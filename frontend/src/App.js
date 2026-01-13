@@ -1485,12 +1485,16 @@ function App() {
     try {
       const res = await axios.post(`${API}/reservations`, pendingReservation);
       if (pendingReservation.appliedDiscount) await axios.post(`${API}/discount-codes/${pendingReservation.appliedDiscount.id}/use`);
+      
+      // MÉMORISATION CLIENT: Save client info after successful payment
+      saveClientInfo(pendingReservation.userName, pendingReservation.userEmail, pendingReservation.userWhatsapp);
+      
       setLastReservation(res.data);
       sendWhatsAppNotification(res.data, true);
       sendWhatsAppNotification(res.data, false);
       setShowSuccess(true);
       setShowConfirmPayment(false);
-      resetForm();
+      resetFormKeepClient();
     } catch (err) { console.error(err); }
     setLoading(false);
   };
