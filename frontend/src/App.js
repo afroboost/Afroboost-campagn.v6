@@ -1002,6 +1002,8 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
   };
 
   // Generate WhatsApp link with message and media URL at the end for link preview
+  // NOTE: Do NOT call addCampaignLog here - this function is called during render!
+  // Error handling is done visually in the JSX with red indicators
   const generateWhatsAppLink = (phone, message, mediaUrl, contactName) => {
     const firstName = contactName?.split(' ')[0] || contactName || 'ami(e)';
     const personalizedMessage = message
@@ -1018,7 +1020,8 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
     const formattedPhone = formatPhoneForWhatsApp(phone);
     
     if (!formattedPhone) {
-      addCampaignLog('whatsapp', `❌ Numéro invalide pour ${contactName}: "${phone}"`, 'error');
+      // Don't call setState here (addCampaignLog) - it causes infinite re-render!
+      // The error is handled visually in the JSX
       return null;
     }
     
@@ -1028,6 +1031,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
   };
 
   // Generate mailto link for email
+  // NOTE: Do NOT call addCampaignLog here - this function is called during render!
   const generateEmailLink = (email, subject, message, mediaUrl, contactName) => {
     const firstName = contactName?.split(' ')[0] || contactName || 'ami(e)';
     const personalizedMessage = message
@@ -1040,7 +1044,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
       : personalizedMessage;
     
     if (!email) {
-      addCampaignLog('email', `Email invalide pour ${contactName}`, 'error');
+      // Don't call setState here - it causes infinite re-render!
       return null;
     }
     
