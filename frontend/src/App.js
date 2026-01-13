@@ -625,6 +625,14 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
     setDiscountCodes(discountCodes.map(c => c.id === code.id ? { ...c, active: !c.active } : c));
   };
 
+  // Delete discount code
+  const deleteCode = async (codeId) => {
+    if (window.confirm(t('confirmDelete') || 'Supprimer ce code ?')) {
+      await axios.delete(`${API}/discount-codes/${codeId}`);
+      setDiscountCodes(discountCodes.filter(c => c.id !== codeId));
+    }
+  };
+
   const handleImportCSV = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -664,7 +672,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
     if (!newOffer.name) return;
     const response = await axios.post(`${API}/offers`, newOffer);
     setOffers([...offers, response.data]);
-    setNewOffer({ name: "", price: 0, visible: true, thumbnail: "" });
+    setNewOffer({ name: "", price: 0, visible: true, thumbnail: "", description: "" });
   };
 
   const toggleCourseSelection = (courseId) => {
