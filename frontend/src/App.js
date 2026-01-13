@@ -1560,29 +1560,53 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
                 </div>
               </div>
               
-              {/* Scheduling */}
+              {/* Scheduling - Multi-date support */}
               <div className="mb-4">
                 <label className="block mb-2 text-white text-sm">Programmation</label>
-                <div className="flex flex-wrap gap-4 items-center">
+                <div className="flex flex-wrap gap-4 items-center mb-3">
                   <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
-                    <input type="radio" name="schedule" checked={!newCampaign.scheduledDate}
-                      onChange={() => setNewCampaign({...newCampaign, scheduledDate: "", scheduledTime: ""})} />
+                    <input type="radio" name="schedule" checked={newCampaign.scheduleSlots.length === 0}
+                      onChange={() => setNewCampaign({...newCampaign, scheduleSlots: []})} />
                     Envoyer maintenant
                   </label>
                   <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
-                    <input type="radio" name="schedule" checked={!!newCampaign.scheduledDate}
-                      onChange={() => setNewCampaign({...newCampaign, scheduledDate: new Date().toISOString().split('T')[0], scheduledTime: "18:00"})} />
-                    Programmer
+                    <input type="radio" name="schedule" checked={newCampaign.scheduleSlots.length > 0}
+                      onChange={addScheduleSlot} />
+                    Programmer (multi-dates)
                   </label>
-                  {newCampaign.scheduledDate && (
-                    <div className="flex gap-2">
-                      <input type="date" value={newCampaign.scheduledDate} 
-                        onChange={e => setNewCampaign({...newCampaign, scheduledDate: e.target.value})}
-                        className="px-3 py-2 rounded-lg neon-input text-sm" />
-                      <input type="time" value={newCampaign.scheduledTime}
-                        onChange={e => setNewCampaign({...newCampaign, scheduledTime: e.target.value})}
-                        className="px-3 py-2 rounded-lg neon-input text-sm" />
+                </div>
+                
+                {/* Multi-date slots */}
+                {newCampaign.scheduleSlots.length > 0 && (
+                  <div className="border border-purple-500/30 rounded-lg p-3 space-y-2">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs text-purple-400">{newCampaign.scheduleSlots.length} date(s) programmée(s)</span>
+                      <button type="button" onClick={addScheduleSlot} 
+                        className="px-3 py-1 rounded text-xs bg-purple-600 hover:bg-purple-700 text-white">
+                        + Ajouter une date
+                      </button>
                     </div>
+                    {newCampaign.scheduleSlots.map((slot, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-black/30">
+                        <span className="text-white text-xs w-6">#{idx + 1}</span>
+                        <input type="date" value={slot.date} 
+                          onChange={e => updateScheduleSlot(idx, 'date', e.target.value)}
+                          className="px-3 py-2 rounded-lg neon-input text-sm flex-1" 
+                          min={new Date().toISOString().split('T')[0]} />
+                        <input type="time" value={slot.time}
+                          onChange={e => updateScheduleSlot(idx, 'time', e.target.value)}
+                          className="px-3 py-2 rounded-lg neon-input text-sm" />
+                        <button type="button" onClick={() => removeScheduleSlot(idx)}
+                          className="px-2 py-2 rounded text-xs bg-red-600/30 hover:bg-red-600/50 text-red-400"
+                          title="Supprimer cette date">
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    <p className="text-xs text-purple-400 mt-2">
+                      📅 Chaque date créera une ligne distincte avec le statut "Programmé"
+                    </p>
+                  </div>
                   )}
                 </div>
               </div>
