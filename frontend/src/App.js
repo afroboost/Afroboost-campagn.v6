@@ -748,7 +748,8 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
               <div>
                 <label className="block mb-2 text-white text-sm">{t('conceptDescription')}</label>
                 <textarea value={concept.description} onChange={(e) => setConcept({ ...concept, description: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg neon-input" rows={4} data-testid="concept-description" />
+                  className="w-full px-4 py-3 rounded-lg neon-input" rows={4} data-testid="concept-description" 
+                  placeholder="Décrivez le concept Afroboost..." />
               </div>
               <div>
                 <label className="block mb-2 text-white text-sm">{t('mediaUrl')}</label>
@@ -758,8 +759,23 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
               </div>
               {concept.heroImageUrl && (
                 <div className="mt-4">
-                  <p className="text-white text-sm mb-2" style={{ opacity: 0.7 }}>Aperçu:</p>
-                  <MediaDisplay url={concept.heroImageUrl} className="rounded-lg overflow-hidden" style={{ maxHeight: '250px' }} />
+                  <p className="text-white text-sm mb-2" style={{ opacity: 0.7 }}>Aperçu média (16:9):</p>
+                  <MediaDisplay url={concept.heroImageUrl} className="rounded-lg overflow-hidden" />
+                </div>
+              )}
+              {/* Logo URL for Splash Screen & PWA */}
+              <div>
+                <label className="block mb-2 text-white text-sm">{t('logoUrl') || 'URL du Logo (Splash Screen & PWA)'}</label>
+                <input type="url" value={concept.logoUrl || ''} onChange={(e) => setConcept({ ...concept, logoUrl: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg neon-input" placeholder="https://... (logo PNG/SVG)" data-testid="concept-logo-url" />
+                <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Ce logo apparaît sur le Splash Screen et comme icône PWA</p>
+              </div>
+              {concept.logoUrl && (
+                <div className="mt-2">
+                  <p className="text-white text-sm mb-2" style={{ opacity: 0.7 }}>Aperçu logo:</p>
+                  <div className="flex justify-center p-4 rounded-lg" style={{ background: '#000' }}>
+                    <img src={concept.logoUrl} alt="Logo" style={{ maxHeight: '80px', maxWidth: '200px' }} />
+                  </div>
                 </div>
               )}
               <button onClick={saveConcept} className="btn-primary px-6 py-3 rounded-lg" data-testid="save-concept">{t('save')}</button>
