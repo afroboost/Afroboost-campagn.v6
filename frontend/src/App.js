@@ -991,6 +991,16 @@ const QRScannerModal = ({ onClose, onValidate, scanResult, scanError, onManualVa
         throw new Error("Scanner container not found");
       }
 
+      // IMPORTANT: Stop any previous session first
+      if (html5QrCodeRef.current) {
+        try {
+          await html5QrCodeRef.current.stop();
+          html5QrCodeRef.current = null;
+        } catch (e) {
+          console.log("No previous session to stop");
+        }
+      }
+
       const html5QrCode = new Html5Qrcode("qr-reader");
       html5QrCodeRef.current = html5QrCode;
       
