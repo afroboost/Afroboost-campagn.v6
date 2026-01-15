@@ -1231,7 +1231,24 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
                   </div>
                 </div>
               )}
-              <button onClick={saveConcept} className="btn-primary px-6 py-3 rounded-lg" data-testid="save-concept">{t('save')}</button>
+
+              {/* CGV - Conditions Générales de Vente */}
+              <div className="mt-6 pt-6 border-t border-purple-500/30">
+                <label className="block mb-2 text-white text-sm">{t('termsText') || 'Texte des Conditions Générales'}</label>
+                <textarea 
+                  value={concept.termsText || ''} 
+                  onChange={(e) => setConcept({ ...concept, termsText: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg neon-input" 
+                  rows={8}
+                  placeholder={t('termsPlaceholder') || 'Entrez le texte de vos conditions générales de vente...'}
+                  data-testid="concept-terms-text"
+                />
+                <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  Ce texte s'affichera dans la fenêtre modale "Conditions générales" accessible depuis le formulaire de réservation.
+                </p>
+              </div>
+
+              <button onClick={saveConcept} className="btn-primary px-6 py-3 rounded-lg mt-6" data-testid="save-concept">{t('save')}</button>
             </div>
           </div>
         )}
