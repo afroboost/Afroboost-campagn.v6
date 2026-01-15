@@ -2524,14 +2524,42 @@ function App() {
                   <p className="text-red-400 text-sm font-medium" data-testid="validation-message">{validationMessage}</p>
                 )}
                 
-                {/* Price summary with discount */}
+                {/* Price summary with quantity selector and discount */}
                 <div className="p-4 rounded-lg card-gradient">
                   {selectedOffer && (
                     <>
-                      <div className="flex justify-between text-white text-sm mb-1">
+                      <div className="flex justify-between items-center text-white text-sm mb-2">
                         <span>{selectedOffer.name}</span>
                         <span>CHF {selectedOffer.price.toFixed(2)}</span>
                       </div>
+                      
+                      {/* Quantity selector */}
+                      <div className="flex justify-between items-center text-white text-sm mb-2">
+                        <span>{t('quantity') || 'Quantité'}:</span>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            type="button"
+                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                            className="w-8 h-8 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-bold"
+                            data-testid="quantity-minus"
+                          >-</button>
+                          <span className="w-8 text-center font-bold" data-testid="quantity-value">{quantity}</span>
+                          <button 
+                            type="button"
+                            onClick={() => setQuantity(quantity + 1)}
+                            className="w-8 h-8 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-bold"
+                            data-testid="quantity-plus"
+                          >+</button>
+                        </div>
+                      </div>
+                      
+                      {quantity > 1 && (
+                        <div className="flex justify-between text-white text-xs opacity-60 mb-1">
+                          <span>Sous-total ({quantity} x CHF {selectedOffer.price.toFixed(2)})</span>
+                          <span>CHF {(selectedOffer.price * quantity).toFixed(2)}</span>
+                        </div>
+                      )}
+                      
                       {appliedDiscount && (
                         <div className="flex justify-between text-green-400 text-sm mb-1">
                           <span>Réduction ({appliedDiscount.code})</span>
@@ -2554,9 +2582,22 @@ function App() {
                   </p>
                 </div>
                 
+                {/* CGV checkbox with clickable link */}
                 <label className="flex items-start gap-2 cursor-pointer text-xs text-white opacity-70">
                   <input type="checkbox" required checked={hasAcceptedTerms} onChange={e => setHasAcceptedTerms(e.target.checked)} data-testid="terms-checkbox" />
-                  <span>{t('acceptTerms')}</span>
+                  <span>
+                    {t('acceptTerms')}{' '}
+                    <button 
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); setShowTermsModal(true); }}
+                      className="underline hover:text-purple-400"
+                      style={{ color: '#d91cd2' }}
+                      data-testid="terms-link"
+                    >
+                      {t('termsLink') || 'conditions générales'}
+                    </button>
+                    {' '}et confirme ma réservation.
+                  </span>
                 </label>
               </div>
             </div>
@@ -2568,6 +2609,27 @@ function App() {
               {loading ? t('loading') : parseFloat(totalPrice) === 0 ? '🎁 Réserver gratuitement' : t('payAndReserve')}
             </button>
           </form>
+        )}
+
+        {/* CGV Modal */}
+        {showTermsModal && (
+          <div className="modal-overlay" onClick={() => setShowTermsModal(false)}>
+            <div className="modal-content glass rounded-xl p-6 max-w-lg w-full neon-border" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-white">{t('termsTitle') || 'Conditions Générales'}</h3>
+                <button onClick={() => setShowTermsModal(false)} className="text-2xl text-white hover:text-purple-400">×</button>
+              </div>
+              <div className="max-h-[60vh] overflow-y-auto text-white text-sm opacity-80 whitespace-pre-wrap">
+                {concept.termsText || 'Les conditions générales ne sont pas encore définies. Veuillez contacter l\'administrateur.'}
+              </div>
+              <button 
+                onClick={() => setShowTermsModal(false)} 
+                className="mt-4 w-full py-3 rounded-lg btn-primary"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
         )}
 
         <footer className="mt-12 mb-8 text-center" style={{ opacity: 0.3 }}>
