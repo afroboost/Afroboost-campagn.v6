@@ -4539,6 +4539,32 @@ function App() {
     }
   }, [concept.faviconUrl]);
 
+  // Scroll vers la section par défaut au chargement (si configuré par le coach)
+  useEffect(() => {
+    if (concept.defaultLandingSection && concept.defaultLandingSection !== 'all' && !coachMode && !showSplash) {
+      // Petit délai pour s'assurer que le DOM est prêt
+      const timer = setTimeout(() => {
+        let sectionId = null;
+        if (concept.defaultLandingSection === 'sessions') {
+          sectionId = 'sessions-section';
+        } else if (concept.defaultLandingSection === 'offers' || concept.defaultLandingSection === 'shop') {
+          sectionId = 'offers-section';
+        }
+        
+        if (sectionId) {
+          const element = document.getElementById(sectionId);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+        
+        // Mettre à jour le filtre actif
+        setActiveFilter(concept.defaultLandingSection);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [concept.defaultLandingSection, coachMode, showSplash]);
+
   useEffect(() => { const timer = setTimeout(() => setShowSplash(false), 1500); return () => clearTimeout(timer); }, []);
 
   // LOGIQUE CODE PROMO: Validation en temps réel - Case Insensitive avec trim
