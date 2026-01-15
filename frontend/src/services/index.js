@@ -22,3 +22,16 @@ export {
   sendBulkWhatsApp,
   testWhatsAppConfig
 } from './whatsappService';
+
+// === AI RESPONSE SERVICE ===
+export {
+  getAIConfig,
+  saveAIConfig,
+  isAIEnabled,
+  setLastMediaUrl,
+  addAILog,
+  getAILogs,
+  clearAILogs,
+  findClientByPhone,
+  buildAIContext
+} from './aiResponseService';
