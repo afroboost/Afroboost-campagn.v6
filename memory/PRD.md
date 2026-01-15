@@ -140,14 +140,25 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
    - Twitter Card meta tags ajoutés
    - Aperçu riche pour partage WhatsApp/Instagram
 
-### Architecture Vercel (15 Jan 2026)
-1. ✅ **Structure modulaire initiée**:
-   - `/frontend/src/config/index.js` - Configuration groupée
-   - `/frontend/src/config/constants.js` - Constantes exportées
-   - `/frontend/vercel.json` - Configuration routing Vercel
-   - `/frontend/ARCHITECTURE.md` - Documentation structure
+### Refactoring Modulaire Vercel P1 (15 Jan 2026)
+1. ✅ **Composants extraits de App.js**:
+   - `/components/OfferCard.js` - OfferCard + OfferCardSlider avec multi-images
+   - `/components/QRScanner.js` - Modal scanner avec gestion propre caméra (stop/start)
+   - `/components/AdminCampaigns.js` - Hooks + composants pour campagnes marketing
+   - `/components/index.js` - Export centralisé de tous les composants
 
-2. ⏳ **Prochaine étape**: Refactoriser App.js en composants séparés
+2. ✅ **CSS organisé par sections**:
+   - Section "OFFERS SLIDER STYLES" - Swipe mobile iOS/Android
+   - Section "QR SCANNER STYLES" - Conteneur visible
+   - Section "OFFER CARD STYLES" - Multi-images et sélection
+   - Section "COACH MODE ADMIN STYLES" - Tabs coach
+   - Section "CAMPAIGNS STYLES" - Gestionnaire marketing
+
+3. ✅ **Vérifications post-refactoring**:
+   - Bouton "Voir les avis" : Fonctionnel ✓
+   - Champ adresse conditionnel (produits) : Fonctionnel ✓
+   - Scanner QR : Modal + boutons fonctionnels ✓
+   - Swipe offres mobile : Fonctionnel ✓
 
 ### Fonctionnalités Avis Google (15 Jan 2026)
 1. ✅ **Mode Coach - Champ Lien des avis Google**:
