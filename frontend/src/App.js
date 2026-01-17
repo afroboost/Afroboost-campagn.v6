@@ -4734,7 +4734,7 @@ const SuccessOverlay = ({ t, data, onClose }) => {
           </div>
           
           {/* Afroboost branding in ticket */}
-          <p className="text-xs text-white/40 mt-4">afroboost.ch</p>
+          <p className="text-xs text-white/40 mt-4">afroboost.com</p>
         </div>
         
         {/* Action buttons - outside capture zone */}
