@@ -3025,12 +3025,13 @@ function App() {
             Complètement indépendante des cours
             ===================================================== */}
         {filteredProducts.length > 0 && (activeFilter === 'shop' || activeFilter === 'all') && (
-          <div id="products-section" className="mb-8">
+          <div id="products-section" className="mb-8" style={{ paddingTop: '10px' }}>
             <h2 className="font-semibold mb-2 text-white" style={{ fontSize: '18px' }}>
               🛒 {t('shop') || 'Boutique'}
             </h2>
             
-            <p className="text-sm mb-4" style={{ color: 'rgba(139, 92, 246, 0.8)' }}>
+            {/* Texte blanc pur et police fine */}
+            <p className="text-sm mb-4" style={{ color: '#ffffff', fontWeight: '300', letterSpacing: '0.3px' }}>
               Nos produits physiques - livraison disponible
             </p>
             
