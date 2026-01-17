@@ -23,6 +23,7 @@ import {
 import {
   setLastMediaUrl as setLastMediaUrlService
 } from "../services/aiResponseService";
+import { LandingSectionSelector } from "./SearchBar";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
