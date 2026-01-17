@@ -4604,6 +4604,9 @@ const SuccessOverlay = ({ t, data, onClose }) => {
   const ticketRef = useRef(null);
   const [isGenerating, setIsGenerating] = useState(false);
   
+  // URL officielle du site
+  const AFROBOOST_URL = 'https://afroboost.com';
+  
   const handlePrint = () => window.print();
   
   // Generate ticket image using html2canvas
@@ -4637,11 +4640,15 @@ const SuccessOverlay = ({ t, data, onClose }) => {
     }
   };
   
+  // Text message for WhatsApp with site URL
+  const getShareMessage = () => {
+    return `🎧 ${t('reservationConfirmed')}\n\n👤 ${t('name')}: ${data.userName}\n📧 ${t('email')}: ${data.userEmail}\n💰 ${t('offer')}: ${data.offerName}\n💵 ${t('total')}: CHF ${data.totalPrice}\n📅 ${t('courses')}: ${data.courseName}\n🎫 ${t('code')}: ${data.reservationCode}\n\n🔗 ${AFROBOOST_URL}`;
+  };
+  
   // Share with image - uses Web Share API if available, otherwise fallback
   const handleShareWithImage = async () => {
     const canvas = await generateTicketImage();
     if (!canvas) {
-      // Fallback to text share if image generation fails
       handleTextShare();
       return;
     }
@@ -4656,32 +4663,38 @@ const SuccessOverlay = ({ t, data, onClose }) => {
       const file = new File([blob], `ticket-afroboost-${data.reservationCode}.png`, { type: 'image/png' });
       const shareData = {
         title: `🎧 ${t('reservationConfirmed')}`,
-        text: `${t('reservationCode')}: ${data.reservationCode}`,
+        text: `${t('reservationCode')}: ${data.reservationCode}\n${AFROBOOST_URL}`,
         files: [file]
       };
       
-      // Check if Web Share API with files is supported
+      // Check if Web Share API with files is supported (mobile mainly)
       if (navigator.canShare && navigator.canShare(shareData)) {
         try {
           await navigator.share(shareData);
+          return; // Success, exit
         } catch (err) {
-          if (err.name !== 'AbortError') {
-            // User didn't cancel, try text share
-            handleTextShare();
-          }
+          if (err.name === 'AbortError') return; // User cancelled
         }
-      } else {
-        // Fallback: download the image and open WhatsApp with text
-        handleSaveTicket();
-        setTimeout(() => handleTextShare(), 500);
       }
+      
+      // Fallback for PC/browsers without file share support:
+      // 1. Save the image
+      // 2. Open WhatsApp Web with text + URL
+      const link = document.createElement('a');
+      link.download = `ticket-afroboost-${data.reservationCode}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      
+      // Open WhatsApp Web with message including afroboost.com URL
+      setTimeout(() => {
+        window.open(`https://wa.me/?text=${encodeURIComponent(getShareMessage())}`, '_blank');
+      }, 300);
     }, 'image/png');
   };
   
-  // Text-only share (fallback)
+  // Text-only share (fallback) - includes afroboost.com URL
   const handleTextShare = () => {
-    const msg = `🎧 ${t('reservationConfirmed')}\n\n👤 ${t('name')}: ${data.userName}\n📧 ${t('email')}: ${data.userEmail}\n💰 ${t('offer')}: ${data.offerName}\n💵 ${t('total')}: CHF ${data.totalPrice}\n📅 ${t('courses')}: ${data.courseName}\n🎫 ${t('code')}: ${data.reservationCode}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    window.open(`https://wa.me/?text=${encodeURIComponent(getShareMessage())}`, '_blank');
   };
 
   // QR Code contains the validation URL for coach scanning
