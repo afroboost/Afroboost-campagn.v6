@@ -2729,6 +2729,14 @@ function App() {
     <div className="w-full min-h-screen p-6 relative section-gradient" style={{ fontFamily: 'system-ui, sans-serif' }}>
       <LanguageSelector lang={lang} setLang={setLang} />
 
+      {/* Event Poster Modal (Popup d'accueil) */}
+      {showEventPoster && concept.eventPosterMediaUrl && (
+        <EventPosterModal 
+          mediaUrl={concept.eventPosterMediaUrl} 
+          onClose={closeEventPoster} 
+        />
+      )}
+
       {/* PWA Install Banner */}
       {showInstallBanner && (
         <div 
