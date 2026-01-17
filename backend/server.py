@@ -194,12 +194,17 @@ class PaymentLinks(BaseModel):
     paypal: str = ""
     twint: str = ""
     coachWhatsapp: str = ""
+    # Notifications automatiques pour le coach
+    coachNotificationEmail: str = ""  # Email pour recevoir les alertes
+    coachNotificationPhone: str = ""  # Téléphone pour recevoir les alertes WhatsApp
 
 class PaymentLinksUpdate(BaseModel):
     stripe: Optional[str] = ""
     paypal: Optional[str] = ""
     twint: Optional[str] = ""
     coachWhatsapp: Optional[str] = ""
+    coachNotificationEmail: Optional[str] = ""
+    coachNotificationPhone: Optional[str] = ""
 
 # Campaign Models for Marketing Module
 class CampaignResult(BaseModel):
