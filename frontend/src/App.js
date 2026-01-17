@@ -5103,7 +5103,7 @@ function App() {
       }
       link.href = concept.logoUrl;
       
-      // Update apple-touch-icon
+      // Update apple-touch-icon for PWA
       let appleLink = document.querySelector("link[rel='apple-touch-icon']");
       if (!appleLink) {
         appleLink = document.createElement('link');
@@ -5125,9 +5125,34 @@ function App() {
         document.head.appendChild(link);
       }
       link.href = concept.faviconUrl;
+      
+      // Update apple-touch-icon for PWA with faviconUrl
+      let appleLink = document.querySelector("link[rel='apple-touch-icon']");
+      if (!appleLink) {
+        appleLink = document.createElement('link');
+        appleLink.rel = 'apple-touch-icon';
+        document.head.appendChild(appleLink);
+      }
+      appleLink.href = concept.faviconUrl;
+      
       console.log("Favicon updated to:", concept.faviconUrl);
     }
   }, [concept.faviconUrl]);
+
+  // Update manifest link to use dynamic API endpoint for PWA logo
+  useEffect(() => {
+    const logoUrl = concept.faviconUrl || concept.logoUrl;
+    if (logoUrl && logoUrl.trim() !== '') {
+      // Update manifest link to point to dynamic endpoint
+      let manifestLink = document.querySelector("link[rel='manifest']");
+      if (manifestLink) {
+        // Use API endpoint for dynamic manifest
+        const apiUrl = process.env.REACT_APP_BACKEND_URL || '';
+        manifestLink.href = `${apiUrl}/api/manifest.json`;
+        console.log("PWA Manifest updated to dynamic endpoint");
+      }
+    }
+  }, [concept.logoUrl, concept.faviconUrl]);
 
   // Scroll vers la section par défaut au chargement (si configuré par le coach)
   useEffect(() => {
