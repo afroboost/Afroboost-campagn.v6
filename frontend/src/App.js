@@ -4692,6 +4692,50 @@ const SuccessOverlay = ({ t, data, onClose }) => {
     }, 'image/png');
   };
   
+  // NEW: Share on WhatsApp with image + specific text
+  const handleShareWhatsApp = async () => {
+    const canvas = await generateTicketImage();
+    if (!canvas) {
+      // Fallback to text-only if image fails
+      window.open(`https://wa.me/?text=${encodeURIComponent('Voici ma réservation Afroboost : https://afroboost.com')}`, '_blank');
+      return;
+    }
+    
+    canvas.toBlob(async (blob) => {
+      if (!blob) {
+        window.open(`https://wa.me/?text=${encodeURIComponent('Voici ma réservation Afroboost : https://afroboost.com')}`, '_blank');
+        return;
+      }
+      
+      const file = new File([blob], `ticket-afroboost-${data.reservationCode}.png`, { type: 'image/png' });
+      const shareData = {
+        title: 'Ma réservation Afroboost',
+        text: 'Voici ma réservation Afroboost : https://afroboost.com',
+        files: [file]
+      };
+      
+      // Use Web Share API if available (mobile)
+      if (navigator.canShare && navigator.canShare(shareData)) {
+        try {
+          await navigator.share(shareData);
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+        }
+      }
+      
+      // Fallback for PC: download image + open WhatsApp Web
+      const link = document.createElement('a');
+      link.download = `ticket-afroboost-${data.reservationCode}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      
+      setTimeout(() => {
+        window.open(`https://wa.me/?text=${encodeURIComponent('Voici ma réservation Afroboost : https://afroboost.com')}`, '_blank');
+      }, 300);
+    }, 'image/png');
+  };
+  
   // Text-only share (fallback) - includes afroboost.com URL
   const handleTextShare = () => {
     window.open(`https://wa.me/?text=${encodeURIComponent(getShareMessage())}`, '_blank');
