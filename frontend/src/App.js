@@ -2535,7 +2535,7 @@ function App() {
   };
 
   const resetForm = () => {
-    setPendingReservation(null); setSelectedCourse(null); setSelectedDate(null);
+    setPendingReservation(null); setSelectedCourse(null); setSelectedDates([]);
     setSelectedOffer(null); setSelectedSession(null); setUserName(""); 
     setUserEmail(""); setUserWhatsapp(""); setDiscountCode(""); 
     setHasAcceptedTerms(false); setAppliedDiscount(null); setPromoMessage({ type: '', text: '' });
@@ -2544,7 +2544,7 @@ function App() {
 
   // Reset form but keep client info (for repeat purchases)
   const resetFormKeepClient = () => {
-    setPendingReservation(null); setSelectedCourse(null); setSelectedDate(null);
+    setPendingReservation(null); setSelectedCourse(null); setSelectedDates([]);
     setSelectedOffer(null); setSelectedSession(null); setDiscountCode(""); 
     setHasAcceptedTerms(false); setAppliedDiscount(null); setPromoMessage({ type: '', text: '' });
     setQuantity(1); setShippingAddress(""); // Reset quantité et adresse
