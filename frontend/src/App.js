@@ -1930,6 +1930,28 @@ function App() {
   const [showEventPoster, setShowEventPoster] = useState(false);
   const [discountCodes, setDiscountCodes] = useState([]);
 
+  // ========== AUDIO PLAYER STATE ==========
+  const [showAudioPlayer, setShowAudioPlayer] = useState(false);
+  const [audioFeatureEnabled, setAudioFeatureEnabled] = useState(false);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioVolume, setAudioVolume] = useState(0.7);
+  const audioRef = useRef(null);
+
+  // Vérifier si le feature flag Audio est activé
+  useEffect(() => {
+    const checkAudioFeature = async () => {
+      try {
+        const response = await axios.get(`${API}/feature-flags`);
+        setAudioFeatureEnabled(response.data?.AUDIO_SERVICE_ENABLED || false);
+      } catch (err) {
+        console.log('Feature flags not available');
+        setAudioFeatureEnabled(false);
+      }
+    };
+    checkAudioFeature();
+  }, []);
+
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [selectedDates, setSelectedDates] = useState([]); // MULTI-SELECT: Array de dates sélectionnées
   const [selectedOffer, setSelectedOffer] = useState(null);
