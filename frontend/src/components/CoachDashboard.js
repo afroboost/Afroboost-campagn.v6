@@ -408,6 +408,25 @@ const CoachDashboard = ({ t, lang, onBack, onLogout }) => {
       console.error("Erreur ajout contact:", err);
     }
   };
+  
+  // Supprimer un contact (Hard Delete avec nettoyage des références)
+  const deleteContact = async (userId) => {
+    if (!window.confirm("⚠️ Supprimer définitivement ce contact ?\n\nCette action:\n• Supprime le contact de la base\n• Retire son email des codes promo associés")) return;
+    try {
+      await axios.delete(`${API}/users/${userId}`);
+      setUsers(users.filter(u => u.id !== userId));
+      // Mettre à jour les codes promo localement (retirer l'email du contact)
+      const deletedUser = users.find(u => u.id === userId);
+      if (deletedUser?.email) {
+        setDiscountCodes(codes => codes.map(c => 
+          c.assignedEmail === deletedUser.email ? { ...c, assignedEmail: null } : c
+        ));
+      }
+    } catch (err) {
+      console.error("Erreur suppression contact:", err);
+      alert("Erreur lors de la suppression");
+    }
+  };
 
   const handleImportCSV = (e) => {
     const file = e.target.files[0];
