@@ -2142,7 +2142,7 @@ function App() {
   const [discountCodes, setDiscountCodes] = useState([]);
 
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDates, setSelectedDates] = useState([]); // MULTI-SELECT: Array de dates sélectionnées
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [selectedSession, setSelectedSession] = useState(null);
   const [quantity, setQuantity] = useState(1); // Quantité pour achats multiples
@@ -2156,6 +2156,17 @@ function App() {
   const [discountCode, setDiscountCode] = useState("");
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const [promoMessage, setPromoMessage] = useState({ type: '', text: '' }); // New: dedicated promo message
+
+  // Toggle une date dans la sélection multiple
+  const toggleDateSelection = (date) => {
+    setSelectedDates(prev => {
+      if (prev.includes(date)) {
+        return prev.filter(d => d !== date); // Enlever si déjà sélectionnée
+      } else {
+        return [...prev, date]; // Ajouter sinon
+      }
+    });
+  };
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [showConfirmPayment, setShowConfirmPayment] = useState(false);
