@@ -3285,30 +3285,70 @@ function App() {
                         <span>CHF {selectedOffer.price.toFixed(2)}</span>
                       </div>
                       
-                      {/* Quantity selector */}
-                      <div className="flex justify-between items-center text-white text-sm mb-2">
-                        <span>{t('quantity') || 'Quantité'}:</span>
-                        <div className="flex items-center gap-2">
-                          <button 
-                            type="button"
-                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                            className="w-8 h-8 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-bold"
-                            data-testid="quantity-minus"
-                          >-</button>
-                          <span className="w-8 text-center font-bold" data-testid="quantity-value">{quantity}</span>
-                          <button 
-                            type="button"
-                            onClick={() => setQuantity(quantity + 1)}
-                            className="w-8 h-8 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-bold"
-                            data-testid="quantity-plus"
-                          >+</button>
+                      {/* Pour les services/cours: Afficher les dates sélectionnées */}
+                      {!selectedOffer?.isProduct && !selectedOffer?.isPhysicalProduct && selectedDates.length > 0 && (
+                        <div className="mb-3 p-3 rounded-lg" style={{ 
+                          background: 'rgba(217, 28, 210, 0.1)', 
+                          border: '1px solid rgba(217, 28, 210, 0.3)' 
+                        }}>
+                          <p className="text-xs text-pink-400 mb-2 font-medium">📅 Dates sélectionnées ({selectedDates.length})</p>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedDates.map((dateISO, idx) => (
+                              <span 
+                                key={idx}
+                                className="px-2 py-1 rounded-full text-xs text-white"
+                                style={{ 
+                                  background: 'rgba(217, 28, 210, 0.3)',
+                                  border: '1px solid #D91CD2'
+                                }}
+                              >
+                                {new Date(dateISO).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                              </span>
+                            ))}
+                          </div>
+                          {selectedDates.length > 1 && (
+                            <p className="text-xs text-white opacity-70 mt-2">
+                              💡 Cliquez sur les dates ci-dessus pour en ajouter ou retirer
+                            </p>
+                          )}
                         </div>
-                      </div>
+                      )}
                       
-                      {quantity > 1 && (
+                      {/* Quantity selector - Visible uniquement pour les produits physiques */}
+                      {(selectedOffer?.isProduct || selectedOffer?.isPhysicalProduct) && (
+                        <div className="flex justify-between items-center text-white text-sm mb-2">
+                          <span>{t('quantity') || 'Quantité'}:</span>
+                          <div className="flex items-center gap-2">
+                            <button 
+                              type="button"
+                              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                              className="w-8 h-8 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-bold"
+                              data-testid="quantity-minus"
+                            >-</button>
+                            <span className="w-8 text-center font-bold" data-testid="quantity-value">{quantity}</span>
+                            <button 
+                              type="button"
+                              onClick={() => setQuantity(quantity + 1)}
+                              className="w-8 h-8 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-bold"
+                              data-testid="quantity-plus"
+                            >+</button>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Sous-total pour produits physiques */}
+                      {(selectedOffer?.isProduct || selectedOffer?.isPhysicalProduct) && quantity > 1 && (
                         <div className="flex justify-between text-white text-xs opacity-60 mb-1">
                           <span>Sous-total ({quantity} x CHF {selectedOffer.price.toFixed(2)})</span>
                           <span>CHF {(selectedOffer.price * quantity).toFixed(2)}</span>
+                        </div>
+                      )}
+                      
+                      {/* Sous-total pour services/cours avec multi-dates */}
+                      {!selectedOffer?.isProduct && !selectedOffer?.isPhysicalProduct && selectedDates.length > 1 && (
+                        <div className="flex justify-between text-white text-xs opacity-60 mb-1">
+                          <span>Sous-total ({selectedDates.length} dates x CHF {selectedOffer.price.toFixed(2)})</span>
+                          <span>CHF {(selectedOffer.price * selectedDates.length).toFixed(2)}</span>
                         </div>
                       )}
                       
