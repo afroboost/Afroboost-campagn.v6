@@ -2692,6 +2692,9 @@ function App() {
       .filter(([_, v]) => v)
       .map(([k, v]) => `${k === 'size' ? 'Taille' : k === 'color' ? 'Couleur' : 'Poids'}: ${v}`)
       .join(', ');
+    
+    // Formatter les dates sélectionnées
+    const selectedDatesText = selectedDates.map(d => new Date(d).toLocaleDateString('fr-FR')).join(', ');
 
     const reservation = {
       userId: `user-${Date.now()}`,
@@ -2701,6 +2704,8 @@ function App() {
       shippingAddress: isPhysicalProduct ? shippingAddress : null, // Adresse si produit physique
       selectedVariants: Object.keys(selectedVariants).length > 0 ? selectedVariants : null, // Variantes choisies
       variantsText: variantsText || null, // Texte formaté des variantes
+      selectedDates: selectedDates, // Toutes les dates sélectionnées
+      selectedDatesText: selectedDatesText || null, // Texte formaté des dates
       courseId: selectedCourse?.id || 'N/A', 
       courseName: selectedCourse?.name || 'Produit physique',
       courseTime: selectedCourse?.time || '', 
@@ -2708,7 +2713,7 @@ function App() {
       offerId: selectedOffer.id, 
       offerName: selectedOffer.name,
       price: selectedOffer.price, 
-      quantity: quantity, // Quantité sélectionnée
+      quantity: dateCount, // Nombre de dates sélectionnées comme quantité
       totalPrice,
       discountCode: appliedDiscount?.code || null,
       discountType: appliedDiscount?.type || null,
