@@ -532,13 +532,68 @@ async def delete_user(user_id: str):
     return {"success": True, "message": "Contact supprimé et références nettoyées"}
 
 # --- Reservations ---
-@api_router.get("/reservations", response_model=List[Reservation])
-async def get_reservations():
-    reservations = await db.reservations.find({}, {"_id": 0}).to_list(1000)
+@api_router.get("/reservations")
+async def get_reservations(
+    page: int = 1,
+    limit: int = 20,
+    all_data: bool = False
+):
+    """
+    Get reservations with pagination for performance optimization.
+    - page: Page number (default 1)
+    - limit: Items per page (default 20)
+    - all_data: If True, returns all reservations (for export CSV)
+    """
+    # Projection optimisée: ne récupérer que les champs nécessaires pour l'affichage initial
+    projection = {
+        "_id": 0,
+        "id": 1,
+        "reservationCode": 1,
+        "userName": 1,
+        "userEmail": 1,
+        "userWhatsapp": 1,
+        "courseName": 1,
+        "courseTime": 1,
+        "datetime": 1,
+        "offerName": 1,
+        "totalPrice": 1,
+        "quantity": 1,
+        "validated": 1,
+        "validatedAt": 1,
+        "createdAt": 1,
+        "selectedDates": 1,
+        "selectedDatesText": 1,
+        "selectedVariants": 1,
+        "variantsText": 1,
+        "isProduct": 1,
+        "shippingStatus": 1,
+        "trackingNumber": 1
+    }
+    
+    if all_data:
+        # Pour l'export CSV, récupérer tous les champs
+        reservations = await db.reservations.find({}, {"_id": 0}).sort("createdAt", -1).to_list(10000)
+    else:
+        # Pagination avec tri par date de création (les plus récentes en premier)
+        skip = (page - 1) * limit
+        reservations = await db.reservations.find({}, projection).sort("createdAt", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Compter le total pour la pagination
+    total_count = await db.reservations.count_documents({})
+    
     for res in reservations:
         if isinstance(res.get('createdAt'), str):
             res['createdAt'] = datetime.fromisoformat(res['createdAt'].replace('Z', '+00:00'))
-    return reservations
+    
+    return {
+        "data": reservations,
+        "pagination": {
+            "page": page,
+            "limit": limit,
+            "total": total_count,
+            "pages": (total_count + limit - 1) // limit  # Ceiling division
+        }
+    }
 
 @api_router.post("/reservations", response_model=Reservation)
 async def create_reservation(reservation: ReservationCreate):
