@@ -430,8 +430,17 @@ async def update_offer(offer_id: str, offer: OfferCreate):
 
 @api_router.delete("/offers/{offer_id}")
 async def delete_offer(offer_id: str):
+    """Supprime une offre et nettoie les références dans les codes promo"""
+    # 1. Supprimer l'offre
     await db.offers.delete_one({"id": offer_id})
-    return {"success": True}
+    
+    # 2. Nettoyer les références dans les codes promo (retirer l'offre des 'courses'/articles autorisés)
+    await db.discount_codes.update_many(
+        {"courses": offer_id},
+        {"$pull": {"courses": offer_id}}
+    )
+    
+    return {"success": True, "message": "Offre supprimée et références nettoyées"}
 
 # --- Product Categories ---
 @api_router.get("/categories")
