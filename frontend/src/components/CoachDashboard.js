@@ -173,6 +173,84 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   const [showManualContactForm, setShowManualContactForm] = useState(false);
   const [manualContact, setManualContact] = useState({ name: "", email: "", whatsapp: "" });
 
+  // ========== AUDIO PLAYLIST STATE ==========
+  const [showAudioModal, setShowAudioModal] = useState(false);
+  const [selectedCourseForAudio, setSelectedCourseForAudio] = useState(null);
+  const [playlistUrls, setPlaylistUrls] = useState([]);
+  const [newAudioUrl, setNewAudioUrl] = useState("");
+  const [savingPlaylist, setSavingPlaylist] = useState(false);
+
+  // Ouvrir le modal de gestion audio pour un cours
+  const openAudioModal = (course) => {
+    setSelectedCourseForAudio(course);
+    setPlaylistUrls(course.playlist || []);
+    setNewAudioUrl("");
+    setShowAudioModal(true);
+  };
+
+  // Ajouter une URL à la playlist
+  const addAudioUrl = () => {
+    const url = newAudioUrl.trim();
+    if (!url) return;
+    
+    // Validation basique de l'URL
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      alert("Veuillez entrer une URL valide commençant par http:// ou https://");
+      return;
+    }
+    
+    // Vérifier si c'est un MP3 ou stream audio
+    const isAudioUrl = url.includes('.mp3') || url.includes('.wav') || url.includes('.ogg') || 
+                       url.includes('.m3u') || url.includes('.m3u8') || url.includes('stream') ||
+                       url.includes('audio') || url.includes('soundcloud') || url.includes('spotify');
+    
+    if (!isAudioUrl) {
+      if (!window.confirm("Cette URL ne semble pas être un fichier audio (MP3, WAV, etc.) ou un stream. Voulez-vous l'ajouter quand même ?")) {
+        return;
+      }
+    }
+    
+    if (playlistUrls.includes(url)) {
+      alert("Cette URL est déjà dans la playlist.");
+      return;
+    }
+    
+    setPlaylistUrls([...playlistUrls, url]);
+    setNewAudioUrl("");
+  };
+
+  // Supprimer une URL de la playlist
+  const removeAudioUrl = (urlToRemove) => {
+    setPlaylistUrls(playlistUrls.filter(url => url !== urlToRemove));
+  };
+
+  // Sauvegarder la playlist dans la base de données
+  const savePlaylist = async () => {
+    if (!selectedCourseForAudio) return;
+    
+    setSavingPlaylist(true);
+    try {
+      // Mettre à jour le cours avec la nouvelle playlist
+      const updatedCourse = { ...selectedCourseForAudio, playlist: playlistUrls };
+      await axios.put(`${API}/courses/${selectedCourseForAudio.id}`, updatedCourse);
+      
+      // Mettre à jour l'état local
+      setCourses(courses.map(c => 
+        c.id === selectedCourseForAudio.id 
+          ? { ...c, playlist: playlistUrls } 
+          : c
+      ));
+      
+      alert(`✅ Playlist sauvegardée pour "${selectedCourseForAudio.name}" (${playlistUrls.length} morceaux)`);
+      setShowAudioModal(false);
+    } catch (err) {
+      console.error("Erreur sauvegarde playlist:", err);
+      alert("❌ Erreur lors de la sauvegarde de la playlist");
+    } finally {
+      setSavingPlaylist(false);
+    }
+  };
+
   // Fonction pour charger les réservations avec pagination
   const loadReservations = async (page = 1, limit = 20) => {
     setLoadingReservations(true);
