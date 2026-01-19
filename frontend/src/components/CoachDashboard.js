@@ -1937,6 +1937,135 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
             <h2 className="font-semibold text-white mb-6" style={{ fontSize: '20px' }}>{t('conceptVisual')}</h2>
             <div className="space-y-4">
               
+              {/* ========================= PERSONNALISATION DES COULEURS ========================= */}
+              <div className="border border-purple-500/30 rounded-lg p-4 bg-purple-900/10">
+                <h3 className="text-purple-400 font-semibold mb-4">🎨 Personnalisation des couleurs</h3>
+                <p className="text-white/60 text-xs mb-4">Changez les couleurs principales du site. Les modifications s'appliquent en temps réel.</p>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Couleur principale */}
+                  <div>
+                    <label className="block mb-2 text-white text-sm">✨ Couleur principale (Glow)</label>
+                    <div className="flex items-center gap-3">
+                      <input 
+                        type="color" 
+                        value={concept.primaryColor || '#D91CD2'} 
+                        onChange={(e) => {
+                          const newColor = e.target.value;
+                          setConcept({ ...concept, primaryColor: newColor });
+                          // Appliquer immédiatement
+                          document.documentElement.style.setProperty('--primary-color', newColor);
+                          document.documentElement.style.setProperty('--glow-color', `${newColor}66`);
+                          document.documentElement.style.setProperty('--glow-color-strong', `${newColor}99`);
+                        }}
+                        className="w-12 h-12 rounded-lg cursor-pointer border-2 border-white/20"
+                        style={{ background: 'transparent' }}
+                        data-testid="color-picker-primary"
+                      />
+                      <div>
+                        <input 
+                          type="text" 
+                          value={concept.primaryColor || '#D91CD2'} 
+                          onChange={(e) => {
+                            const newColor = e.target.value;
+                            if (/^#[0-9A-Fa-f]{6}$/.test(newColor)) {
+                              setConcept({ ...concept, primaryColor: newColor });
+                              document.documentElement.style.setProperty('--primary-color', newColor);
+                              document.documentElement.style.setProperty('--glow-color', `${newColor}66`);
+                            }
+                          }}
+                          className="px-3 py-2 rounded-lg neon-input text-sm uppercase w-28"
+                          placeholder="#D91CD2"
+                        />
+                        <p className="text-xs mt-1 text-white/40">Rose par défaut</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Couleur secondaire */}
+                  <div>
+                    <label className="block mb-2 text-white text-sm">💜 Couleur secondaire</label>
+                    <div className="flex items-center gap-3">
+                      <input 
+                        type="color" 
+                        value={concept.secondaryColor || '#8b5cf6'} 
+                        onChange={(e) => {
+                          const newColor = e.target.value;
+                          setConcept({ ...concept, secondaryColor: newColor });
+                          document.documentElement.style.setProperty('--secondary-color', newColor);
+                        }}
+                        className="w-12 h-12 rounded-lg cursor-pointer border-2 border-white/20"
+                        style={{ background: 'transparent' }}
+                        data-testid="color-picker-secondary"
+                      />
+                      <div>
+                        <input 
+                          type="text" 
+                          value={concept.secondaryColor || '#8b5cf6'} 
+                          onChange={(e) => {
+                            const newColor = e.target.value;
+                            if (/^#[0-9A-Fa-f]{6}$/.test(newColor)) {
+                              setConcept({ ...concept, secondaryColor: newColor });
+                              document.documentElement.style.setProperty('--secondary-color', newColor);
+                            }
+                          }}
+                          className="px-3 py-2 rounded-lg neon-input text-sm uppercase w-28"
+                          placeholder="#8b5cf6"
+                        />
+                        <p className="text-xs mt-1 text-white/40">Violet par défaut</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Présets de couleurs */}
+                <div className="mt-4">
+                  <label className="block mb-2 text-white text-sm">🎯 Préréglages rapides</label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { name: 'Rose Néon', primary: '#D91CD2', secondary: '#8b5cf6' },
+                      { name: 'Bleu Électrique', primary: '#0ea5e9', secondary: '#6366f1' },
+                      { name: 'Vert Menthe', primary: '#10b981', secondary: '#14b8a6' },
+                      { name: 'Orange Sunset', primary: '#f97316', secondary: '#eab308' },
+                      { name: 'Rouge Passion', primary: '#ef4444', secondary: '#ec4899' },
+                      { name: 'Or Luxe', primary: '#d4af37', secondary: '#b8860b' },
+                    ].map((preset) => (
+                      <button
+                        key={preset.name}
+                        onClick={() => {
+                          setConcept({ ...concept, primaryColor: preset.primary, secondaryColor: preset.secondary });
+                          document.documentElement.style.setProperty('--primary-color', preset.primary);
+                          document.documentElement.style.setProperty('--secondary-color', preset.secondary);
+                          document.documentElement.style.setProperty('--glow-color', `${preset.primary}66`);
+                          document.documentElement.style.setProperty('--glow-color-strong', `${preset.primary}99`);
+                        }}
+                        className="px-3 py-2 rounded-full text-xs font-medium text-white transition-all hover:scale-105"
+                        style={{ 
+                          background: `linear-gradient(135deg, ${preset.primary}, ${preset.secondary})`,
+                          boxShadow: `0 2px 10px ${preset.primary}40`
+                        }}
+                      >
+                        {preset.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Bouton reset */}
+                <button
+                  onClick={() => {
+                    setConcept({ ...concept, primaryColor: '#D91CD2', secondaryColor: '#8b5cf6' });
+                    document.documentElement.style.setProperty('--primary-color', '#D91CD2');
+                    document.documentElement.style.setProperty('--secondary-color', '#8b5cf6');
+                    document.documentElement.style.setProperty('--glow-color', 'rgba(217, 28, 210, 0.4)');
+                    document.documentElement.style.setProperty('--glow-color-strong', 'rgba(217, 28, 210, 0.6)');
+                  }}
+                  className="mt-4 px-4 py-2 rounded-lg text-sm text-white/70 hover:text-white border border-white/20 hover:border-white/40 transition-all"
+                >
+                  🔄 Réinitialiser les couleurs par défaut
+                </button>
+              </div>
+              
               {/* ========================= IDENTITÉ DE L'APPLICATION ========================= */}
               <div className="border border-pink-500/30 rounded-lg p-4 bg-pink-900/10">
                 <h3 className="text-pink-400 font-semibold mb-4">🎨 Identité de l'application</h3>
