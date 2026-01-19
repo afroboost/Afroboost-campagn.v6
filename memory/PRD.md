@@ -233,6 +233,33 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
    - Bouton "🗑️ Effacer" pour nettoyer les logs
    - Stockage dans MongoDB (50 derniers logs)
 
+### Intégration Stripe Checkout + TWINT (19 Jan 2026)
+1. ✅ **Endpoint `/api/create-checkout-session`**:
+   - Création de session Stripe Checkout avec `payment_method_types=['card', 'twint']`
+   - Devise forcée à `currency='chf'` (obligatoire pour TWINT)
+   - Fallback automatique vers `['card']` si TWINT n'est pas disponible sur le compte Stripe
+   - Enregistrement des transactions dans la collection `payment_transactions`
+   - URLs de retour dynamiques construites depuis l'origine frontend
+
+2. ✅ **Endpoint `/api/checkout-status/{session_id}`**:
+   - Vérification du statut de paiement Stripe
+   - Mise à jour de la base de données avec le nouveau statut
+
+3. ✅ **Endpoint `/api/webhook/stripe`**:
+   - Réception des événements Stripe (checkout.session.completed, checkout.session.expired)
+   - Mise à jour automatique du statut des transactions
+
+4. ✅ **Frontend - Flux Stripe Checkout**:
+   - Si `concept.paymentCreditCard` ou `concept.paymentTwint` activé → utilise Stripe Checkout API
+   - Sinon → fallback vers liens de paiement externes (ancien comportement)
+   - Gestion du retour de paiement via paramètres URL (`payment_success`, `session_id`)
+   - Finalisation automatique de la réservation après paiement réussi
+
+5. ✅ **Logos de paiement dans le footer**:
+   - Logo TWINT si `concept.paymentTwint` activé
+   - Logos Visa/Mastercard si `concept.paymentCreditCard` activé
+   - Logo PayPal si `concept.paymentPaypal` activé
+
 ---
 
 ## Technical Architecture
