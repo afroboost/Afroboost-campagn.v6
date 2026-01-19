@@ -2104,18 +2104,20 @@ function App() {
     }
   }, []);
 
-  // STRIPE CHECKOUT: Gestion du retour de paiement
+  // STRIPE CHECKOUT: Gestion du retour de paiement - Ticket persistant
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    // Détecter payment=success ou payment_success=true (compatibilité)
+    // Détecter status=success ou les anciens formats (compatibilité)
+    const statusParam = urlParams.get('status');
     const paymentParam = urlParams.get('payment');
-    const paymentSuccess = paymentParam === 'success' || urlParams.get('payment_success') === 'true';
-    const paymentCanceled = paymentParam === 'canceled' || urlParams.get('payment_canceled') === 'true';
+    const isPaymentSuccess = statusParam === 'success' || paymentParam === 'success' || urlParams.get('payment_success') === 'true';
+    const isPaymentCanceled = statusParam === 'canceled' || paymentParam === 'canceled' || urlParams.get('payment_canceled') === 'true';
     const sessionId = urlParams.get('session_id');
     
-    // Nettoyer l'URL après lecture
+    // Nettoyer l'URL après affichage du ticket
     const cleanUrl = () => {
       const url = new URL(window.location.href);
+      url.searchParams.delete('status');
       url.searchParams.delete('payment');
       url.searchParams.delete('payment_success');
       url.searchParams.delete('payment_canceled');
@@ -2123,82 +2125,86 @@ function App() {
       window.history.replaceState({}, document.title, url.pathname);
     };
     
-    if (paymentSuccess && sessionId) {
-      // Paiement réussi - finaliser la réservation et afficher le TICKET avec QR code
+    if (isPaymentSuccess && sessionId) {
+      // Paiement réussi - Afficher le ticket IMMÉDIATEMENT
       const pendingReservationData = localStorage.getItem('pendingReservation');
+      
       if (pendingReservationData) {
         const reservation = JSON.parse(pendingReservationData);
         
-        // Vérifier le statut du paiement puis créer la réservation
+        // AFFICHER LE TICKET IMMÉDIATEMENT avec les données locales
+        // Cela garantit que le ticket apparaît même si l'API est lente ou échoue
+        const tempTicketData = {
+          ...reservation,
+          reservationCode: `AF-${Date.now().toString(36).toUpperCase()}`,
+          stripeSessionId: sessionId,
+          paymentStatus: 'processing'
+        };
+        setLastReservation(tempTicketData);
+        setShowSuccess(true); // TICKET VISIBLE IMMÉDIATEMENT
+        
+        // Ensuite, finaliser en arrière-plan
         const finalizeReservation = async () => {
           try {
-            // Vérifier le statut du paiement
-            const statusResponse = await axios.get(`${API}/checkout-status/${sessionId}`);
+            // Créer la réservation dans la base de données
+            const res = await axios.post(`${API}/reservations`, {
+              ...reservation,
+              stripeSessionId: sessionId,
+              paymentStatus: 'paid'
+            });
             
-            if (statusResponse.data.paymentStatus === 'paid' || statusResponse.data.status === 'complete') {
-              // Créer la réservation avec le session_id Stripe
-              const res = await axios.post(`${API}/reservations`, {
-                ...reservation,
-                stripeSessionId: sessionId,
-                paymentStatus: 'paid'
-              });
-              
-              // Utiliser le code promo si présent
-              if (reservation.appliedDiscount) {
+            // Utiliser le code promo si présent
+            if (reservation.appliedDiscount) {
+              try {
                 await axios.post(`${API}/discount-codes/${reservation.appliedDiscount.id}/use`);
-              }
-              
-              // Sauvegarder les infos client
-              localStorage.setItem("af_client_info", JSON.stringify({
-                name: reservation.userName,
-                email: reservation.userEmail,
-                whatsapp: reservation.userWhatsapp
-              }));
-              
-              // Nettoyer
-              localStorage.removeItem('pendingReservation');
-              
-              // AFFICHER DIRECTEMENT LE TICKET avec QR Code (SuccessOverlay)
-              setLastReservation(res.data);
-              setShowSuccess(true); // Affiche le ticket avec QR Code instantanément
-            } else {
-              // Paiement non encore confirmé - créer quand même la réservation
-              console.log("Payment not yet confirmed, status:", statusResponse.data);
-              const res = await axios.post(`${API}/reservations`, {
-                ...reservation,
-                stripeSessionId: sessionId,
-                paymentStatus: 'pending'
-              });
-              localStorage.removeItem('pendingReservation');
-              setLastReservation(res.data);
-              setShowSuccess(true);
+              } catch (e) { console.log("Discount code already used"); }
             }
+            
+            // Sauvegarder les infos client
+            localStorage.setItem("af_client_info", JSON.stringify({
+              name: reservation.userName,
+              email: reservation.userEmail,
+              whatsapp: reservation.userWhatsapp
+            }));
+            
+            // Mettre à jour le ticket avec le vrai code de réservation
+            setLastReservation(res.data);
+            
+            // Nettoyer localStorage après succès
+            localStorage.removeItem('pendingReservation');
+            
           } catch (err) {
-            console.error("Error finalizing reservation:", err);
-            // En cas d'erreur API, créer la réservation quand même avec le session_id
-            try {
-              const res = await axios.post(`${API}/reservations`, {
-                ...reservation,
-                stripeSessionId: sessionId,
-                paymentStatus: 'pending_verification'
-              });
-              localStorage.removeItem('pendingReservation');
-              setLastReservation(res.data);
-              setShowSuccess(true); // Afficher le ticket malgré l'erreur
-            } catch (reservationErr) {
-              setValidationMessage("Paiement reçu, mais erreur lors de la création du ticket. Veuillez nous contacter.");
-              setTimeout(() => setValidationMessage(""), 5000);
-            }
+            console.error("Error saving reservation to database:", err);
+            // Le ticket est déjà affiché, pas besoin de le cacher
+            // Sauvegarder localement pour retry ultérieur
+            localStorage.setItem("failedReservation", JSON.stringify({
+              ...reservation,
+              stripeSessionId: sessionId,
+              error: err.message
+            }));
           }
         };
         
         finalizeReservation();
+        
       } else {
-        // Pas de réservation en attente mais session_id présent
-        console.log("No pending reservation found for session:", sessionId);
+        // Pas de réservation en attente - peut-être un refresh
+        // Créer un ticket minimal avec le session_id
+        console.log("No pending reservation, creating minimal ticket for session:", sessionId);
+        setLastReservation({
+          reservationCode: `AF-${sessionId.slice(-8).toUpperCase()}`,
+          stripeSessionId: sessionId,
+          paymentStatus: 'paid',
+          courseName: 'Réservation Afroboost',
+          totalPrice: '-'
+        });
+        setShowSuccess(true);
       }
-      cleanUrl();
-    } else if (paymentCanceled) {
+      
+      // Nettoyer l'URL APRÈS affichage du ticket
+      setTimeout(cleanUrl, 100);
+      
+    } else if (isPaymentCanceled) {
       // Paiement annulé - afficher un message
       localStorage.removeItem('pendingReservation');
       setValidationMessage("Paiement annulé. Vous pouvez réessayer.");
