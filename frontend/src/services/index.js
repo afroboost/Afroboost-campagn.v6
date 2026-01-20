@@ -43,5 +43,9 @@ export {
 export {
   sendEmailGateway,
   sendWhatsAppGateway,
-  sendMessageGateway
+  sendMessageGateway,
+  // === LIAISONS IA (SOUDURES) ===
+  sendAIResponseViaEmail,
+  sendAIResponseViaWhatsApp,
+  dispatchAIResponse
 } from './messagingGateway';
