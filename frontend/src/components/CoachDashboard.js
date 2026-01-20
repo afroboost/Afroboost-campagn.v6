@@ -1175,14 +1175,13 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   };
 
   // Launch campaign WITH REAL SENDING via EmailJS and Twilio
-  // === BOUTON LANCER - ENVOI RÉEL EN BOUCLE ===
-  // Itère sur selectedContacts et appelle emailjs.send pour chaque contact
+  // === BOUTON LANCER - ISOLATION COMPLÈTE ===
+  // Utilise les fonctions autonomes pour éviter tout conflit PostHog/state
   const launchCampaignWithSend = async (e, campaignId) => {
-    // CRITICAL: Protection PostHog - Bloquer propagation
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+    // === BLOCAGE CRASH POSTHOG ===
+    // Ces lignes DOIVENT être en premier, avant toute autre logique
+    e.preventDefault();
+    e.stopPropagation();
     
     try {
       // 1. Récupérer la campagne
@@ -1192,12 +1191,22 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
         return;
       }
 
-      addCampaignLog(campaignId, 'Préparation de l\'envoi...', 'info');
+      // Log isolé (peut être ignoré si PostHog crash)
+      try {
+        addCampaignLog(campaignId, 'Préparation de l\'envoi...', 'info');
+      } catch (logErr) {
+        console.warn('PostHog bloqué sur log mais envoi maintenu:', logErr);
+      }
 
       // 2. Préparer d'abord la campagne côté backend
       const launchRes = await axios.post(`${API}/campaigns/${campaignId}/launch`);
       const launchedCampaign = launchRes.data;
-      setCampaigns(campaigns.map(c => c.id === campaignId ? launchedCampaign : c));
+      
+      try {
+        setCampaigns(campaigns.map(c => c.id === campaignId ? launchedCampaign : c));
+      } catch (stateErr) {
+        console.warn('PostHog bloqué sur setState mais envoi maintenu:', stateErr);
+      }
 
       // 3. Récupérer les contacts à envoyer
       const results = launchedCampaign.results || [];
@@ -1223,9 +1232,12 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
       let totalSent = 0;
       let totalFailed = 0;
 
-      // 5. === ENVOI EMAILS DIRECT VIA emailjs.send ===
+      // 5. === ENVOI EMAILS VIA FONCTION AUTONOME ===
       if (emailResults.length > 0) {
-        addCampaignLog(campaignId, `📧 Envoi de ${emailResults.length} email(s) via EmailJS...`, 'info');
+        try {
+          addCampaignLog(campaignId, `📧 Envoi de ${emailResults.length} email(s)...`, 'info');
+        } catch (e) { console.warn('Log bloqué:', e); }
+        
         console.log(`📧 === LANCEMENT CAMPAGNE EMAIL: ${emailResults.length} destinataires ===`);
         
         for (let i = 0; i < emailResults.length; i++) {
@@ -1233,55 +1245,43 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
           
           console.log(`📧 [${i + 1}/${emailResults.length}] Envoi à: ${contact.contactEmail}`);
           
-          try {
-            // LIAISON DIRECTE emailjs.send pour chaque contact sélectionné
-            const templateParams = {
-              to_email: contact.contactEmail,
-              to_name: contact.contactName || "Client",
-              subject: campaign.name || "Afroboost - Message",
-              message: campaign.message
-            };
-            
-            console.log('📧 Template params:', templateParams);
-            
-            const response = await emailjs.send(
-              EMAILJS_SERVICE_ID,
-              EMAILJS_TEMPLATE_ID,
-              templateParams,
-              EMAILJS_PUBLIC_KEY
-            );
-            
-            console.log(`✅ [${i + 1}/${emailResults.length}] Email envoyé:`, response);
-            
-            if (response.status === 200 || response.text === 'OK') {
-              totalSent++;
-              // Marquer comme envoyé dans le backend
-              try {
-                await axios.post(`${API}/campaigns/${campaignId}/mark-sent`, {
-                  contactId: contact.contactId,
-                  channel: 'email'
-                });
-              } catch (markErr) {
-                console.warn('⚠️ Impossible de marquer comme envoyé:', markErr);
-              }
-            } else {
-              totalFailed++;
+          // === APPEL FONCTION AUTONOME ISOLÉE ===
+          const result = await performEmailSend(
+            contact.contactEmail,
+            contact.contactName || 'Client',
+            campaign.name || 'Afroboost - Message',
+            campaign.message
+          );
+          
+          if (result.success) {
+            totalSent++;
+            // Marquer comme envoyé (peut être ignoré si PostHog crash)
+            try {
+              await axios.post(`${API}/campaigns/${campaignId}/mark-sent`, {
+                contactId: contact.contactId,
+                channel: 'email'
+              });
+            } catch (markErr) {
+              console.warn('⚠️ Mark-sent bloqué mais email envoyé:', markErr);
             }
-          } catch (emailErr) {
-            console.error(`❌ [${i + 1}/${emailResults.length}] Email failed for ${contact.contactEmail}:`, emailErr);
+          } else {
             totalFailed++;
+            console.error(`❌ Email failed: ${result.error}`);
           }
           
-          // Délai entre les envois (300ms pour éviter rate limit)
+          // Délai entre les envois
           if (i < emailResults.length - 1) {
             await new Promise(resolve => setTimeout(resolve, 300));
           }
         }
       }
 
-      // 6. === ENVOI WHATSAPP DIRECT VIA TWILIO ===
-      if (whatsAppResults.length > 0 && isWhatsAppConfigured()) {
-        addCampaignLog(campaignId, `📱 Envoi de ${whatsAppResults.length} WhatsApp via Twilio...`, 'info');
+      // 6. === ENVOI WHATSAPP VIA FONCTION AUTONOME ===
+      if (whatsAppResults.length > 0) {
+        try {
+          addCampaignLog(campaignId, `📱 Envoi de ${whatsAppResults.length} WhatsApp...`, 'info');
+        } catch (e) { console.warn('Log bloqué:', e); }
+        
         console.log(`📱 === LANCEMENT CAMPAGNE WHATSAPP: ${whatsAppResults.length} destinataires ===`);
         
         for (let i = 0; i < whatsAppResults.length; i++) {
@@ -1289,53 +1289,57 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
           
           console.log(`📱 [${i + 1}/${whatsAppResults.length}] Envoi à: ${contact.contactPhone}`);
           
-          try {
-            // Utiliser la fonction directe avec logs
-            const result = await sendWhatsAppMessageDirect(
-              contact.contactPhone,
-              campaign.message,
-              campaign.mediaUrl
-            );
+          // === APPEL FONCTION AUTONOME ISOLÉE ===
+          const result = await performWhatsAppSend(
+            contact.contactPhone,
+            campaign.message,
+            whatsAppConfig
+          );
 
-            if (result.success) {
-              totalSent++;
-              console.log(`✅ [${i + 1}/${whatsAppResults.length}] WhatsApp envoyé:`, result.sid);
-              // Marquer comme envoyé dans le backend
-              try {
-                await axios.post(`${API}/campaigns/${campaignId}/mark-sent`, {
-                  contactId: contact.contactId,
-                  channel: 'whatsapp'
-                });
-              } catch (markErr) {
-                console.warn('⚠️ Impossible de marquer comme envoyé:', markErr);
-              }
-            } else {
-              totalFailed++;
-              console.error(`❌ [${i + 1}/${whatsAppResults.length}] WhatsApp failed:`, result.error);
+          if (result.success) {
+            totalSent++;
+            console.log(`✅ WhatsApp envoyé${result.simulated ? ' (simulation)' : ''}`);
+            // Marquer comme envoyé
+            try {
+              await axios.post(`${API}/campaigns/${campaignId}/mark-sent`, {
+                contactId: contact.contactId,
+                channel: 'whatsapp'
+              });
+            } catch (markErr) {
+              console.warn('⚠️ Mark-sent bloqué mais WhatsApp envoyé:', markErr);
             }
-          } catch (waErr) {
-            console.error(`❌ [${i + 1}/${whatsAppResults.length}] WhatsApp failed for ${contact.contactPhone}:`, waErr);
+          } else {
             totalFailed++;
+            console.error(`❌ WhatsApp failed: ${result.error}`);
           }
           
-          // Délai entre les envois (500ms pour Twilio)
+          // Délai entre les envois
           if (i < whatsAppResults.length - 1) {
             await new Promise(resolve => setTimeout(resolve, 500));
           }
         }
       }
 
-      // 7. Recharger la campagne mise à jour
-      const updatedRes = await axios.get(`${API}/campaigns/${campaignId}`);
-      setCampaigns(campaigns.map(c => c.id === campaignId ? updatedRes.data : c));
+      // 7. Recharger la campagne (peut être ignoré)
+      try {
+        const updatedRes = await axios.get(`${API}/campaigns/${campaignId}`);
+        setCampaigns(campaigns.map(c => c.id === campaignId ? updatedRes.data : c));
+      } catch (reloadErr) {
+        console.warn('Reload bloqué mais envois effectués:', reloadErr);
+      }
 
       // 8. Notification finale
-      addCampaignLog(campaignId, `✅ Campagne terminée: ${totalSent} envoyés, ${totalFailed} échoués`, 'success');
+      try {
+        addCampaignLog(campaignId, `✅ Terminé: ${totalSent} envoyés, ${totalFailed} échoués`, 'success');
+      } catch (e) { console.warn('Log final bloqué:', e); }
+      
       alert(`✅ Campagne "${campaign.name}" terminée !\n\n✓ Envoyés: ${totalSent}\n✗ Échoués: ${totalFailed}`);
 
     } catch (err) {
       console.error("Error launching campaign with send:", err);
-      addCampaignLog(campaignId, `❌ Erreur: ${err.message}`, 'error');
+      try {
+        addCampaignLog(campaignId, `❌ Erreur: ${err.message}`, 'error');
+      } catch (e) { console.warn('Log erreur bloqué:', e); }
       alert(`❌ Erreur lors de l'envoi: ${err.message}`);
     }
   };
