@@ -3716,7 +3716,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                       <div className="space-y-2">
                         <button 
                           type="button"
-                          onClick={handleSendEmailCampaign}
+                          onClick={(e) => handleSendEmailCampaign(e)}
                           disabled={emailSendingProgress !== null || !isEmailJSConfigured()}
                           className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-center font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
