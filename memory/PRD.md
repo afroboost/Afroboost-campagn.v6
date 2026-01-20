@@ -565,6 +565,35 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
   - **Tests** : 10/10 backend pytest passés
   - **Onglets inchangés** : Paiements et Réservations non modifiés
 
+### Correction Bug DataCloneError PostHog + EmailJS/Twilio (20 Jan 2026)
+1. ✅ **Fix DataCloneError PostHog**:
+   - Configuration PostHog mise à jour dans `index.html` (lignes 198-209)
+   - `capture_performance: false` - Empêche le clonage de PerformanceServerTiming
+   - `disable_session_recording: true` - Désactive l'enregistrement de session
+   - `autocapture: false` - Désactive la capture automatique des événements
+
+2. ✅ **Isolation des handlers avec try/catch**:
+   - `handleTestEmailJS` - `e.preventDefault()` + `e.stopPropagation()` + try/catch
+   - `handleTestWhatsApp` - `e.preventDefault()` + `e.stopPropagation()` + try/catch
+   - `handleSendWhatsAppCampaign` - `e.preventDefault()` + `e.stopPropagation()` + try/catch
+
+3. ✅ **Payload EmailJS plat**:
+   - `emailService.js` utilise un objet JSON plat avec `String()` conversion
+   - IDs par défaut : `service_8mrmxim`, `template_3n1u86p`, `5LfgQSIEQoqq_XSqt`
+
+4. ✅ **WhatsApp config async**:
+   - `handleSaveWhatsAppConfig` converti en `async` pour gérer correctement la sauvegarde
+   - Appel `await saveWhatsAppConfig(whatsAppConfig)` avant les tests
+
+5. ✅ **data-testid ajoutés**:
+   - `data-testid="test-email-btn"` et `data-testid="test-email-input"`
+   - `data-testid="test-whatsapp-btn"`
+
+6. ✅ **Tests automatisés**:
+   - 14/14 tests passés (`/app/tests/test_dataclone_fix.py`)
+   - Backend: 5/5 API tests (health, whatsapp-config GET/PUT, campaigns GET)
+   - Frontend: 9/9 code implementation tests
+
 ### P1 - À faire
 - [x] ~~**CRITICAL: Refactoring de App.js**~~ - ✅ COMPLÉTÉ - App.js réduit de 52%
 - [x] ~~**Notifications email après réservation**~~ - ✅ COMPLÉTÉ
@@ -572,6 +601,9 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
 - [x] ~~**Duplication cours**~~ - ✅ COMPLÉTÉ
 - [x] ~~**Séparation Cours/Produits**~~ - ✅ COMPLÉTÉ
 - [x] ~~**Archivage cours**~~ - ✅ COMPLÉTÉ
+- [x] ~~**Correction Bug DataCloneError**~~ - ✅ COMPLÉTÉ (20 Jan 2026)
+- [ ] **Migration CSS variables** : Refactoriser les styles inline (`style={{ color: '#D91CD2' }}`) pour utiliser les variables CSS `--primary-color` et `--glow-color`
+- [ ] **Lecteur Audio Côté Client** : Implémenter le lecteur audio sur la page publique pour les cours ayant une playlist
 - [ ] **Optimisation Backend MongoDB** - Appliquer pagination et projection sur les requêtes pour améliorer les performances en production.
 - [ ] Continuer refactoring: Extraire CoachLoginModal dans composant séparé
 - [ ] Tests automatisés pour les composants extraits
