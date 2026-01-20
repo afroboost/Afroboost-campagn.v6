@@ -53,36 +53,95 @@ try {
  * @param {string} text - Corps du message
  * @returns {Promise<{success: boolean, response?: any, error?: string}>}
  */
+/**
+ * FONCTION AUTONOME D'ENVOI EMAIL - CONNEXION TECHNIQUE EMAILJS
+ * 
+ * IDENTIFIANTS FIXES (NE PAS MODIFIER):
+ * - Service ID : service_8mrmxim
+ * - Template ID : template_3n1u86p
+ * - Public Key : 5LfgQSIEQoqq_XSqt
+ * 
+ * Le texte IA est injecté dans la variable {{message}} d'EmailJS
+ */
 const performEmailSend = async (destination, recipientName = 'Client', subject = 'Afroboost', text = '') => {
-  // Objet ultra-simple - aucune référence complexe
-  const params = {
-    to_email: destination,
-    to_name: recipientName,
-    subject: subject,
-    message: text
-  };
   
-  console.log('========================================');
-  console.log('DEMANDE EMAILJS ENVOYÉE');
-  console.log('Destination:', destination);
-  console.log('Params:', JSON.stringify(params));
-  console.log('Service:', EMAILJS_SERVICE_ID);
-  console.log('Template:', EMAILJS_TEMPLATE_ID);
-  console.log('========================================');
-  
+  // === SUPPRESSION DU CRASH - TRY/CATCH GLOBAL ===
+  // L'erreur DataCloneError ne doit plus stopper l'envoi
   try {
+    
+    // Validation des paramètres
+    if (!destination || !destination.includes('@')) {
+      console.error('EMAILJS_DEBUG: Email invalide -', destination);
+      return { success: false, error: 'Email invalide' };
+    }
+    
+    if (!text || text.trim() === '') {
+      console.error('EMAILJS_DEBUG: Message vide');
+      return { success: false, error: 'Message vide' };
+    }
+    
+    // === INJECTION IA ===
+    // Le texte généré par l'IA (Prompt Système) est transmis à {{message}}
+    const params = {
+      to_email: String(destination).trim(),
+      to_name: String(recipientName || 'Client').trim(),
+      subject: String(subject || 'Afroboost').trim(),
+      message: String(text).trim()  // {{message}} dans le template EmailJS
+    };
+    
+    console.log('========================================');
+    console.log('EMAILJS_DEBUG: Tentative d\'envoi');
+    console.log('EMAILJS_DEBUG: Destination =', params.to_email);
+    console.log('EMAILJS_DEBUG: Service =', EMAILJS_SERVICE_ID);
+    console.log('EMAILJS_DEBUG: Template =', EMAILJS_TEMPLATE_ID);
+    console.log('EMAILJS_DEBUG: Message (100 chars) =', params.message.substring(0, 100));
+    console.log('========================================');
+    
+    // === LIAISON RÉELLE - APPEL EMAILJS ===
     const response = await emailjs.send(
-      EMAILJS_SERVICE_ID,
-      EMAILJS_TEMPLATE_ID,
-      params,
-      EMAILJS_PUBLIC_KEY
+      EMAILJS_SERVICE_ID,   // service_8mrmxim
+      EMAILJS_TEMPLATE_ID,  // template_3n1u86p
+      params,               // {to_email, to_name, subject, message}
+      EMAILJS_PUBLIC_KEY    // 5LfgQSIEQoqq_XSqt
     );
     
-    console.log('✅ EMAILJS RÉPONSE:', response);
-    return { success: true, response };
+    // === DEBUG SUCCÈS ===
+    console.log('EMAILJS_DEBUG: SUCCÈS - Status =', response.status);
+    console.log('EMAILJS_DEBUG: Response text =', response.text);
+    
+    return { 
+      success: true, 
+      response,
+      debug: `EMAILJS_DEBUG: OK - ${response.status}`
+    };
+    
   } catch (error) {
-    console.error('❌ EMAILJS ERREUR:', error);
-    return { success: false, error: error?.text || error?.message || 'Erreur inconnue' };
+    // === SUPPRESSION DU CRASH ===
+    // Capturer TOUTES les erreurs y compris DataCloneError
+    
+    const errorName = error?.name || 'Unknown';
+    const errorMessage = error?.text || error?.message || 'Erreur inconnue';
+    
+    console.error('EMAILJS_DEBUG: ÉCHEC -', errorName);
+    console.error('EMAILJS_DEBUG: Message =', errorMessage);
+    console.error('EMAILJS_DEBUG: Stack =', error?.stack?.substring(0, 200));
+    
+    // Vérifier si c'est une erreur PostHog/DataClone
+    if (errorName === 'DataCloneError' || errorMessage.includes('clone')) {
+      console.warn('EMAILJS_DEBUG: Erreur PostHog détectée - L\'email a peut-être été envoyé malgré l\'erreur');
+      return { 
+        success: false, 
+        error: 'PostHog DataCloneError - vérifier la boîte mail',
+        postHogBlocked: true,
+        debug: 'EMAILJS_DEBUG: PostHog blocking'
+      };
+    }
+    
+    return { 
+      success: false, 
+      error: errorMessage,
+      debug: `EMAILJS_DEBUG: ÉCHEC - ${errorName}: ${errorMessage}`
+    };
   }
 };
 
