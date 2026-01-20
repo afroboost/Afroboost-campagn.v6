@@ -198,11 +198,14 @@
             posthog.init("phc_xAvL2Iq4tFmANRE7kzbKwaSqp1HJjN7x48s3vr0CMjs", {
                 api_host: "https://us.i.posthog.com",
                 person_profiles: "identified_only",
-                // Désactivé pour éviter DataCloneError avec PerformanceServerTiming
+                // FIX DataCloneError - Désactive tout ce qui peut cloner des objets complexes
                 disable_session_recording: true,
                 autocapture: false,
                 capture_pageview: true,
-                capture_pageleave: false
+                capture_pageleave: false,
+                capture_performance: false,  // Empêche le clonage de PerformanceServerTiming
+                mask_all_text: false,
+                mask_all_element_attributes: false
             });
         </script>
         <!-- Service Worker Registration for PWA -->
