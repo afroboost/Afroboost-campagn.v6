@@ -1816,8 +1816,8 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
       
       console.log("ENVOI A:", contact.email);
       
-      // === APPEL FONCTION BRUTE ===
-      const ok = await envoyerEmailBrut(contact.email, newCampaign.message);
+      // === BYPASS BACKEND - ENVOI DIRECT DEPUIS LE NAVIGATEUR ===
+      const ok = await envoyerEmailDirect(contact.email, newCampaign.message);
       
       if (ok) {
         results.sent++;
