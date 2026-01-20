@@ -98,6 +98,50 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
 - Frontend: Toutes les fonctionnalités vérifiées
 - Tests spécifiques campagnes: 8/8 passés
 
+### Correction Bug DataCloneError PostHog + EmailJS/Twilio (20 Jan 2026)
+1. ✅ **Fix DataCloneError PostHog**:
+   - Configuration PostHog mise à jour dans `index.html` (lignes 198-209)
+   - `capture_performance: false` - Empêche le clonage de PerformanceServerTiming
+   - `disable_session_recording: true` - Désactive l'enregistrement de session
+   - `autocapture: false` - Désactive la capture automatique des événements
+
+2. ✅ **Protection handlers avec e.preventDefault() + e.stopPropagation()**:
+   - `handleTestEmailJS` - Protection complète avec try/catch
+   - `handleTestWhatsApp` - Protection complète avec try/catch
+   - `handleSendEmailCampaign` - Protection complète
+   - `handleSendWhatsAppCampaign` - Protection complète
+   - `handleBulkSendCampaign` - Protection complète avec notifications
+   - `launchCampaignWithSend` - **NOUVEAU**: Itère sur les contacts et envoie réellement
+
+3. ✅ **Payload EmailJS plat (service `emailService.js`)**:
+   - Objet JSON plat avec `String()` conversion
+   - IDs par défaut : `service_8mrmxim`, `template_3n1u86p`, `5LfgQSIEQoqq_XSqt`
+   - Pas de références complexes (évite DataCloneError)
+
+4. ✅ **WhatsApp/Twilio service (`whatsappService.js`)**:
+   - Utilise `accountSid`, `authToken`, `fromNumber` depuis le state
+   - Appel API Twilio avec Basic Auth
+   - Payload: uniquement phone + message (pas d'objets complexes)
+
+5. ✅ **Bouton "Lancer" amélioré**:
+   - `launchCampaignWithSend` itère sur tous les contacts
+   - Envoie emails via EmailJS ET WhatsApp via Twilio
+   - Marque chaque contact comme "envoyé" dans le backend
+   - Notification de progression et de succès
+
+6. ✅ **data-testid ajoutés pour tests automatisés**:
+   - `test-email-btn`, `test-email-input`
+   - `test-whatsapp-btn`
+   - `send-email-campaign-btn`
+   - `send-whatsapp-campaign-btn`
+   - `bulk-send-campaign-btn`
+   - `launch-campaign-${campaign.id}`
+
+7. ✅ **Tests automatisés** (`/app/tests/test_campaign_buttons.py`):
+   - 27/27 tests passés
+   - Backend: 3/3 API tests (health, whatsapp-config, campaigns)
+   - Frontend: 24/24 code implementation tests
+
 ### Corrections Bug Fixes (15 Jan 2026)
 1. ✅ **Scanner QR amélioré**:
    - Test direct de la caméra avant initialisation html5-qrcode
