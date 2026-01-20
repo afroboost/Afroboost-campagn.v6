@@ -1755,69 +1755,37 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
       return;
     }
 
-    console.log('EMAILJS_DEBUG: Contacts à envoyer =', emailContacts.length);
+    console.log('CAMPAGNE: Contacts =', emailContacts.length);
 
-    // Réinitialiser
     setEmailSendingResults(null);
     setEmailSendingProgress({ current: 0, total: emailContacts.length, status: 'starting' });
 
-    // === ENVOI DIRECT AVEC IDS HARDCODÉS ===
-    const results = {
-      sent: 0,
-      failed: 0,
-      errors: [],
-      details: []
-    };
+    const results = { sent: 0, failed: 0, errors: [] };
 
-    // === INITIALISATION AU MONTAGE (OBLIGATOIRE) ===
-    try {
-      emailjs.init("5LfgQSIEQoqq_XSqt");
-      console.log('EMAILJS_DEBUG: SDK initialisé avant envoi');
-    } catch (initErr) {
-      console.warn('EMAILJS_DEBUG: Init warning:', initErr);
-    }
-
+    // === BOUCLE ENVOI BRUT ===
     for (let i = 0; i < emailContacts.length; i++) {
       const contact = emailContacts[i];
       
-      // === VÉRIFICATION QUE L'EMAIL N'EST PAS VIDE ===
-      if (!contact.email || contact.email.trim() === '') {
-        console.error(`EMAILJS_DEBUG: [${i + 1}] Email VIDE - ignoré`);
+      if (!contact.email) {
         results.failed++;
-        results.errors.push('Email vide');
         continue;
       }
       
-      try {
-        setEmailSendingProgress({ 
-          current: i + 1, 
-          total: emailContacts.length, 
-          status: 'sending', 
-          name: contact.name || contact.email 
-        });
-      } catch (stateErr) {
-        // Ignorer - PostHog
+      console.log("ENVOI A:", contact.email);
+      
+      // === APPEL FONCTION BRUTE ===
+      const ok = await envoyerEmailBrut(contact.email, newCampaign.message);
+      
+      if (ok) {
+        results.sent++;
+      } else {
+        results.failed++;
+        results.errors.push(contact.email);
       }
-
-      console.log(`EMAILJS_DEBUG: [${i + 1}/${emailContacts.length}] Envoi à ${contact.email}...`);
-
-      // === SOUDURE IA-EMAIL ===
-      // La variable {{message}} reçoit le texte produit par l'IA (personnalité coach)
-      const templateParams = {
-        to_email: contact.email,
-        to_name: contact.name || "Client",
-        message: newCampaign.message,  // ← Texte IA injecté dans {{message}}
-        subject: "Votre programme Afroboost"
-      };
-
-      console.log('EMAILJS_DEBUG: templateParams =', JSON.stringify(templateParams));
-
-      // === BYPASS DU CRASH - TRY/CATCH AUTOUR DE L'ENVOI ===
-      try {
-        const response = await emailjs.send(
-          "service_8mrmxim",
-          "template_3n1u86p",
-          templateParams,
+      
+      // Délai
+      await new Promise(r => setTimeout(r, 300));
+    }
           "5LfgQSIEQoqq_XSqt"
         );
 
