@@ -566,16 +566,18 @@ export const ChatWidget = () => {
         </button>
       )}
 
-      {/* Fenêtre de chat */}
+      {/* Fenêtre de chat - Responsive */}
       {isOpen && (
         <div
-          className="fixed z-50 shadow-2xl"
+          className="chat-widget-window fixed z-50 shadow-2xl"
           style={{
             bottom: '80px',
             right: '20px',
-            width: '340px',
+            width: '380px',
             maxWidth: 'calc(100vw - 40px)',
-            maxHeight: '80vh',
+            height: '70vh',
+            maxHeight: '85vh',
+            minHeight: '400px',
             borderRadius: '16px',
             background: '#0a0a0a',
             border: '1px solid rgba(217, 28, 210, 0.3)',
