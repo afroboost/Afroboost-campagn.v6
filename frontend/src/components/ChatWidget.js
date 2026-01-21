@@ -156,23 +156,72 @@ export const ChatWidget = () => {
         // Si le dernier message n'est pas de l'utilisateur actuel, notification
         if (latestMessage.sender_id !== participantId && latestMessage.sender_type !== 'user') {
           playNotificationSound('coach');
-          
-          // Mettre à jour les messages
-          const formattedMessages = newMessages.map(m => ({
-            id: m.id,
-            type: m.sender_type === 'user' ? 'user' : m.sender_type === 'coach' ? 'coach' : 'ai',
-            text: m.content,
-            sender: m.sender_name
-          }));
-          setMessages(formattedMessages);
         }
         
+        // Mettre à jour les messages avec senderId pour la fonctionnalité de chat privé
+        const formattedMessages = newMessages.map(m => ({
+          id: m.id,
+          type: m.sender_type === 'user' ? 'user' : m.sender_type === 'coach' ? 'coach' : 'ai',
+          text: m.content,
+          sender: m.sender_name,
+          senderId: m.sender_id
+        }));
+        setMessages(formattedMessages);
         setLastMessageCount(newMessages.length);
       }
     } catch (err) {
       console.warn('Polling error:', err);
     }
   }, [sessionData, participantId, lastMessageCount]);
+
+  // === DÉMARRER UNE DISCUSSION PRIVÉE ===
+  const startPrivateChat = async (targetId, targetName) => {
+    if (!participantId || !targetId) return;
+    
+    const confirm = window.confirm(`💬 Voulez-vous démarrer une discussion privée avec ${targetName} ?`);
+    if (!confirm) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await axios.post(`${API}/chat/start-private`, {
+        initiator_id: participantId,
+        target_id: targetId,
+        community_session_id: sessionData?.id
+      });
+      
+      const { session, is_new, message } = response.data;
+      
+      // Sauvegarder la nouvelle session
+      localStorage.setItem(CHAT_SESSION_KEY, JSON.stringify(session));
+      setSessionData(session);
+      setIsCommunityMode(false);
+      setPrivateChatTarget({ id: targetId, name: targetName });
+      
+      // Charger les messages de la nouvelle session
+      const messagesRes = await axios.get(`${API}/chat/sessions/${session.id}/messages`);
+      const formattedMessages = messagesRes.data.map(m => ({
+        id: m.id,
+        type: m.sender_type === 'user' ? 'user' : m.sender_type === 'coach' ? 'coach' : 'ai',
+        text: m.content,
+        sender: m.sender_name,
+        senderId: m.sender_id
+      }));
+      
+      setMessages([
+        { type: 'ai', text: message },
+        ...formattedMessages
+      ]);
+      setLastMessageCount(formattedMessages.length + 1);
+      
+      playNotificationSound('message');
+      
+    } catch (err) {
+      console.error('Start private chat error:', err);
+      alert('Erreur lors de la création de la discussion privée');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Démarrer le polling quand en mode humain ou communautaire
   useEffect(() => {
