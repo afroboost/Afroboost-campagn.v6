@@ -5509,39 +5509,70 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
               </button>
             </div>
 
-            {/* Section Générer un lien */}
-            <div className="glass rounded-xl p-4" style={{ border: '1px solid rgba(217, 28, 210, 0.3)' }}>
-              <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-                🔗 Générer un lien partageable
-              </h3>
-              <p className="text-white/60 text-xs mb-3">
-                Créez un lien unique à partager sur Instagram, Facebook ou WhatsApp. Les utilisateurs seront automatiquement enregistrés.
-              </p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newLinkTitle}
-                  onChange={(e) => setNewLinkTitle(e.target.value)}
-                  placeholder="Titre du lien (ex: Promo Instagram Janvier)"
-                  className="flex-1 px-3 py-2 rounded-lg text-sm"
-                  style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
-                  data-testid="new-link-title"
-                />
-                <button
-                  onClick={generateShareableLink}
-                  className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
-                  style={{ background: 'linear-gradient(135deg, #d91cd2, #8b5cf6)', color: '#fff' }}
-                  data-testid="generate-link-btn"
-                >
-                  ✨ Générer
-                </button>
+            {/* Section Générer liens - IA et Communautaire */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Lien IA partageable */}
+              <div className="glass rounded-xl p-4" style={{ border: '1px solid rgba(217, 28, 210, 0.3)' }}>
+                <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                  🔗 Lien Chat IA
+                </h3>
+                <p className="text-white/60 text-xs mb-3">
+                  Créez un lien avec l'IA activée pour Instagram, Facebook ou WhatsApp.
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newLinkTitle}
+                    onChange={(e) => setNewLinkTitle(e.target.value)}
+                    placeholder="Titre du lien"
+                    className="flex-1 px-3 py-2 rounded-lg text-sm"
+                    style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
+                    data-testid="new-link-title"
+                  />
+                  <button
+                    onClick={generateShareableLink}
+                    className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                    style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', color: '#fff' }}
+                    data-testid="generate-link-btn"
+                  >
+                    🤖 Créer
+                  </button>
+                </div>
+              </div>
+
+              {/* Chat Communautaire */}
+              <div className="glass rounded-xl p-4" style={{ border: '1px solid rgba(139, 92, 246, 0.3)' }}>
+                <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                  👥 Chat Communautaire
+                </h3>
+                <p className="text-white/60 text-xs mb-3">
+                  Créez un groupe 100% humain (sans IA) pour plusieurs participants.
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newLinkTitle}
+                    onChange={(e) => setNewLinkTitle(e.target.value)}
+                    placeholder="Nom du groupe"
+                    className="flex-1 px-3 py-2 rounded-lg text-sm"
+                    style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
+                  />
+                  <button
+                    onClick={createCommunityChat}
+                    className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                    style={{ background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', color: '#fff' }}
+                    data-testid="create-community-btn"
+                  >
+                    👥 Créer
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Liste des liens générés */}
             <div className="glass rounded-xl p-4" style={{ border: '1px solid rgba(217, 28, 210, 0.2)' }}>
               <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-                📋 Liens générés ({chatLinks.length})
+                📋 Liens & Groupes ({chatLinks.length})
               </h3>
               {chatLinks.length === 0 ? (
                 <p className="text-white/50 text-sm text-center py-4">Aucun lien généré pour le moment</p>
@@ -5556,7 +5587,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                       <div className="flex-1 min-w-0">
                         <div className="text-white text-sm font-medium truncate">{link.title || 'Lien sans titre'}</div>
                         <div className="text-white/50 text-xs">
-                          {link.participant_count || 0} participant(s) • Mode: {link.is_ai_active ? '🤖 IA' : '👤 Humain'}
+                          {link.participant_count || 0} participant(s) • Mode: {link.mode === 'community' ? '👥 Communauté' : link.is_ai_active ? '🤖 IA' : '👤 Humain'}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
