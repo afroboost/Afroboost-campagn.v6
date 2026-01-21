@@ -11,12 +11,40 @@ from typing import List, Optional
 import uuid
 from datetime import datetime, timezone, timedelta
 import stripe
+import asyncio
+import json
+
+# Web Push imports
+try:
+    from pywebpush import webpush, WebPushException
+    WEBPUSH_AVAILABLE = True
+except ImportError:
+    WEBPUSH_AVAILABLE = False
+    logger = logging.getLogger(__name__)
+    logger.warning("pywebpush not installed - push notifications disabled")
+
+# Resend import
+try:
+    import resend
+    RESEND_AVAILABLE = True
+except ImportError:
+    RESEND_AVAILABLE = False
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 # Stripe configuration - utilise la variable d'environnement existante
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
+
+# VAPID configuration for Web Push
+VAPID_PUBLIC_KEY = os.environ.get('VAPID_PUBLIC_KEY', '')
+VAPID_PRIVATE_KEY = os.environ.get('VAPID_PRIVATE_KEY', '')
+VAPID_CLAIMS_EMAIL = os.environ.get('VAPID_CLAIMS_EMAIL', 'contact@afroboost.ch')
+
+# Resend configuration
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
+if RESEND_AVAILABLE and RESEND_API_KEY:
+    resend.api_key = RESEND_API_KEY
 
 # MongoDB connection - with fallback for production environments
 mongo_url = os.environ.get('MONGO_URL')
