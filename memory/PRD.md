@@ -862,6 +862,9 @@ Les fonctions d'envoi sont maintenant **au niveau module** (hors React) pour év
 - [ ] Envoi Instagram via ig.me
 - [ ] Dashboard analytics pour le coach
 - [ ] Ajouter une vue "Leads" dans le Mode Coach pour visualiser les contacts capturés
+- [ ] Export CSV des contacts CRM
+- [ ] Manuel utilisateur pour le coach
+- [ ] Configurer RESEND_API_KEY pour activer les vraies notifications email
 
 ---
 
