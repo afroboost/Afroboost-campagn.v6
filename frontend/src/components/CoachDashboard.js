@@ -1104,6 +1104,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   const [newLinkTitle, setNewLinkTitle] = useState('');
   const [loadingConversations, setLoadingConversations] = useState(false);
   const [copiedLinkId, setCopiedLinkId] = useState(null);
+  const [conversationSearch, setConversationSearch] = useState(''); // Recherche globale conversations
 
   // Add schedule slot
   const addScheduleSlot = () => {
