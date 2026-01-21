@@ -663,8 +663,30 @@ Les fonctions d'envoi sont maintenant **au niveau module** (hors React) pour év
    - `deleted_at` timestamp pour traçabilité
 
 6. ✅ **Tests API complets**:
-   - 17/17 tests curl passés
+   - 21/21 tests backend pytest (iteration_27)
    - Flux complet testé : génération lien → inscription utilisateur → reconnaissance → messages
+
+### Système de Chat Amélioré - Frontend (21 Jan 2026)
+1. ✅ **ChatWidget amélioré** (`/components/ChatWidget.js`):
+   - Utilise `/api/chat/smart-entry` pour reconnaissance automatique
+   - Stocke participant et session dans localStorage
+   - Restaure l'historique pour les utilisateurs reconnus
+   - Message personnalisé "Ravi de te revoir, {prénom}!"
+   - Support des liens partageables via URL `/chat/{token}`
+
+2. ✅ **Onglet Conversations dans CoachDashboard**:
+   - Section "🔗 Générer un lien partageable" avec titre personnalisé
+   - Liste des liens générés avec bouton copier (clipboard)
+   - Liste des conversations actives avec source identifiée
+   - Toggle visuel 🤖 IA Active / 👤 Mode Humain
+   - Panel de messages avec input réponse coach
+   - Section CRM avec tableau des contacts enregistrés
+
+3. ✅ **Tests Playwright complets**:
+   - Widget visible et cliquable
+   - Formulaire de capture fonctionnel
+   - Mode chat activé après soumission
+   - Reconnaissance utilisateur testée
 
 ### P1 - À faire
 - [x] ~~**CRITICAL: Refactoring de App.js**~~ - ✅ COMPLÉTÉ - App.js réduit de 52%
