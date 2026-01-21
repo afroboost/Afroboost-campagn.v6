@@ -5973,50 +5973,69 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
               </div>
             </div>
 
-            {/* Section CRM - Participants */}
+            {/* Section CRM - Participants avec scroll et suppression */}
             <div className="glass rounded-xl p-4" style={{ border: '1px solid rgba(217, 28, 210, 0.2)' }}>
               <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-                📇 Contacts CRM ({chatParticipants.length})
+                📇 Contacts CRM ({filteredChatParticipants.length}{conversationSearch ? `/${chatParticipants.length}` : ''})
               </h3>
-              {chatParticipants.length === 0 ? (
-                <p className="text-white/50 text-sm text-center py-4">Aucun contact enregistré via le chat</p>
+              {filteredChatParticipants.length === 0 ? (
+                <p className="text-white/50 text-sm text-center py-4">
+                  {conversationSearch ? 'Aucun contact correspondant' : 'Aucun contact enregistré via le chat'}
+                </p>
               ) : (
-                <div className="overflow-x-auto">
+                <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
                   <table className="w-full text-sm">
-                    <thead>
+                    <thead className="sticky top-0" style={{ background: '#0a0a0a' }}>
                       <tr className="text-white/60 text-xs">
                         <th className="text-left py-2 px-2">Nom</th>
-                        <th className="text-left py-2 px-2">Email</th>
-                        <th className="text-left py-2 px-2">WhatsApp</th>
+                        <th className="text-left py-2 px-2 hidden sm:table-cell">Email</th>
+                        <th className="text-left py-2 px-2 hidden md:table-cell">WhatsApp</th>
                         <th className="text-left py-2 px-2">Source</th>
-                        <th className="text-left py-2 px-2">Date</th>
+                        <th className="text-left py-2 px-2 hidden sm:table-cell">Date</th>
+                        <th className="text-center py-2 px-2">Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {chatParticipants.slice(0, 20).map(participant => (
-                        <tr key={participant.id} className="border-t border-white/10 text-white">
-                          <td className="py-2 px-2">{participant.name}</td>
-                          <td className="py-2 px-2 text-white/70">{participant.email || '-'}</td>
-                          <td className="py-2 px-2 text-white/70">{participant.whatsapp || '-'}</td>
+                      {filteredChatParticipants.map(participant => (
+                        <tr key={participant.id} className="border-t border-white/10 text-white hover:bg-white/5">
+                          <td className="py-2 px-2">
+                            <div className="font-medium">{participant.name}</div>
+                            <div className="text-white/50 text-xs sm:hidden">{participant.email || '-'}</div>
+                          </td>
+                          <td className="py-2 px-2 text-white/70 hidden sm:table-cell">{participant.email || '-'}</td>
+                          <td className="py-2 px-2 text-white/70 hidden md:table-cell">{participant.whatsapp || '-'}</td>
                           <td className="py-2 px-2">
                             <span className="text-xs px-2 py-0.5 rounded bg-purple-600/30 text-purple-300">
                               {getSourceLabel(participant.source)}
                             </span>
                           </td>
-                          <td className="py-2 px-2 text-white/50 text-xs">
+                          <td className="py-2 px-2 text-white/50 text-xs hidden sm:table-cell">
                             {new Date(participant.created_at).toLocaleDateString('fr-FR')}
+                          </td>
+                          <td className="py-2 px-2 text-center">
+                            <button
+                              onClick={() => deleteChatParticipant(participant.id)}
+                              className="px-2 py-1 rounded text-xs transition-all hover:bg-red-600/30"
+                              style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}
+                              title="Supprimer ce contact"
+                            >
+                              🗑️
+                            </button>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                  {chatParticipants.length > 20 && (
-                    <p className="text-white/40 text-xs text-center mt-2">
-                      + {chatParticipants.length - 20} autres contacts
-                    </p>
-                  )}
                 </div>
               )}
+              
+              {/* Statistiques CRM */}
+              <div className="mt-4 pt-3 border-t border-white/10 flex flex-wrap gap-4 text-xs text-white/50">
+                <span>📊 Total: {chatParticipants.length}</span>
+                <span>🔗 Via liens: {chatParticipants.filter(p => p.source?.startsWith('link_')).length}</span>
+                <span>💬 Via widget: {chatParticipants.filter(p => p.source === 'chat_afroboost').length}</span>
+                <span>✍️ Manuel: {chatParticipants.filter(p => p.source?.includes('manual')).length}</span>
+              </div>
             </div>
           </div>
         )}
