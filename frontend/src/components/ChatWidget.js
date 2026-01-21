@@ -48,11 +48,12 @@ const GroupIcon = () => (
 );
 
 /**
- * Composant pour afficher un message avec liens cliquables
+ * Composant pour afficher un message avec liens cliquables et emojis
  */
-const MessageBubble = ({ msg, isUser }) => {
+const MessageBubble = ({ msg, isUser, onParticipantClick, isCommunity, currentUserId }) => {
   // Convertir le texte en HTML avec liens cliquables
   const htmlContent = linkifyText(msg.text);
+  const isOtherUser = isCommunity && msg.type === 'user' && msg.senderId && msg.senderId !== currentUserId;
   
   return (
     <div
@@ -80,6 +81,26 @@ const MessageBubble = ({ msg, isUser }) => {
           <div style={{ fontSize: '10px', opacity: 0.7, marginBottom: '4px' }}>
             🏋️ Coach
           </div>
+        )}
+        {/* Nom cliquable pour discussion privée en mode communautaire */}
+        {isOtherUser && msg.sender && (
+          <button
+            onClick={() => onParticipantClick && onParticipantClick(msg.senderId, msg.sender)}
+            style={{
+              fontSize: '10px',
+              opacity: 0.8,
+              marginBottom: '4px',
+              background: 'none',
+              border: 'none',
+              color: '#a78bfa',
+              cursor: 'pointer',
+              padding: 0,
+              textDecoration: 'underline'
+            }}
+            title="Cliquer pour envoyer un message privé"
+          >
+            👤 {msg.sender} (cliquer pour discuter)
+          </button>
         )}
         {/* Rendu du texte avec liens cliquables */}
         <span 
@@ -109,6 +130,7 @@ export const ChatWidget = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [isCommunityMode, setIsCommunityMode] = useState(false);
   const [lastMessageCount, setLastMessageCount] = useState(0);
+  const [privateChatTarget, setPrivateChatTarget] = useState(null);
   const messagesEndRef = useRef(null);
   const pollingRef = useRef(null);
 
