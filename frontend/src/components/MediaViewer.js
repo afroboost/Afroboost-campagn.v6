@@ -57,7 +57,7 @@ const MediaViewer = ({ slug }) => {
           className="px-6 py-3 rounded-lg text-white font-semibold transition-all hover:scale-105"
           style={{ background: 'linear-gradient(135deg, #d91cd2, #8b5cf6)' }}
         >
-          Retour à l'accueil
+          Retour à l&apos;accueil
         </a>
       </div>
     );
