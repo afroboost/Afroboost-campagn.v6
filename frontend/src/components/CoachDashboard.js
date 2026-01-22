@@ -1631,70 +1631,55 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
       let totalSent = 0;
       let totalFailed = 0;
 
-      // 5. === ENVOI EMAILS DIRECT AVEC IDS HARDCODÉS ===
+      // 5. === ENVOI EMAILS VIA RESEND (BACKEND) ===
       if (emailResults.length > 0) {
         try {
-          addCampaignLog(campaignId, `📧 Envoi de ${emailResults.length} email(s)...`, 'info');
+          addCampaignLog(campaignId, `📧 Envoi de ${emailResults.length} email(s) via Resend...`, 'info');
         } catch (e) { console.warn('Log bloqué:', e); }
         
-        console.log(`EMAILJS_DEBUG: === LANCEMENT CAMPAGNE: ${emailResults.length} destinataires ===`);
+        console.log(`RESEND_DEBUG: === LANCEMENT CAMPAGNE: ${emailResults.length} destinataires ===`);
         
         for (let i = 0; i < emailResults.length; i++) {
           const contact = emailResults[i];
           
-          console.log(`EMAILJS_DEBUG: [${i + 1}/${emailResults.length}] Envoi à: ${contact.contactEmail}`);
+          console.log(`RESEND_DEBUG: [${i + 1}/${emailResults.length}] Envoi à: ${contact.contactEmail}`);
           
-          // === ISOLATION DE L'ENVOI - OBJET PROPRE ET PLAT ===
-          const emailData = {
-            to_email: contact.contactEmail,
-            to_name: contact.contactName || 'Client',
-            subject: campaign.name || 'Afroboost - Message',
-            message: campaign.message  // Le texte issu du Prompt Système IA
-          };
-          
-          // === BYPASS DU CRASH - TRY/CATCH AUTOUR DE emailjs.send ===
           try {
-            console.log('EMAILJS_DEBUG: emailData =', JSON.stringify(emailData));
+            // Appel API Resend via backend
+            const response = await fetch(`${BACKEND_URL}/api/campaigns/send-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to_email: contact.contactEmail,
+                to_name: contact.contactName || 'Client',
+                subject: campaign.name || 'Afroboost - Message',
+                message: campaign.message
+              })
+            });
             
-            // IDENTIFIANTS HARDCODÉS
-            const response = await emailjs.send(
-              'service_8mrmxim',   // Service ID
-              'template_3n1u86p',  // Template ID
-              emailData,           // Objet propre et plat
-              '5LfgQSIEQoqq_XSqt'  // Public Key
-            );
+            const result = await response.json();
             
-            console.log(`EMAILJS_DEBUG: [${i + 1}/${emailResults.length}] SUCCÈS - Status = ${response.status}`);
-            
-            // === LOG DE CONFIRMATION ===
-            console.log(`Succès : Message IA envoyé à ${contact.contactEmail}`);
-            
-            totalSent++;
-            
-            // Marquer comme envoyé
-            try {
-              await axios.post(`${API}/campaigns/${campaignId}/mark-sent`, {
-                contactId: contact.contactId,
-                channel: 'email'
-              });
-            } catch (markErr) {
-              console.warn('EMAILJS_DEBUG: Mark-sent bloqué mais email envoyé');
+            if (result.success) {
+              console.log(`RESEND_DEBUG: [${i + 1}/${emailResults.length}] SUCCÈS - ID = ${result.email_id}`);
+              totalSent++;
+              
+              // Marquer comme envoyé
+              try {
+                await axios.post(`${API}/campaigns/${campaignId}/mark-sent`, {
+                  contactId: contact.contactId,
+                  channel: 'email'
+                });
+              } catch (markErr) {
+                console.warn('RESEND_DEBUG: Mark-sent bloqué mais email envoyé');
+              }
+            } else {
+              console.error(`RESEND_DEBUG: [${i + 1}/${emailResults.length}] ÉCHEC - ${result.error}`);
+              totalFailed++;
             }
             
           } catch (error) {
-            // === BYPASS DU CRASH ===
-            const errorName = error?.name || 'Unknown';
-            const errorMsg = error?.text || error?.message || 'Erreur inconnue';
-            
-            console.error(`EMAILJS_DEBUG: [${i + 1}/${emailResults.length}] ÉCHEC - ${errorName}: ${errorMsg}`);
-            
-            // Ignorer l'erreur PostHog
-            if (errorName === 'DataCloneError' || errorMsg.includes('clone')) {
-              console.warn('EMAILJS_DEBUG: Erreur PostHog ignorée');
-              totalSent++; // Compter comme envoyé car l'email a peut-être été envoyé
-            } else {
-              totalFailed++;
-            }
+            console.error(`RESEND_DEBUG: [${i + 1}/${emailResults.length}] EXCEPTION - ${error.message}`);
+            totalFailed++;
           }
           
           // Délai entre les envois
