@@ -1106,9 +1106,12 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
         return;
       }
       
-      // Vérifier si c'est un lien interne afroboosteur.com/v/slug ou /v/slug
+      // Vérifier si c'est un lien interne
+      // Formats supportés: /v/slug, /api/share/slug
       let slug = null;
-      if (url.includes('/v/')) {
+      if (url.includes('/api/share/')) {
+        slug = url.split('/api/share/').pop().split('?')[0].split('#')[0].trim();
+      } else if (url.includes('/v/')) {
         slug = url.split('/v/').pop().split('?')[0].split('#')[0].trim();
       }
       
