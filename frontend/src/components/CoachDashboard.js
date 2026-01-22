@@ -1243,24 +1243,16 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     }
   };
 
-  // === FONCTION D'ENVOI MESSAGE COACH - RECONSTRUCTION COMPLÈTE ===
+  // === FONCTION D'ENVOI MESSAGE COACH ===
   const handleSendMessage = async () => {
     try {
-      // 1. Vérifier le message
       const msg = coachMessage?.trim();
-      if (!msg) {
-        alert('ERREUR: Le message est vide');
-        return;
-      }
+      if (!msg) return;
       
-      // 2. Récupérer la session (depuis selectedSession OU première session disponible)
       const sid = selectedSession?.id || (chatSessions.length > 0 ? chatSessions[0].id : null);
-      if (!sid) {
-        alert('ERREUR: Aucune session disponible. Sessions = ' + chatSessions.length);
-        return;
-      }
+      if (!sid) return;
       
-      // 3. Préparer le message (emojis)
+      // Préparer le message (emojis)
       let messageContent = msg;
       if (customEmojis && customEmojis.length > 0) {
         for (const emoji of customEmojis) {
@@ -1271,32 +1263,26 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
         }
       }
       
-      // 4. Envoi HTTP
+      // Envoi HTTP
       const response = await axios.post(`${API}/chat/coach-response`, {
         session_id: sid,
         message: messageContent,
         coach_name: coachUser?.name || 'Coach'
       });
       
-      // 5. Si succès, vider le champ et recharger
+      // Si succès, vider le champ et recharger
       if (response.data && response.data.success) {
-        setCoachMessage(''); // VIDE LE CHAMP
+        setCoachMessage('');
         loadSessionMessages(sid);
         
-        // Auto-sélectionner la session si pas déjà fait
         if (!selectedSession) {
           const session = chatSessions.find(s => s.id === sid);
           if (session) setSelectedSession(session);
         }
-      } else {
-        alert('ERREUR SERVEUR: ' + JSON.stringify(response.data));
       }
       
     } catch (err) {
-      // 6. Afficher l'erreur exacte
-      const errorMsg = err?.response?.data?.detail || err?.message || 'Erreur inconnue';
-      alert('EXCEPTION: ' + errorMsg);
-      console.error('handleSendMessage error:', err);
+      console.error('Erreur envoi:', err);
     }
   };
 
