@@ -1,16 +1,6 @@
 // /services/index.js - Export centralisé des services Afroboost
 // Compatible Vercel - Données persistées dans MongoDB
-
-// === EMAIL SERVICE (EmailJS + localStorage) ===
-export {
-  getEmailJSConfig,
-  saveEmailJSConfig,
-  isEmailJSConfigured,
-  initEmailJS,
-  sendEmail,
-  sendBulkEmails,
-  testEmailJSConfig
-} from './emailService';
+// Note: EmailJS supprimé - utiliser Resend via backend
 
 // === WHATSAPP SERVICE (Twilio + MongoDB) ===
 export {
@@ -41,11 +31,9 @@ export {
 // Ces fonctions sont des canaux de sortie PURS
 // L'agent IA reste le déclencheur et utilise ces passerelles pour expédier
 export {
-  sendEmailGateway,
   sendWhatsAppGateway,
   sendMessageGateway,
   // === LIAISONS IA (SOUDURES) ===
-  sendAIResponseViaEmail,
   sendAIResponseViaWhatsApp,
   dispatchAIResponse
 } from './messagingGateway';
