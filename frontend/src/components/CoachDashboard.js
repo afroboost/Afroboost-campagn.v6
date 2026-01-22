@@ -1469,6 +1469,110 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     }
   }, [tab]);
 
+  // === MEDIA LINKS FUNCTIONS (Lecteur Afroboost) ===
+  
+  // Charger les media links
+  const loadMediaLinks = async () => {
+    try {
+      const res = await axios.get(`${API}/media`);
+      setMediaLinks(res.data);
+    } catch (err) {
+      console.error("Error loading media links:", err);
+    }
+  };
+
+  // Générer un slug automatique depuis le titre
+  const generateSlug = (title) => {
+    if (!title) return '';
+    return title
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Supprimer accents
+      .replace(/[^a-z0-9\s-]/g, '') // Supprimer caractères spéciaux
+      .replace(/\s+/g, '-') // Espaces -> tirets
+      .replace(/-+/g, '-') // Éviter double tirets
+      .substring(0, 30) // Limiter longueur
+      .replace(/^-|-$/g, ''); // Supprimer tirets début/fin
+  };
+
+  // Créer un nouveau media link
+  const handleCreateMediaLink = async () => {
+    try {
+      if (!newMediaLink.video_url || !newMediaLink.title) {
+        alert('Veuillez renseigner au minimum le titre et l\'URL de la vidéo');
+        return;
+      }
+      
+      // Générer le slug automatiquement si vide
+      let slug = newMediaLink.slug?.trim();
+      if (!slug) {
+        slug = generateSlug(newMediaLink.title) + '-' + Date.now().toString(36).slice(-4);
+      }
+      
+      const payload = {
+        slug: slug.toLowerCase(),
+        video_url: newMediaLink.video_url,
+        title: newMediaLink.title,
+        description: newMediaLink.description || '',
+        custom_thumbnail: newMediaLink.custom_thumbnail || null,
+        cta_text: newMediaLink.cta_text || null,
+        cta_link: newMediaLink.cta_link || null
+      };
+      
+      const res = await axios.post(`${API}/media/create`, payload);
+      
+      if (res.data.success) {
+        // Copier le lien généré dans le presse-papier
+        const generatedUrl = res.data.media_link.url;
+        navigator.clipboard.writeText(generatedUrl);
+        alert(`✅ Lien créé avec succès !\n\nURL: ${generatedUrl}\n\n(Lien copié dans le presse-papier)`);
+        
+        // Reset form et recharger
+        setNewMediaLink({
+          slug: '',
+          video_url: '',
+          title: '',
+          description: '',
+          custom_thumbnail: '',
+          cta_text: '',
+          cta_link: ''
+        });
+        setShowMediaLinkForm(false);
+        loadMediaLinks();
+      }
+    } catch (err) {
+      const errorMessage = err.response?.data?.detail || 'Erreur lors de la création du lien';
+      alert(`❌ ${errorMessage}`);
+      console.error("Error creating media link:", err);
+    }
+  };
+
+  // Supprimer un media link
+  const handleDeleteMediaLink = async (slug) => {
+    if (!window.confirm(`Supprimer le lien /v/${slug} ?`)) return;
+    try {
+      await axios.delete(`${API}/media/${slug}`);
+      loadMediaLinks();
+    } catch (err) {
+      console.error("Error deleting media link:", err);
+      alert('Erreur lors de la suppression');
+    }
+  };
+
+  // Copier le lien dans le presse-papier
+  const copyMediaLink = (slug) => {
+    const url = `https://afroboosteur.com/v/${slug}`;
+    navigator.clipboard.writeText(url);
+    alert(`Lien copié: ${url}`);
+  };
+
+  // Load media links when tab changes
+  useEffect(() => {
+    if (tab === "media") {
+      loadMediaLinks();
+    }
+  }, [tab]);
+
   // === CONTACTS COMBINÉS: Users + Reservations + Chat Participants ===
   const allContacts = useMemo(() => {
     const contactMap = new Map();
