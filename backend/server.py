@@ -3475,12 +3475,19 @@ async def send_campaign_email(request: Request):
         
         # Générer le HTML de l'image cliquable - SIMPLE et PROPRE
         if thumbnail_url:
+            # S'assurer que l'URL est en HTTPS
+            if thumbnail_url.startswith('http://'):
+                thumbnail_url = thumbnail_url.replace('http://', 'https://')
+            
             media_html = f'''<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;">
+<tr><td align="center" style="padding-bottom:8px;">
+<p style="color:#888888;font-family:Arial,sans-serif;font-size:11px;margin:0;">Si l'image ne s'affiche pas, cliquez sur "Afficher les images" ci-dessus</p>
+</td></tr>
 <tr><td align="center">
-<a href="{click_url}" target="_blank"><img src="{thumbnail_url}" width="560" style="max-width:100%;height:auto;border-radius:8px;" alt=""></a>
+<a href="{click_url}" target="_blank"><img src="{thumbnail_url}" width="560" style="max-width:100%;height:auto;border-radius:8px;display:block;" alt="Cliquez pour voir la vidéo"></a>
 </td></tr>
 <tr><td align="center" style="padding-top:15px;">
-<a href="{click_url}" target="_blank" style="display:inline-block;padding:12px 24px;background:#d91cd2;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">Voir la vidéo</a>
+<a href="{click_url}" target="_blank" style="display:inline-block;padding:14px 28px;background:#d91cd2;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:bold;font-size:16px;">Voir la vidéo</a>
 </td></tr>
 </table>'''
     
