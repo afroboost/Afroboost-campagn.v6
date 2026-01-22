@@ -1911,6 +1911,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
           const contact = emailResults[i];
           
           console.log(`RESEND_DEBUG: [${i + 1}/${emailResults.length}] Envoi à: ${contact.contactEmail}`);
+          console.log(`RESEND_DEBUG: mediaUrl = ${campaign.mediaUrl || 'AUCUN'}`);
           
           try {
             // Appel API Resend via backend
@@ -1921,7 +1922,8 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                 to_email: contact.contactEmail,
                 to_name: contact.contactName || 'Client',
                 subject: campaign.name || 'Afroboost - Message',
-                message: campaign.message
+                message: campaign.message,
+                media_url: campaign.mediaUrl || null
               })
             });
             
