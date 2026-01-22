@@ -124,7 +124,7 @@ const MessageBubble = ({ msg, isUser, onParticipantClick, isCommunity, currentUs
  */
 export const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [step, setStep] = useState('form'); // 'form' | 'chat'
+  const [step, setStep] = useState('form'); // 'form' | 'chat' | 'coach'
   const [leadData, setLeadData] = useState({ firstName: '', whatsapp: '', email: '' });
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -139,8 +139,14 @@ export const ChatWidget = () => {
   const [privateChatTarget, setPrivateChatTarget] = useState(null);
   const [messageCount, setMessageCount] = useState(0); // Compteur de messages pour prompt notif
   const [pushEnabled, setPushEnabled] = useState(false);
+  const [isCoachMode, setIsCoachMode] = useState(false); // Mode coach depuis le widget
+  const [coachSessions, setCoachSessions] = useState([]); // Liste des sessions pour le coach
+  const [selectedCoachSession, setSelectedCoachSession] = useState(null); // Session sélectionnée par le coach
   const messagesEndRef = useRef(null);
   const pollingRef = useRef(null);
+
+  // Email du coach autorisé
+  const COACH_EMAIL = 'contact.artboost@gmail.com';
 
   // Enregistrer le Service Worker au montage
   useEffect(() => {
