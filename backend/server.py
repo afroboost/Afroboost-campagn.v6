@@ -3498,6 +3498,112 @@ async def send_push_to_participant(request: Request):
         "participant_id": participant_id
     }
 
+# =============================================
+# LECTEUR MÉDIA UNIFIÉ - AFROBOOST
+# =============================================
+
+class MediaLinkCreate(BaseModel):
+    """Modèle pour créer un lien média personnalisé"""
+    slug: str = Field(..., description="Slug mémorable (ex: promo-danse)")
+    video_url: str = Field(..., description="URL YouTube ou Vimeo")
+    title: str = Field(..., description="Titre de la campagne")
+    description: Optional[str] = Field(None, description="Description/message")
+    custom_thumbnail: Optional[str] = Field(None, description="URL thumbnail personnalisée")
+    cta_text: Optional[str] = Field(None, description="Texte du bouton CTA")
+    cta_link: Optional[str] = Field(None, description="Lien du bouton CTA")
+    campaign_id: Optional[str] = Field(None, description="ID campagne associée")
+
+def extract_youtube_id(url: str) -> Optional[str]:
+    """Extrait l'ID YouTube d'une URL"""
+    import re
+    patterns = [
+        r'(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})',
+        r'youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})'
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            return match.group(1)
+    return None
+
+@api_router.post("/media/create")
+async def create_media_link(data: MediaLinkCreate):
+    """
+    Crée un lien média personnalisé pour les campagnes.
+    Génère une URL afroboosteur.com/v/[slug]
+    """
+    # Vérifier si le slug existe déjà
+    existing = await db.media_links.find_one({"slug": data.slug})
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Le slug '{data.slug}' existe déjà")
+    
+    # Extraire l'ID YouTube si applicable
+    youtube_id = extract_youtube_id(data.video_url)
+    
+    # Générer la thumbnail automatique si pas de custom
+    thumbnail = data.custom_thumbnail
+    if not thumbnail and youtube_id:
+        thumbnail = f"https://img.youtube.com/vi/{youtube_id}/maxresdefault.jpg"
+    
+    media_link = {
+        "id": str(uuid.uuid4()),
+        "slug": data.slug.lower().strip(),
+        "video_url": data.video_url,
+        "youtube_id": youtube_id,
+        "title": data.title,
+        "description": data.description or "",
+        "thumbnail": thumbnail,
+        "cta_text": data.cta_text,
+        "cta_link": data.cta_link,
+        "campaign_id": data.campaign_id,
+        "views": 0,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.media_links.insert_one(media_link)
+    
+    return {
+        "success": True,
+        "media_link": {
+            "id": media_link["id"],
+            "slug": media_link["slug"],
+            "url": f"https://afroboosteur.com/v/{media_link['slug']}",
+            "thumbnail": media_link["thumbnail"]
+        }
+    }
+
+@api_router.get("/media/{slug}")
+async def get_media_link(slug: str):
+    """
+    Récupère les infos d'un lien média par son slug.
+    Incrémente le compteur de vues.
+    """
+    media = await db.media_links.find_one({"slug": slug.lower()}, {"_id": 0})
+    if not media:
+        raise HTTPException(status_code=404, detail="Média non trouvé")
+    
+    # Incrémenter les vues
+    await db.media_links.update_one(
+        {"slug": slug.lower()},
+        {"$inc": {"views": 1}}
+    )
+    
+    return media
+
+@api_router.get("/media")
+async def list_media_links():
+    """Liste tous les liens média créés"""
+    media_links = await db.media_links.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return media_links
+
+@api_router.delete("/media/{slug}")
+async def delete_media_link(slug: str):
+    """Supprime un lien média"""
+    result = await db.media_links.delete_one({"slug": slug.lower()})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Média non trouvé")
+    return {"success": True, "deleted": slug}
+
 # Include router
 app.include_router(api_router)
 
