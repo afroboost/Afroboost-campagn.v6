@@ -136,7 +136,7 @@ const MediaViewer = ({ slug }) => {
         {/* Lecteur Vidéo - Mode Cinéma 16:9 */}
         <div style={styles.videoWrapper} data-testid="video-container">
           {isGoogleDrive ? (
-            /* Player Google Drive via iframe (sans marquage) */
+            /* Player HTML5 natif pour Google Drive - ZÉRO MARQUAGE */
             !isPlaying ? (
               <>
                 <div 
@@ -160,15 +160,21 @@ const MediaViewer = ({ slug }) => {
                 </div>
               </>
             ) : (
-              <iframe
+              /* Video HTML5 natif avec lien direct Google Drive */
+              <video
+                ref={videoRef}
                 src={videoStreamUrl}
-                title={media.title || 'Vidéo Afroboost'}
-                style={styles.videoIframe}
-                frameBorder="0"
-                allow="autoplay; encrypted-media; fullscreen"
-                allowFullScreen
-                data-testid="google-drive-player"
-              />
+                poster={thumbnailUrl}
+                style={styles.videoPlayer}
+                controls
+                autoPlay
+                controlsList="nodownload noremoteplayback"
+                playsInline
+                onPause={() => setIsPlaying(false)}
+                data-testid="html5-video-drive"
+              >
+                Votre navigateur ne supporte pas la lecture vidéo.
+              </video>
             )
           ) : hasDirectVideo ? (
             /* Player HTML5 natif pour vidéos directes (MP4, WebM) */
