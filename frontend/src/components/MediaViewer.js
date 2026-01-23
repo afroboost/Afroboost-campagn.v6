@@ -171,6 +171,12 @@ const MediaViewer = ({ slug }) => {
                 controlsList="nodownload noremoteplayback"
                 playsInline
                 onPause={() => setIsPlaying(false)}
+                onError={(e) => {
+                  console.error('[MediaViewer] Erreur chargement vidéo:', e);
+                  setIsPlaying(false); // Revenir à la thumbnail si erreur
+                }}
+                onLoadStart={() => console.log('[MediaViewer] Début chargement vidéo Drive')}
+                onCanPlay={() => console.log('[MediaViewer] Vidéo prête à jouer')}
                 data-testid="html5-video-drive"
               >
                 Votre navigateur ne supporte pas la lecture vidéo.
