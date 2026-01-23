@@ -3471,8 +3471,9 @@ async def send_campaign_email(request: Request):
             media_link = await db.media_links.find_one({"slug": slug.lower()}, {"_id": 0})
             if media_link:
                 thumbnail_url = media_link.get("thumbnail") or media_link.get("custom_thumbnail")
-                # Utiliser directement /v/{slug} - Le routage SPA doit être configuré sur le serveur de prod
-                click_url = f"{frontend_base}/v/{slug}"
+                # HASH ROUTING: Utiliser /#/v/{slug} pour garantir le fonctionnement
+                # sans configuration serveur (100% côté client)
+                click_url = f"{frontend_base}/#/v/{slug}"
                 logger.info(f"Media link found for slug {slug}: click_url={click_url}, thumbnail={thumbnail_url}")
             else:
                 logger.warning(f"Media link not found for slug: {slug}")
