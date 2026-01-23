@@ -3473,30 +3473,35 @@ async def send_campaign_email(request: Request):
             # URL externe directe (image)
             thumbnail_url = media_url
         
-        # Générer le HTML de l'image cliquable - V4 Style "Bravooooo"
+        # Générer le HTML de l'image cliquable - V5 FINAL (taille réduite -20%)
         if thumbnail_url:
             if thumbnail_url.startswith('http://'):
                 thumbnail_url = thumbnail_url.replace('http://', 'https://')
             
-            # Template V4 : Card avec image + bouton overlay style
-            media_html = f'''<!-- Image avec bordure arrondie -->
+            # Template V5 : Card RÉDUITE (-20%) avec image + bouton
+            # Image: 400px au lieu de 536px
+            media_html = f'''<!-- Image cliquable (taille réduite) -->
 <a href="{click_url}" style="display:block;text-decoration:none;">
-<img src="{thumbnail_url}" width="536" style="display:block;width:100%;max-width:536px;border-radius:8px;margin:0 auto;" alt="Aperçu vidéo">
+<img src="{thumbnail_url}" width="400" style="display:block;width:100%;max-width:400px;border-radius:8px;margin:0 auto;" alt="Aperçu vidéo">
 </a>
-<!-- Bouton "Voir la vidéo" style rose avec icône play -->
-<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:20px;">
+<!-- Bouton "Voir la vidéo" -->
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:15px;">
 <tr><td align="center">
-<a href="{click_url}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg, #E91E63 0%, #C2185B 100%);color:#ffffff;text-decoration:none;border-radius:8px;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;">
+<a href="{click_url}" style="display:inline-block;padding:12px 28px;background:#E91E63;color:#ffffff;text-decoration:none;border-radius:8px;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;">
 &#9658; Voir la vidéo
 </a>
 </td></tr>
 </table>'''
     
     # =====================================================
-    # Template Email V4 - Style "BRAVOOOOO" Card Afroboost
+    # Template Email V5 FINAL - Anti-Promotions Maximal
     # =====================================================
-    # Design: Header violet gradient, container noir arrondi
-    # Anti-Promotions: Preheader invisible + salutation texte brut
+    # RÈGLES GMAIL ANTI-PROMOTIONS:
+    # 1. TEXTE BRUT en premier (3 lignes minimum AVANT tout design)
+    # 2. Salutation personnalisée
+    # 3. Ratio texte > image
+    # 4. Pas de gradient CSS (Gmail les ignore parfois)
+    # 5. Taille réduite de 20%
     
     # Extraire le prénom pour personnalisation
     to_name = body.get("to_name", "")
