@@ -3473,37 +3473,69 @@ async def send_campaign_email(request: Request):
             # URL externe directe (image)
             thumbnail_url = media_url
         
-        # Générer le HTML de l'image cliquable - ULTRA-LÉGER V2
+        # Générer le HTML de l'image cliquable - V3 avec intro textuelle
         if thumbnail_url:
             if thumbnail_url.startswith('http://'):
                 thumbnail_url = thumbnail_url.replace('http://', 'https://')
             
-            # Template V2 ultra-léger : image + bouton seulement
-            media_html = f'''<a href="{click_url}" style="display:block;text-align:center;margin-bottom:20px;">
-<img src="{thumbnail_url}" width="500" style="max-width:100%;border-radius:8px;border:2px solid #E91E63;" alt="Voir la vidéo">
+            # Template V3 : RATIO TEXTE/IMAGE AMÉLIORÉ
+            # Introduction textuelle AVANT le bloc visuel pour éviter l'onglet Promotions
+            media_html = f'''<p style="text-align:center;margin:0 0 20px 0;">
+<a href="{click_url}" style="display:block;">
+<img src="{thumbnail_url}" width="480" style="max-width:100%;border-radius:8px;border:2px solid #E91E63;" alt="Aperçu vidéo">
 </a>
-<p style="text-align:center;margin:0 0 25px 0;">
-<a href="{click_url}" style="display:inline-block;padding:16px 40px;background:#E91E63;color:#ffffff;text-decoration:none;border-radius:30px;font-family:Arial,sans-serif;font-size:16px;font-weight:bold;">Voir la vidéo</a>
+</p>
+<p style="text-align:center;margin:0 0 30px 0;">
+<a href="{click_url}" style="display:inline-block;padding:16px 40px;background:#E91E63;color:#ffffff;text-decoration:none;border-radius:30px;font-family:Arial,sans-serif;font-size:16px;font-weight:bold;">VOIR LA VIDÉO</a>
 </p>'''
     
-    # Template Email V2 ULTRA-LÉGER - Maximise la délivrabilité
-    # Structure simple : titre > image cliquable > message > bouton > footer
+    # Template Email V3 - DÉLIVRABILITÉ MAXIMALE
+    # Règles appliquées:
+    # 1. RATIO TEXTE > IMAGE : Introduction textuelle personnalisée en premier
+    # 2. Structure simple table layout
+    # 3. Salutation personnalisée avec le prénom
+    # 4. Texte plat sans HTML complexe
+    
+    # Extraire le prénom pour personnalisation
+    to_name = body.get("to_name", "")
+    first_name = to_name.split()[0] if to_name else "ami(e)"
+    
     html_content = f'''<!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="utf-8"><title>Afroboost</title></head>
-<body style="margin:0;padding:25px;background-color:#0c0014;font-family:Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:550px;margin:0 auto;">
-<tr><td style="text-align:center;padding-bottom:20px;">
-<a href="https://afroboosteur.com" style="color:#E91E63;font-size:22px;font-weight:bold;text-decoration:none;">Afroboost</a>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Afroboost</title></head>
+<body style="margin:0;padding:0;background-color:#0c0014;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0c0014;">
+<tr><td align="center" style="padding:30px 15px;">
+<table width="550" cellpadding="0" cellspacing="0" border="0" style="max-width:550px;">
+
+<!-- Header Logo -->
+<tr><td align="center" style="padding-bottom:25px;">
+<a href="https://afroboosteur.com" style="color:#E91E63;font-size:24px;font-weight:bold;text-decoration:none;font-family:Arial,sans-serif;">Afroboost</a>
 </td></tr>
+
+<!-- Salutation personnalisée -->
+<tr><td style="color:#ffffff;font-size:16px;line-height:1.6;padding-bottom:15px;font-family:Arial,sans-serif;">
+Salut {first_name},
+</td></tr>
+
+<!-- Introduction textuelle AVANT l'image (ratio texte/image) -->
+<tr><td style="color:#ffffff;font-size:15px;line-height:1.7;padding-bottom:25px;font-family:Arial,sans-serif;">
+{message.replace(chr(10), '<br>')}
+</td></tr>
+
+<!-- Bloc Media (image + bouton) -->
 <tr><td>
 {media_html}
 </td></tr>
-<tr><td style="color:#ffffff;font-size:15px;line-height:1.7;padding-bottom:25px;">
-{message.replace(chr(10), '<br>')}
+
+<!-- Footer -->
+<tr><td align="center" style="padding-top:30px;border-top:1px solid #333333;">
+<p style="color:#888888;font-size:12px;margin:0;font-family:Arial,sans-serif;">
+<a href="https://afroboosteur.com" style="color:#E91E63;text-decoration:none;">afroboosteur.com</a>
+</p>
 </td></tr>
-<tr><td style="text-align:center;padding-top:20px;border-top:1px solid #333;">
-<a href="https://afroboosteur.com" style="color:#888;font-size:12px;text-decoration:none;">afroboosteur.com</a>
+
+</table>
 </td></tr>
 </table>
 </body>
