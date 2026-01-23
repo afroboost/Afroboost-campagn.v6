@@ -1,6 +1,6 @@
 /**
  * MediaViewer - Lecteur Afroboost Mode Cinéma FINAL
- * Lecture vidéo Google Drive via iframe /preview (seule méthode fiable)
+ * Supporte: YouTube, Google Drive, vidéos directes (MP4)
  * Design cinéma, bouton CTA #E91E63
  */
 import { useState, useEffect } from 'react';
@@ -8,15 +8,51 @@ import axios from 'axios';
 
 const API = process.env.REACT_APP_BACKEND_URL || '';
 
+// Détecte le type de vidéo
+const getVideoType = (url) => {
+  if (!url) return 'unknown';
+  const lowerUrl = url.toLowerCase();
+  
+  // YouTube
+  if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+    return 'youtube';
+  }
+  
+  // Google Drive
+  if (lowerUrl.includes('drive.google.com')) {
+    return 'gdrive';
+  }
+  
+  // Vidéo directe (MP4, WebM, etc.)
+  if (['.mp4', '.webm', '.mov', '.m4v', '.ogv'].some(ext => lowerUrl.includes(ext))) {
+    return 'direct';
+  }
+  
+  return 'unknown';
+};
+
+// Extrait l'ID YouTube d'une URL
+const extractYouTubeId = (url) => {
+  if (!url) return null;
+  // Format: youtube.com/watch?v=ID
+  const watchMatch = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  if (watchMatch) return watchMatch[1];
+  // Format: youtu.be/ID
+  const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  if (shortMatch) return shortMatch[1];
+  // Format: youtube.com/embed/ID
+  const embedMatch = url.match(/embed\/([a-zA-Z0-9_-]{11})/);
+  if (embedMatch) return embedMatch[1];
+  return null;
+};
+
 // Extrait l'ID Google Drive d'une URL
 const extractGoogleDriveId = (url) => {
   if (!url) return null;
-  // Format: https://drive.google.com/file/d/{FILE_ID}/view
   const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if (match && match[1]) return match[1];
-  // Format: https://drive.google.com/uc?...&id={FILE_ID}
+  if (match) return match[1];
   const idMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  if (idMatch && idMatch[1]) return idMatch[1];
+  if (idMatch) return idMatch[1];
   return null;
 };
 
@@ -72,10 +108,25 @@ const MediaViewer = ({ slug }) => {
     );
   }
 
-  // Extraire l'ID Google Drive
-  const driveId = extractGoogleDriveId(media.video_url);
-  const embedUrl = driveId ? `https://drive.google.com/file/d/${driveId}/preview` : null;
-  const thumbnailUrl = media.thumbnail || (media.youtube_id ? `https://img.youtube.com/vi/${media.youtube_id}/maxresdefault.jpg` : null);
+  // Détecter le type de vidéo et générer l'URL d'embed
+  const videoType = getVideoType(media.video_url);
+  let embedUrl = null;
+  let thumbnailUrl = media.thumbnail || media.custom_thumbnail;
+
+  if (videoType === 'youtube') {
+    const ytId = media.youtube_id || extractYouTubeId(media.video_url);
+    if (ytId) {
+      embedUrl = `https://www.youtube.com/embed/${ytId}?modestbranding=1&rel=0`;
+      if (!thumbnailUrl) {
+        thumbnailUrl = `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`;
+      }
+    }
+  } else if (videoType === 'gdrive') {
+    const driveId = extractGoogleDriveId(media.video_url);
+    if (driveId) {
+      embedUrl = `https://drive.google.com/file/d/${driveId}/preview`;
+    }
+  }
 
   return (
     <div style={styles.page}>
@@ -92,7 +143,7 @@ const MediaViewer = ({ slug }) => {
         {/* Titre */}
         <h1 style={styles.title} data-testid="media-title">{media.title || 'Vidéo Afroboost'}</h1>
 
-        {/* Lecteur Vidéo - iframe Google Drive */}
+        {/* Lecteur Vidéo */}
         <div style={styles.videoWrapper} data-testid="video-container">
           {embedUrl ? (
             <iframe
@@ -100,12 +151,24 @@ const MediaViewer = ({ slug }) => {
               title={media.title || 'Vidéo Afroboost'}
               style={styles.videoIframe}
               frameBorder="0"
-              allow="autoplay; encrypted-media; fullscreen"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               allowFullScreen
-              data-testid="google-drive-player"
+              data-testid={videoType === 'youtube' ? 'youtube-player' : 'google-drive-player'}
             />
+          ) : videoType === 'direct' ? (
+            <video
+              src={media.video_url}
+              poster={thumbnailUrl}
+              style={styles.videoPlayer}
+              controls
+              controlsList="nodownload"
+              playsInline
+              data-testid="html5-video"
+            >
+              Votre navigateur ne supporte pas la lecture vidéo.
+            </video>
           ) : (
-            /* Fallback: image avec lien vers la vidéo originale */
+            /* Fallback: lien vers la vidéo originale */
             <a href={media.video_url} target="_blank" rel="noopener noreferrer" style={styles.fallbackLink}>
               <div style={{...styles.thumbnailContainer, backgroundImage: thumbnailUrl ? `url(${thumbnailUrl})` : 'none'}}>
                 <div style={styles.playOverlay}>
@@ -274,6 +337,11 @@ const styles = {
     width: '100%',
     height: '100%',
     border: 'none',
+  },
+  videoPlayer: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
   },
   fallbackLink: {
     display: 'block',
