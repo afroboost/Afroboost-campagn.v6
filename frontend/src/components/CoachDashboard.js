@@ -979,6 +979,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   const [selectedContactsForCampaign, setSelectedContactsForCampaign] = useState([]);
   const [contactSearchQuery, setContactSearchQuery] = useState("");
   const [campaignLogs, setCampaignLogs] = useState([]); // Error logs
+  const [editingCampaignId, setEditingCampaignId] = useState(null); // ID de la campagne en édition
   
   // === ENVOI DIRECT STATE ===
   const [directSendMode, setDirectSendMode] = useState(false);
