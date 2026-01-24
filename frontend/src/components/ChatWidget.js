@@ -564,10 +564,13 @@ export const ChatWidget = () => {
           }]);
         }
       } else {
-        // Fallback: ancien système
+        // Fallback: ancien système - maintenant avec CRM auto-save
         const response = await axios.post(`${API}/chat`, {
           message: userMessage,
           firstName: leadData.firstName,
+          email: leadData.email || '',       // Pour CRM auto-save
+          whatsapp: leadData.whatsapp || '', // Pour CRM auto-save
+          source: 'chat_ia',                 // Source pour tracking
           leadId: ''
         });
         
