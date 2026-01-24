@@ -981,6 +981,9 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   const [campaignLogs, setCampaignLogs] = useState([]); // Error logs
   const [editingCampaignId, setEditingCampaignId] = useState(null); // ID de la campagne en édition
   
+  // === SCHEDULER HEALTH STATE ===
+  const [schedulerHealth, setSchedulerHealth] = useState({ status: "unknown", last_run: null });
+  
   // === ENVOI DIRECT STATE ===
   const [directSendMode, setDirectSendMode] = useState(false);
   const [currentWhatsAppIndex, setCurrentWhatsAppIndex] = useState(0);
