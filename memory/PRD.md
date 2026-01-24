@@ -145,6 +145,10 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
   - Bug: La route `/api/chat/ai-response` n'injectait pas le contexte dynamique (produits, articles)
   - Correction: Synchronisation du contexte avec `/api/chat` (MongoDB: offers, courses, articles)
   - Test: L'IA reconnaît maintenant "café congolais" à "10 CHF" ✅
+- [x] **Lien de Paiement Twint Dynamique** (24 Jan 2026) - NOUVEAU ✅
+  - Le coach peut configurer un lien Twint dans Dashboard > Conversations > Agent IA > "Lien de paiement Twint"
+  - L'IA propose automatiquement ce lien quand un client veut acheter
+  - Si le lien est vide, l'IA redirige vers le coach
 
 ### P1 - À faire
 - [ ] **Gérer les articles dans le Dashboard** : Interface CRUD pour créer/modifier/supprimer des articles
