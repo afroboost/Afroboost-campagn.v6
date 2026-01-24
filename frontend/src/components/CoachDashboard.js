@@ -6642,7 +6642,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                     </div>
                   ))}
                 </div>
-                </div>{/* Fin conteneur scrollable médias */}
+                </div>
               )}
             </div>
 
