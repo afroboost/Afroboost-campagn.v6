@@ -6552,7 +6552,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
 
             {/* Liste des liens existants */}
             <div className="space-y-3">
-              <h3 className="text-white font-semibold">Vos liens média ({mediaLinks.length})</h3>
+              <h3 className="text-white font-semibold sticky top-0 z-10 pb-2" style={{ background: 'inherit' }}>Vos liens média ({mediaLinks.length})</h3>
               
               {mediaLinks.length === 0 ? (
                 <div className="glass rounded-xl p-8 text-center">
@@ -6561,6 +6561,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                   <p className="text-white/50 text-sm mt-2">Créez votre premier lien pour partager vos vidéos sur WhatsApp avec des aperçus professionnels</p>
                 </div>
               ) : (
+                <div style={{ maxHeight: '500px', overflowY: 'auto', overflowX: 'hidden' }}>
                 <div className="grid gap-4">
                   {mediaLinks.map(link => (
                     <div 
