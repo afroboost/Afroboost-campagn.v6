@@ -1620,7 +1620,111 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     );
   }, [chatParticipants, conversationSearch]);
 
-  // === POLLING NOTIFICATIONS pour nouveaux messages ===
+  // === NOTIFICATIONS SONORES ET VISUELLES (Coach) ===
+  const [notificationPermission, setNotificationPermission] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const lastNotifiedIdsRef = useRef(new Set());
+  
+  // Demander la permission de notification au premier accès aux conversations
+  const requestNotificationAccess = useCallback(async () => {
+    try {
+      // Déverrouiller l'audio (nécessaire sur iOS)
+      const { unlockAudio, requestNotificationPermission } = await import('../services/notificationService');
+      await unlockAudio();
+      
+      // Demander la permission des notifications browser
+      const granted = await requestNotificationPermission();
+      setNotificationPermission(granted);
+      
+      if (granted) {
+        console.log('[NOTIFICATIONS] Permission accordée');
+      }
+    } catch (err) {
+      console.warn('[NOTIFICATIONS] Erreur permission:', err);
+    }
+  }, []);
+  
+  // Vérifier les nouveaux messages non notifiés (endpoint optimisé)
+  const checkUnreadNotifications = useCallback(async () => {
+    if (tab !== 'conversations') return;
+    
+    try {
+      const res = await axios.get(`${API}/notifications/unread`, {
+        params: { target: 'coach' }
+      });
+      
+      const { count, messages } = res.data;
+      setUnreadCount(count);
+      
+      if (messages && messages.length > 0) {
+        // Filtrer les messages déjà notifiés localement
+        const newMessages = messages.filter(m => !lastNotifiedIdsRef.current.has(m.id));
+        
+        if (newMessages.length > 0) {
+          // Importer les fonctions de notification
+          const { playNotificationSound, showBrowserNotification } = await import('../services/notificationService');
+          
+          // Jouer le son pour le premier nouveau message
+          await playNotificationSound('user');
+          
+          // Afficher une notification browser pour chaque nouveau message (max 3)
+          for (const msg of newMessages.slice(0, 3)) {
+            await showBrowserNotification(
+              '💬 Nouveau message - Afroboost',
+              `${msg.sender_name}: ${msg.content.substring(0, 80)}${msg.content.length > 80 ? '...' : ''}`,
+              {
+                tag: `afroboost-msg-${msg.id}`,
+                onClick: () => {
+                  window.focus();
+                  // Sélectionner la session correspondante
+                  const session = chatSessions.find(s => s.id === msg.session_id);
+                  if (session) {
+                    setSelectedSession(session);
+                    loadSessionMessages(session.id);
+                  }
+                }
+              }
+            );
+            
+            // Ajouter à la liste des messages notifiés localement
+            lastNotifiedIdsRef.current.add(msg.id);
+          }
+          
+          // Marquer les messages comme notifiés côté serveur
+          const messageIds = newMessages.map(m => m.id);
+          await axios.put(`${API}/notifications/mark-read`, {
+            message_ids: messageIds
+          }).catch(() => {}); // Ignorer les erreurs silencieusement
+          
+          // Rafraîchir les conversations
+          loadConversations(true);
+        }
+      }
+    } catch (err) {
+      // Fallback vers l'ancienne méthode si le nouvel endpoint n'est pas disponible
+      console.warn('[NOTIFICATIONS] Fallback mode');
+    }
+  }, [tab, chatSessions]);
+  
+  // Polling des notifications toutes les 10 secondes
+  useEffect(() => {
+    if (tab !== 'conversations') return;
+    
+    // Demander la permission au premier accès
+    requestNotificationAccess();
+    
+    // Vérifier immédiatement
+    checkUnreadNotifications();
+    
+    // Puis toutes les 10 secondes
+    const interval = setInterval(() => {
+      checkUnreadNotifications();
+    }, 10000);
+    
+    return () => clearInterval(interval);
+  }, [tab, requestNotificationAccess, checkUnreadNotifications]);
+
+  // === POLLING LEGACY pour les sessions en mode humain ===
   const lastMessageCountRef = useRef({});
   
   const checkNewMessages = useCallback(async () => {
@@ -1640,7 +1744,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
           
           // Si le message vient d'un utilisateur (pas du coach)
           if (latestMessage.sender_type === 'user') {
-            playNotificationSound('user');
+            // Note: Le son est maintenant géré par checkUnreadNotifications
             
             // Mettre à jour les messages si c'est la session sélectionnée
             if (selectedSession?.id === session.id) {
