@@ -4881,28 +4881,6 @@ async def startup_scheduler():
     
     logger.info("[SYSTEM] ✅ Scheduler thread lancé avec succès")
 
-@api_router.get("/scheduler/status")
-async def get_scheduler_status():
-    """Endpoint pour vérifier que le scheduler est en vie."""
-    return {
-        "scheduler_running": SCHEDULER_RUNNING,
-        "last_heartbeat": SCHEDULER_LAST_HEARTBEAT,
-        "interval_seconds": SCHEDULER_INTERVAL,
-        "twilio_configured": bool(TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER),
-        "twilio_from_number": TWILIO_FROM_NUMBER
-    }
-
-@api_router.get("/scheduler/health")
-async def get_scheduler_health():
-    """
-    Endpoint de santé du scheduler pour le dashboard.
-    Renvoie le statut et le dernier timestamp d'exécution.
-    """
-    return {
-        "status": "active" if SCHEDULER_RUNNING else "stopped",
-        "last_run": SCHEDULER_LAST_HEARTBEAT
-    }
-
 @app.on_event("shutdown")
 async def shutdown_db_client():
     global SCHEDULER_RUNNING
