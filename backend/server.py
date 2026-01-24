@@ -3336,14 +3336,20 @@ async def delete_chat_link(link_id: str):
     Supprime un lien de chat (suppression logique).
     Le lien ne sera plus accessible et n'apparaîtra plus dans la liste.
     """
+    logger.info(f"[DELETE] Suppression lien: {link_id}")
+    
     result = await db.chat_sessions.update_one(
         {"$or": [{"id": link_id}, {"link_token": link_id}]},
         {"$set": {"is_deleted": True, "deleted_at": datetime.now(timezone.utc).isoformat()}}
     )
     
+    logger.info(f"[DELETE] Résultat: matched={result.matched_count}, modified={result.modified_count}")
+    
     if result.modified_count == 0:
+        logger.warning(f"[DELETE] Lien non trouvé: {link_id}")
         raise HTTPException(status_code=404, detail="Lien non trouvé")
     
+    logger.info(f"[DELETE] Lien {link_id} supprimé avec succès ✅")
     return {"success": True, "message": "Lien supprimé"}
 
 # --- Intelligent Chat Entry Point ---
