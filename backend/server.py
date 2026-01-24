@@ -1078,7 +1078,14 @@ async def delete_campaign(campaign_id: str):
 
 @api_router.post("/campaigns/{campaign_id}/launch")
 async def launch_campaign(campaign_id: str):
-    """Mark campaign as sending and prepare results"""
+    """
+    Lance une campagne immédiatement.
+    - WhatsApp: Envoi DIRECT via Twilio (pas de file d'attente)
+    - Email: Envoi DIRECT via Resend
+    - Instagram: Non supporté (manuel)
+    
+    Chaque canal est indépendant: l'échec d'un email ne bloque pas WhatsApp.
+    """
     campaign = await db.campaigns.find_one({"id": campaign_id}, {"_id": 0})
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign not found")
@@ -1090,31 +1097,159 @@ async def launch_campaign(campaign_id: str):
         selected_ids = campaign.get("selectedContacts", [])
         contacts = await db.users.find({"id": {"$in": selected_ids}}, {"_id": 0}).to_list(1000)
     
-    # Prepare results for each contact and channel
+    # Prepare results and tracking
     results = []
     channels = campaign.get("channels", {})
+    message_content = campaign.get("message", "")
+    media_url = campaign.get("mediaUrl", "")
+    campaign_name = campaign.get("name", "Campagne")
+    
+    success_count = 0
+    fail_count = 0
+    
+    logger.info(f"[CAMPAIGN-LAUNCH] 🚀 Lancement campagne '{campaign_name}' - {len(contacts)} contact(s)")
+    
     for contact in contacts:
-        for channel, enabled in channels.items():
-            if enabled:
-                results.append({
-                    "contactId": contact.get("id", ""),
-                    "contactName": contact.get("name", ""),
-                    "contactEmail": contact.get("email", ""),
-                    "contactPhone": contact.get("whatsapp", ""),
-                    "channel": channel,
-                    "status": "pending",
-                    "sentAt": None
-                })
+        contact_id = contact.get("id", "")
+        contact_name = contact.get("name", "")
+        contact_email = contact.get("email", "")
+        contact_phone = contact.get("whatsapp", "")
+        
+        # ==================== ENVOI WHATSAPP (INDÉPENDANT) ====================
+        if channels.get("whatsapp") and contact_phone:
+            whatsapp_result = {
+                "contactId": contact_id,
+                "contactName": contact_name,
+                "contactEmail": contact_email,
+                "contactPhone": contact_phone,
+                "channel": "whatsapp",
+                "status": "pending",
+                "sentAt": None
+            }
+            
+            try:
+                # Envoi DIRECT via Twilio
+                wa_response = await send_whatsapp_direct(
+                    to_phone=contact_phone,
+                    message=message_content,
+                    media_url=media_url if media_url else None
+                )
+                
+                if wa_response.get("status") == "success":
+                    whatsapp_result["status"] = "sent"
+                    whatsapp_result["sentAt"] = datetime.now(timezone.utc).isoformat()
+                    whatsapp_result["sid"] = wa_response.get("sid")
+                    success_count += 1
+                    logger.info(f"[CAMPAIGN-LAUNCH] ✅ WhatsApp envoyé à {contact_name} ({contact_phone})")
+                elif wa_response.get("status") == "simulated":
+                    whatsapp_result["status"] = "simulated"
+                    whatsapp_result["sentAt"] = datetime.now(timezone.utc).isoformat()
+                    logger.info(f"[CAMPAIGN-LAUNCH] 🧪 WhatsApp simulé pour {contact_name} ({contact_phone})")
+                else:
+                    whatsapp_result["status"] = "failed"
+                    whatsapp_result["error"] = wa_response.get("error", "Unknown error")
+                    fail_count += 1
+                    logger.error(f"[CAMPAIGN-LAUNCH] ❌ WhatsApp échoué pour {contact_name}: {wa_response.get('error')}")
+            except Exception as e:
+                whatsapp_result["status"] = "failed"
+                whatsapp_result["error"] = str(e)
+                fail_count += 1
+                logger.error(f"[CAMPAIGN-LAUNCH] ❌ Exception WhatsApp pour {contact_name}: {str(e)}")
+            
+            results.append(whatsapp_result)
+        
+        # ==================== ENVOI EMAIL (INDÉPENDANT) ====================
+        if channels.get("email") and contact_email:
+            email_result = {
+                "contactId": contact_id,
+                "contactName": contact_name,
+                "contactEmail": contact_email,
+                "contactPhone": contact_phone,
+                "channel": "email",
+                "status": "pending",
+                "sentAt": None
+            }
+            
+            try:
+                # Envoi via l'endpoint interne (Resend)
+                if RESEND_AVAILABLE and RESEND_API_KEY:
+                    # Préparer le template email
+                    subject = f"📢 {campaign_name}"
+                    first_name = contact_name.split()[0] if contact_name else "ami(e)"
+                    
+                    html_content = f"""<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="utf-8"><title>Message Afroboost</title></head>
+<body style="margin:0;padding:20px;background:#f5f5f5;font-family:Arial,sans-serif;">
+<div style="max-width:480px;margin:0 auto;background:#111;border-radius:10px;overflow:hidden;">
+<div style="background:#9333EA;padding:16px 20px;text-align:center;">
+<span style="color:#fff;font-size:22px;font-weight:bold;">Afroboost</span>
+</div>
+<div style="padding:20px;color:#fff;font-size:14px;line-height:1.6;">
+<p>Salut {first_name},</p>
+{message_content.replace(chr(10), '<br>')}
+</div>
+<div style="padding:15px 20px;border-top:1px solid #333;text-align:center;">
+<a href="https://afroboosteur.com" style="color:#9333EA;text-decoration:none;font-size:11px;">afroboosteur.com</a>
+</div>
+</div>
+</body>
+</html>"""
+                    
+                    params = {
+                        "from": "Afroboost <notifications@afroboosteur.com>",
+                        "to": [contact_email],
+                        "subject": subject,
+                        "html": html_content
+                    }
+                    
+                    email_response = await asyncio.to_thread(resend.Emails.send, params)
+                    email_result["status"] = "sent"
+                    email_result["sentAt"] = datetime.now(timezone.utc).isoformat()
+                    email_result["email_id"] = email_response.get("id")
+                    success_count += 1
+                    logger.info(f"[CAMPAIGN-LAUNCH] ✅ Email envoyé à {contact_name} ({contact_email})")
+                else:
+                    email_result["status"] = "simulated"
+                    email_result["sentAt"] = datetime.now(timezone.utc).isoformat()
+                    logger.info(f"[CAMPAIGN-LAUNCH] 🧪 Email simulé pour {contact_name} ({contact_email})")
+            except Exception as e:
+                email_result["status"] = "failed"
+                email_result["error"] = str(e)
+                fail_count += 1
+                logger.error(f"[CAMPAIGN-LAUNCH] ❌ Email échoué pour {contact_name}: {str(e)}")
+            
+            results.append(email_result)
+        
+        # ==================== INSTAGRAM (NON SUPPORTÉ - MANUEL) ====================
+        if channels.get("instagram"):
+            results.append({
+                "contactId": contact_id,
+                "contactName": contact_name,
+                "contactEmail": contact_email,
+                "contactPhone": contact_phone,
+                "channel": "instagram",
+                "status": "manual",
+                "sentAt": None,
+                "note": "Envoi manuel requis"
+            })
+    
+    # Déterminer le statut final
+    all_sent = all(r.get("status") in ["sent", "simulated", "manual"] for r in results)
+    final_status = "completed" if all_sent else "sending"
     
     # Update campaign
     await db.campaigns.update_one(
         {"id": campaign_id},
         {"$set": {
-            "status": "sending",
+            "status": final_status,
             "results": results,
-            "updatedAt": datetime.now(timezone.utc).isoformat()
+            "updatedAt": datetime.now(timezone.utc).isoformat(),
+            "launchedAt": datetime.now(timezone.utc).isoformat()
         }}
     )
+    
+    logger.info(f"[CAMPAIGN-LAUNCH] 🏁 Campagne '{campaign_name}' terminée - ✅{success_count} / ❌{fail_count}")
     
     return await db.campaigns.find_one({"id": campaign_id}, {"_id": 0})
 
