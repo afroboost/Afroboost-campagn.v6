@@ -4737,7 +4737,33 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
         {/* === CAMPAIGNS TAB === */}
         {tab === "campaigns" && (
           <div className="card-gradient rounded-xl p-6">
-            <h2 className="font-semibold text-white mb-6" style={{ fontSize: '20px' }}>📢 Gestionnaire de Campagnes</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="font-semibold text-white" style={{ fontSize: '20px' }}>📢 Gestionnaire de Campagnes</h2>
+              
+              {/* === BADGE DE SANTÉ DU SCHEDULER === */}
+              {(() => {
+                const isActive = schedulerHealth.status === "active" && schedulerHealth.last_run;
+                const lastRunDate = schedulerHealth.last_run ? new Date(schedulerHealth.last_run) : null;
+                const now = new Date();
+                const diffSeconds = lastRunDate ? Math.floor((now - lastRunDate) / 1000) : 999;
+                const isRecent = diffSeconds < 60;
+                const isHealthy = isActive && isRecent;
+                
+                return (
+                  <div 
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
+                      isHealthy 
+                        ? 'bg-green-500/20 border border-green-500/50 text-green-400' 
+                        : 'bg-red-500/20 border border-red-500/50 text-red-400'
+                    }`}
+                    title={lastRunDate ? `Dernier scan: ${lastRunDate.toLocaleTimeString()}` : 'Statut inconnu'}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${isHealthy ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
+                    {isHealthy ? '● Automate : Actif' : '● Automate : Arrêté'}
+                  </div>
+                );
+              })()}
+            </div>
             
             {/* === COMPTEUR DE CLIENTS CIBLÉS === */}
             <div className="mb-6 p-4 rounded-xl glass border border-purple-500/30">
