@@ -4482,6 +4482,338 @@ async def get_dynamic_manifest():
     from fastapi.responses import JSONResponse
     return JSONResponse(content=manifest, media_type="application/manifest+json")
 
+# ==================== SCHEDULER INTÉGRÉ (THREAD AUTOMATIQUE) ====================
+# Le scheduler tourne en arrière-plan dès le démarrage du serveur
+# Il vérifie les campagnes programmées toutes les 30 secondes
+
+import threading
+import time as time_module
+from datetime import datetime, timezone, timedelta
+
+# Variable globale pour contrôler le scheduler
+SCHEDULER_RUNNING = False
+SCHEDULER_LAST_HEARTBEAT = None
+SCHEDULER_INTERVAL = 30  # secondes
+
+def parse_campaign_date(date_str):
+    """Parse une date ISO et la convertit en datetime UTC."""
+    if not date_str:
+        return None
+    try:
+        if 'Z' in date_str:
+            date_str = date_str.replace('Z', '+00:00')
+        if '+' in date_str or '-' in date_str[-6:]:
+            dt = datetime.fromisoformat(date_str)
+        else:
+            dt = datetime.fromisoformat(date_str)
+            dt = dt.replace(tzinfo=timezone.utc)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except Exception as e:
+        logger.warning(f"[SCHEDULER] Date parsing error '{date_str}': {e}")
+        return None
+
+def scheduler_send_email_sync(to_email, to_name, subject, message, media_url=None):
+    """Envoi synchrone d'email pour le scheduler (utilise requests)."""
+    import requests
+    try:
+        # Appeler l'API interne
+        response = requests.post(
+            "http://localhost:8001/api/campaigns/send-email",
+            json={
+                "to_email": to_email,
+                "to_name": to_name,
+                "subject": subject,
+                "message": message,
+                "media_url": media_url
+            },
+            timeout=30
+        )
+        if response.status_code == 200:
+            result = response.json()
+            if result.get("success"):
+                return True, None
+            return False, result.get("error", "Unknown error")
+        return False, f"HTTP {response.status_code}"
+    except Exception as e:
+        return False, str(e)
+
+def scheduler_send_whatsapp_sync(to_phone, message, media_url=None):
+    """Envoi synchrone de WhatsApp pour le scheduler."""
+    import requests
+    
+    # Utiliser la config .env en priorité
+    account_sid = TWILIO_ACCOUNT_SID
+    auth_token = TWILIO_AUTH_TOKEN
+    from_number = TWILIO_FROM_NUMBER
+    
+    if not account_sid or not auth_token or not from_number:
+        return False, "Twilio config missing", None
+    
+    # Formater les numéros
+    clean_to = to_phone.replace(" ", "").replace("-", "")
+    if not clean_to.startswith("+"):
+        clean_to = "+41" + clean_to.lstrip("0") if clean_to.startswith("0") else "+" + clean_to
+    clean_from = from_number if from_number.startswith("+") else "+" + from_number
+    
+    twilio_url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
+    data = {
+        "From": f"whatsapp:{clean_from}",
+        "To": f"whatsapp:{clean_to}",
+        "Body": message
+    }
+    if media_url:
+        data["MediaUrl"] = media_url
+    
+    try:
+        response = requests.post(twilio_url, data=data, auth=(account_sid, auth_token), timeout=30)
+        result = response.json()
+        if response.status_code >= 400:
+            error_msg = result.get("message", "Unknown error")
+            print(f"[WHATSAPP-PROD] Message via {clean_from} vers {clean_to} - Status: ERROR ({error_msg})")
+            return False, error_msg, None
+        sid = result.get("sid", "")
+        print(f"[WHATSAPP-PROD] Message via {clean_from} vers {clean_to} - Status: SUCCESS (SID: {sid})")
+        return True, None, sid
+    except Exception as e:
+        return False, str(e), None
+
+def scheduler_loop():
+    """Boucle principale du scheduler - tourne en arrière-plan."""
+    global SCHEDULER_RUNNING, SCHEDULER_LAST_HEARTBEAT
+    
+    from pymongo import MongoClient
+    
+    # Connexion MongoDB synchrone pour le thread
+    mongo_client = MongoClient(os.environ.get('MONGO_URL'))
+    scheduler_db = mongo_client[os.environ.get('DB_NAME', 'test_database')]
+    
+    logger.info("[SCHEDULER] ✅ Thread démarré - Mode DAEMON actif")
+    print("[SYSTEM] ✅ Scheduler is ONLINE - Checking campaigns every 30s")
+    
+    SCHEDULER_RUNNING = True
+    heartbeat_counter = 0
+    
+    while SCHEDULER_RUNNING:
+        try:
+            now = datetime.now(timezone.utc)
+            SCHEDULER_LAST_HEARTBEAT = now.isoformat()
+            heartbeat_counter += 1
+            
+            # Heartbeat toutes les 60 secondes (2 cycles)
+            if heartbeat_counter % 2 == 0:
+                print(f"[SYSTEM] Scheduler is alive - Scanning DB... ({now.strftime('%H:%M:%S')} UTC)")
+            
+            # Chercher les campagnes programmées
+            campaigns = list(scheduler_db.campaigns.find(
+                {"status": {"$in": ["scheduled", "sending"]}},
+                {"_id": 0}
+            ))
+            
+            if campaigns:
+                logger.info(f"[SCHEDULER] 📋 {len(campaigns)} campagne(s) à vérifier")
+            
+            for campaign in campaigns:
+                try:
+                    campaign_id = campaign.get("id")
+                    campaign_name = campaign.get("name", "Sans nom")
+                    
+                    # Récupérer les dates
+                    scheduled_at = campaign.get("scheduledAt")
+                    scheduled_dates = campaign.get("scheduledDates", [])
+                    sent_dates = campaign.get("sentDates", [])
+                    
+                    # Normaliser
+                    if scheduled_at and not scheduled_dates:
+                        scheduled_dates = [scheduled_at]
+                    
+                    if not scheduled_dates:
+                        continue
+                    
+                    # Trouver les dates à traiter
+                    dates_to_process = []
+                    for date_str in scheduled_dates:
+                        parsed_date = parse_campaign_date(date_str)
+                        if parsed_date and parsed_date <= now and date_str not in sent_dates:
+                            dates_to_process.append(date_str)
+                    
+                    if not dates_to_process:
+                        continue
+                    
+                    logger.info(f"[SCHEDULER] 🎯 Traitement: {campaign_name} - {len(dates_to_process)} date(s)")
+                    
+                    # Récupérer les contacts
+                    target_type = campaign.get("targetType", "all")
+                    selected_contacts = campaign.get("selectedContacts", [])
+                    
+                    if target_type == "all":
+                        contacts = list(scheduler_db.users.find({}, {"_id": 0}))
+                    else:
+                        contacts = list(scheduler_db.users.find({"id": {"$in": selected_contacts}}, {"_id": 0}))
+                    
+                    if not contacts:
+                        # Marquer comme terminée si aucun contact
+                        scheduler_db.campaigns.update_one(
+                            {"id": campaign_id},
+                            {"$set": {"status": "completed", "updatedAt": now.isoformat()},
+                             "$addToSet": {"sentDates": {"$each": dates_to_process}}}
+                        )
+                        continue
+                    
+                    channels = campaign.get("channels", {})
+                    message = campaign.get("message", "")
+                    media_url = campaign.get("mediaUrl", "")
+                    
+                    success_count = 0
+                    fail_count = 0
+                    results = campaign.get("results", [])
+                    
+                    for contact in contacts:
+                        contact_id = contact.get("id", "")
+                        contact_email = contact.get("email", "")
+                        contact_name = contact.get("name", "")
+                        contact_phone = contact.get("whatsapp", "")
+                        
+                        # ========== EMAIL (try/except isolé) ==========
+                        if channels.get("email") and contact_email:
+                            try:
+                                success, error = scheduler_send_email_sync(
+                                    to_email=contact_email,
+                                    to_name=contact_name,
+                                    subject=f"📢 {campaign_name}",
+                                    message=message,
+                                    media_url=media_url if media_url else None
+                                )
+                                
+                                result_entry = {
+                                    "contactId": contact_id,
+                                    "contactName": contact_name,
+                                    "contactEmail": contact_email,
+                                    "channel": "email",
+                                    "status": "sent" if success else "failed",
+                                    "error": error if not success else None,
+                                    "sentAt": now.isoformat()
+                                }
+                                results.append(result_entry)
+                                
+                                if success:
+                                    success_count += 1
+                                    logger.info(f"[SCHEDULER] ✅ Email envoyé à {contact_email}")
+                                else:
+                                    fail_count += 1
+                                    logger.error(f"[SCHEDULER] ❌ Email échoué ({contact_email}): {error}")
+                                    
+                            except Exception as e:
+                                logger.error(f"[SCHEDULER] ❌ Exception Email ({contact_email}): {e}")
+                                fail_count += 1
+                                continue  # PASSER AU CONTACT SUIVANT
+                        
+                        # ========== WHATSAPP (try/except isolé) ==========
+                        if channels.get("whatsapp") and contact_phone:
+                            try:
+                                success, error, sid = scheduler_send_whatsapp_sync(
+                                    to_phone=contact_phone,
+                                    message=message,
+                                    media_url=media_url if media_url else None
+                                )
+                                
+                                result_entry = {
+                                    "contactId": contact_id,
+                                    "contactName": contact_name,
+                                    "contactPhone": contact_phone,
+                                    "channel": "whatsapp",
+                                    "status": "sent" if success else "failed",
+                                    "error": error if not success else None,
+                                    "sid": sid,
+                                    "sentAt": now.isoformat()
+                                }
+                                results.append(result_entry)
+                                
+                                if success:
+                                    success_count += 1
+                                    logger.info(f"[SCHEDULER] ✅ WhatsApp envoyé à {contact_phone}")
+                                else:
+                                    fail_count += 1
+                                    logger.error(f"[SCHEDULER] ❌ WhatsApp échoué ({contact_phone}): {error}")
+                                    
+                            except Exception as e:
+                                logger.error(f"[SCHEDULER] ❌ Exception WhatsApp ({contact_phone}): {e}")
+                                fail_count += 1
+                                continue  # PASSER AU CONTACT SUIVANT
+                    
+                    # Mise à jour de la campagne
+                    new_sent_dates = list(set(sent_dates + dates_to_process))
+                    all_dates_done = set(new_sent_dates) >= set(scheduled_dates)
+                    
+                    if fail_count > 0 and success_count == 0:
+                        new_status = "failed"
+                    elif all_dates_done:
+                        new_status = "completed"
+                    else:
+                        new_status = "scheduled"
+                    
+                    scheduler_db.campaigns.update_one(
+                        {"id": campaign_id},
+                        {"$set": {
+                            "status": new_status,
+                            "results": results,
+                            "sentDates": new_sent_dates,
+                            "updatedAt": now.isoformat(),
+                            "lastProcessedAt": now.isoformat()
+                        }}
+                    )
+                    
+                    status_emoji = "🟢" if new_status == "completed" else ("🔴" if new_status == "failed" else "🟠")
+                    logger.info(f"[SCHEDULER] {status_emoji} {campaign_name}: {new_status} (✓{success_count}/✗{fail_count})")
+                    print(f"[SCHEDULER] Campaign '{campaign_name}' processed: {new_status}")
+                    
+                except Exception as campaign_error:
+                    logger.error(f"[SCHEDULER] ❌ Erreur campagne {campaign.get('id')}: {campaign_error}")
+                    continue  # PASSER À LA CAMPAGNE SUIVANTE
+            
+        except Exception as e:
+            logger.error(f"[SCHEDULER] ❌ Erreur dans la boucle: {e}")
+        
+        # Attendre avant le prochain cycle
+        time_module.sleep(SCHEDULER_INTERVAL)
+    
+    logger.info("[SCHEDULER] Thread arrêté")
+
+# Variable pour le thread du scheduler
+scheduler_thread = None
+
+@app.on_event("startup")
+async def startup_scheduler():
+    """Lance le scheduler dans un thread séparé au démarrage du serveur."""
+    global scheduler_thread
+    
+    logger.info("[SYSTEM] 🚀 Démarrage du serveur Afroboost...")
+    print("[SYSTEM] ============================================")
+    print("[SYSTEM] 🚀 AFROBOOST SERVER STARTING...")
+    print(f"[SYSTEM] 📱 Twilio FROM: {TWILIO_FROM_NUMBER}")
+    print("[SYSTEM] ============================================")
+    
+    # Démarrer le scheduler dans un thread daemon
+    scheduler_thread = threading.Thread(target=scheduler_loop, daemon=True, name="CampaignScheduler")
+    scheduler_thread.start()
+    
+    logger.info("[SYSTEM] ✅ Scheduler thread lancé avec succès")
+
+@api_router.get("/scheduler/status")
+async def get_scheduler_status():
+    """Endpoint pour vérifier que le scheduler est en vie."""
+    return {
+        "scheduler_running": SCHEDULER_RUNNING,
+        "last_heartbeat": SCHEDULER_LAST_HEARTBEAT,
+        "interval_seconds": SCHEDULER_INTERVAL,
+        "twilio_configured": bool(TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER),
+        "twilio_from_number": TWILIO_FROM_NUMBER
+    }
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    global SCHEDULER_RUNNING
+    SCHEDULER_RUNNING = False
     client.close()
+    logger.info("[SYSTEM] Serveur arrêté")
