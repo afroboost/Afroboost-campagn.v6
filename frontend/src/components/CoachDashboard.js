@@ -1772,10 +1772,15 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
           // Importer les fonctions de notification
           const { playNotificationSound, showBrowserNotification, getNotificationPermissionStatus } = await import('../services/notificationService');
           
-          // Jouer le son
-          console.log('NOTIF_DEBUG: Jouer son...');
-          await playNotificationSound('user');
-          console.log('NOTIF_DEBUG: Son joué ✅');
+          // Jouer le son (avec protection contre les erreurs)
+          try {
+            console.log('NOTIF_DEBUG: Jouer son...');
+            await playNotificationSound('user');
+            console.log('NOTIF_DEBUG: Son joué ✅');
+          } catch (soundErr) {
+            console.warn('NOTIF_DEBUG: Erreur son (ignorée):', soundErr.message);
+            // Continuer même si le son échoue
+          }
           
           // Vérifier la permission actuelle
           const currentPermission = getNotificationPermissionStatus();
@@ -1786,33 +1791,38 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
             console.log(`NOTIF_DEBUG: Traitement message de ${msg.sender_name}...`);
             
             // Essayer d'afficher une notification browser
-            const result = await showBrowserNotification(
-              '💬 Nouveau message - Afroboost',
-              `${msg.sender_name}: ${msg.content.substring(0, 80)}${msg.content.length > 80 ? '...' : ''}`,
-              {
-                tag: `afroboost-msg-${msg.id}`,
-                onClick: () => {
-                  // Sélectionner la session correspondante
-                  const session = chatSessions.find(s => s.id === msg.session_id);
-                  if (session) {
-                    setSelectedSession(session);
-                    loadSessionMessages(session.id);
+            try {
+              const result = await showBrowserNotification(
+                '💬 Nouveau message - Afroboost',
+                `${msg.sender_name}: ${msg.content.substring(0, 80)}${msg.content.length > 80 ? '...' : ''}`,
+                {
+                  tag: `afroboost-msg-${msg.id}`,
+                  onClick: () => {
+                    // Sélectionner la session correspondante
+                    const session = chatSessions.find(s => s.id === msg.session_id);
+                    if (session) {
+                      setSelectedSession(session);
+                      loadSessionMessages(session.id);
+                    }
                   }
                 }
+              );
+              
+              console.log('NOTIF_DEBUG: Résultat notification:', result);
+              
+              // Si la notification browser a échoué, utiliser le fallback toast
+              if (result.fallbackNeeded) {
+                console.log('NOTIF_DEBUG: Fallback TOAST activé!');
+                addToastNotification(msg);
+              } else {
+                console.log('NOTIF_DEBUG: Notification browser envoyée ✅');
               }
-            );
-            
-            console.log('NOTIF_DEBUG: Résultat notification:', result);
-            
-            // Si la notification browser a échoué, utiliser le fallback toast
-            if (result.fallbackNeeded) {
-              console.log('NOTIF_DEBUG: Fallback TOAST activé!');
+            } catch (notifErr) {
+              console.warn('NOTIF_DEBUG: Erreur notification (fallback toast):', notifErr.message);
               addToastNotification(msg);
-            } else {
-              console.log('NOTIF_DEBUG: Notification browser envoyée ✅');
             }
             
-            // Ajouter à la liste des messages notifiés localement
+            // Ajouter à la liste des messages notifiés localement (TOUJOURS, même en cas d'erreur)
             lastNotifiedIdsRef.current.add(msg.id);
           }
           
