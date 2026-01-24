@@ -118,9 +118,14 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
 - [x] Tests automatisés iteration 34
 - [x] **Scheduler de campagnes DAEMON** (24 Jan 2026) - RÉPARÉ ✅
 - [x] **Configuration Twilio Production** (24 Jan 2026) - VERROUILLÉE ✅
+- [x] **Chat IA - Vision Totale du Site** (24 Jan 2026) - RÉPARÉ ✅
+  - Bug: La route `/api/chat/ai-response` n'injectait pas le contexte dynamique (produits, articles)
+  - Correction: Synchronisation du contexte avec `/api/chat` (MongoDB: offers, courses, articles)
+  - Test: L'IA reconnaît maintenant "café congolais" à "10 CHF" ✅
 
 ### P1 - À faire
-- [ ] **Activation numéro WhatsApp Suisse (+41)** : En attente approbation Meta
+- [ ] **Gérer les articles dans le Dashboard** : Interface CRUD pour créer/modifier/supprimer des articles
+- [ ] **Activation numéro WhatsApp Suisse (+41)** : En attente approbation Meta (config Twilio bloquée)
 - [ ] **Refactoring CoachDashboard.js** : Extraire composants (>6000 lignes)
 - [ ] **Export CSV contacts CRM** : Valider le flux de bout en bout
 
