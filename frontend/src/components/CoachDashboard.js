@@ -1601,13 +1601,28 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     try {
       console.log('DELETE_DEBUG: Suppression lien:', linkId);
       await axios.delete(`${API}/chat/links/${linkId}`);
-      setChatLinks(prev => prev.filter(l => l.id !== linkId && l.link_token !== linkId));
-      // Aussi supprimer des sessions enrichies
-      setEnrichedConversations(prev => prev.filter(c => c.id !== linkId));
-      setChatSessions(prev => prev.filter(s => s.id !== linkId));
+      console.log('DELETE_DEBUG: API OK pour lien, mise à jour du state...');
+      
+      setChatLinks(prev => {
+        const filtered = prev.filter(l => l.id !== linkId && l.link_token !== linkId);
+        console.log('DELETE_DEBUG: chatLinks filtré:', prev.length, '->', filtered.length);
+        return filtered;
+      });
+      setEnrichedConversations(prev => {
+        const filtered = prev.filter(c => c.id !== linkId && c.link_token !== linkId);
+        console.log('DELETE_DEBUG: enrichedConversations filtré:', prev.length, '->', filtered.length);
+        return filtered;
+      });
+      setChatSessions(prev => {
+        const filtered = prev.filter(s => s.id !== linkId && s.link_token !== linkId);
+        console.log('DELETE_DEBUG: chatSessions filtré:', prev.length, '->', filtered.length);
+        return filtered;
+      });
+      
+      console.log('DELETE_DEBUG: Suppression lien terminée ✅');
     } catch (err) {
-      console.error("Error deleting chat link:", err);
-      alert("Erreur lors de la suppression du lien");
+      console.error("DELETE_DEBUG: ERREUR lien:", err);
+      alert("Erreur lors de la suppression du lien: " + (err.response?.data?.detail || err.message));
     }
   };
 
