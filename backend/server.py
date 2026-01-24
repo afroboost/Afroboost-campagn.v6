@@ -53,12 +53,23 @@ TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
 TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
 TWILIO_FROM_NUMBER = os.environ.get('TWILIO_FROM_NUMBER', '')
 
-# Log de la configuration Twilio au démarrage
+# VALIDATION CRITIQUE: Vérification des identifiants Twilio au démarrage
+# Un Account SID Twilio valide fait EXACTEMENT 34 caractères (AC + 32)
 if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER:
-    print(f"[WHATSAPP-PROD] ✅ Configuration Twilio chargée depuis .env")
-    print(f"[WHATSAPP-PROD] 📱 Numéro de production: {TWILIO_FROM_NUMBER}")
+    if len(TWILIO_ACCOUNT_SID) != 34 or not TWILIO_ACCOUNT_SID.startswith('AC'):
+        print(f"[WHATSAPP-PROD] 🚨 ALERTE CRITIQUE: Account SID invalide ({len(TWILIO_ACCOUNT_SID)} chars, attendu: 34)")
+        print(f"[WHATSAPP-PROD] 🚨 SID actuel: {TWILIO_ACCOUNT_SID}")
+    else:
+        print(f"[WHATSAPP-PROD] ✅ Configuration Twilio VALIDE chargée depuis .env")
+        print(f"[WHATSAPP-PROD] 📱 Numéro de production VERROUILLÉ: {TWILIO_FROM_NUMBER}")
+        print(f"[WHATSAPP-PROD] 🔑 Account SID: {TWILIO_ACCOUNT_SID[:8]}...{TWILIO_ACCOUNT_SID[-4:]} (34 chars)")
 else:
     print(f"[WHATSAPP-PROD] ⚠️ Configuration Twilio incomplète dans .env - utilisation de la config en base")
+
+# SÉCURITÉ: Ne JAMAIS utiliser le numéro Sandbox automatiquement
+TWILIO_SANDBOX_NUMBER = "+14155238886"
+if TWILIO_FROM_NUMBER == TWILIO_SANDBOX_NUMBER:
+    print(f"[WHATSAPP-PROD] 🚨 ALERTE: Numéro Sandbox détecté! Vérifiez votre configuration.")
 
 # MongoDB connection - with fallback for production environments
 mongo_url = os.environ.get('MONGO_URL')
