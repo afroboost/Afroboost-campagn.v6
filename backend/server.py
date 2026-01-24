@@ -4710,12 +4710,21 @@ def scheduler_loop():
                                 if success:
                                     success_count += 1
                                     logger.info(f"[SCHEDULER] ✅ Email envoyé à {contact_email}")
+                                    print(f"[SCHEDULER] ✅ Email OK: {contact_email}")
                                 else:
                                     fail_count += 1
-                                    logger.error(f"[SCHEDULER] ❌ Email échoué ({contact_email}): {error}")
+                                    # Détecter le quota épuisé
+                                    is_quota_error = error and ("quota" in error.lower() or "limit" in error.lower() or "429" in str(error))
+                                    if is_quota_error:
+                                        logger.error(f"[SCHEDULER] 🔴 QUOTA EMAIL ÉPUISÉ ({contact_email})")
+                                        print(f"[SCHEDULER] 🔴 QUOTA EMAIL ÉPUISÉ - Marquage failed_quota")
+                                    else:
+                                        logger.error(f"[SCHEDULER] ❌ Email échoué ({contact_email}): {error}")
+                                        print(f"[SCHEDULER] ❌ Email ÉCHEC: {contact_email}")
                                     
                             except Exception as e:
                                 logger.error(f"[SCHEDULER] ❌ Exception Email ({contact_email}): {e}")
+                                print(f"[SCHEDULER] ❌ Exception Email: {e}")
                                 fail_count += 1
                                 continue  # PASSER AU CONTACT SUIVANT
                         
@@ -4743,21 +4752,34 @@ def scheduler_loop():
                                 if success:
                                     success_count += 1
                                     logger.info(f"[SCHEDULER] ✅ WhatsApp envoyé à {contact_phone}")
+                                    print(f"[SCHEDULER] ✅ WhatsApp OK: {contact_phone}")
                                 else:
                                     fail_count += 1
                                     logger.error(f"[SCHEDULER] ❌ WhatsApp échoué ({contact_phone}): {error}")
+                                    print(f"[SCHEDULER] ❌ WhatsApp ÉCHEC: {contact_phone}")
                                     
                             except Exception as e:
                                 logger.error(f"[SCHEDULER] ❌ Exception WhatsApp ({contact_phone}): {e}")
+                                print(f"[SCHEDULER] ❌ Exception WhatsApp: {e}")
                                 fail_count += 1
                                 continue  # PASSER AU CONTACT SUIVANT
                     
-                    # Mise à jour de la campagne
+                    # TOUJOURS marquer les dates comme traitées (même en cas d'échec)
                     new_sent_dates = list(set(sent_dates + dates_to_process))
                     all_dates_done = set(new_sent_dates) >= set(scheduled_dates)
                     
+                    # Déterminer le statut final
+                    # Vérifier si c'est un échec de quota email
+                    has_quota_error = any(
+                        r.get("error") and ("quota" in r.get("error", "").lower() or "limit" in r.get("error", "").lower())
+                        for r in results
+                    )
+                    
                     if fail_count > 0 and success_count == 0:
-                        new_status = "failed"
+                        if has_quota_error:
+                            new_status = "failed_quota"  # Statut spécial pour quota épuisé
+                        else:
+                            new_status = "failed"
                     elif all_dates_done:
                         new_status = "completed"
                     else:
@@ -4774,9 +4796,9 @@ def scheduler_loop():
                         }}
                     )
                     
-                    status_emoji = "🟢" if new_status == "completed" else ("🔴" if new_status == "failed" else "🟠")
+                    status_emoji = "🟢" if new_status == "completed" else ("🟠" if new_status == "failed_quota" else "🔴")
                     logger.info(f"[SCHEDULER] {status_emoji} {campaign_name}: {new_status} (✓{success_count}/✗{fail_count})")
-                    print(f"[SCHEDULER] Campaign '{campaign_name}' processed: {new_status}")
+                    print(f"[SCHEDULER] {status_emoji} Campagne '{campaign_name}' → {new_status} (✓{success_count}/✗{fail_count})")
                     
                 except Exception as campaign_error:
                     logger.error(f"[SCHEDULER] ❌ Erreur campagne {campaign.get('id')}: {campaign_error}")
