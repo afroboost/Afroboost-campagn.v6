@@ -697,13 +697,20 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   const deleteReservation = async (reservationId) => {
     if (window.confirm("⚠️ SUPPRESSION DÉFINITIVE\n\nCette réservation sera supprimée de la base de données.\n\nConfirmer la suppression ?")) {
       try {
+        console.log('DELETE_UI: Début suppression réservation:', reservationId);
         await axios.delete(`${API}/reservations/${reservationId}`);
-        setReservations(prev => prev.filter(r => r.id !== reservationId));
+        
+        setReservations(prev => {
+          const filtered = prev.filter(r => r.id !== reservationId);
+          console.log(`DELETE_UI: Réservations filtrées: ${prev.length} -> ${filtered.length}`);
+          return filtered;
+        });
+        
         // Mettre à jour le compteur de pagination
         setReservationPagination(prev => ({ ...prev, total: prev.total - 1 }));
-        console.log(`✅ Réservation ${reservationId} supprimée définitivement`);
+        console.log(`DELETE_UI: ✅ Réservation ${reservationId} supprimée - UI mise à jour instantanément`);
       } catch (err) {
-        console.error("Erreur suppression réservation:", err);
+        console.error("DELETE_UI: ❌ ERREUR:", err);
         alert("❌ Erreur lors de la suppression");
       }
     }
