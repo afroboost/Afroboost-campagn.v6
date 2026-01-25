@@ -3602,7 +3602,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
             </div>
             
             {/* === DESKTOP VIEW: Table === */}
-            <div className="hidden md:block overflow-x-auto overflow-y-auto rounded-lg" style={{ maxHeight: '600px' }}>
+            <div className="hidden md:block overflow-x-auto overflow-y-auto rounded-lg relative" style={{ maxHeight: '600px' }}>
               <table className="coach-table">
                 <thead className="sticky top-0 bg-black z-10">
                   <tr>
