@@ -3601,16 +3601,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                 );
               })}
               {reservations.length === 0 && !reservationsSearch && <p className="text-center py-8 text-white/50">{t('noReservations')}</p>}
-              {reservationsSearch && reservations.filter(r => {
-                const q = reservationsSearch.toLowerCase();
-                const dateStr = new Date(r.datetime).toLocaleDateString('fr-FR');
-                return r.userName?.toLowerCase().includes(q) ||
-                       r.userEmail?.toLowerCase().includes(q) ||
-                       r.userWhatsapp?.includes(q) ||
-                       r.reservationCode?.toLowerCase().includes(q) ||
-                       dateStr.includes(q) ||
-                       r.courseName?.toLowerCase().includes(q);
-              }).length === 0 && <p className="text-center py-8 text-white/50">Aucune réservation correspondante</p>}
+              {filteredReservations.length === 0 && reservationsSearch && <p className="text-center py-8 text-white/50">Aucune réservation correspondante</p>}
             </div>
             
             {/* === DESKTOP VIEW: Table === */}
@@ -3634,17 +3625,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {reservations.filter(r => {
-                    if (!reservationsSearch) return true;
-                    const q = reservationsSearch.toLowerCase();
-                    const dateStr = new Date(r.datetime).toLocaleDateString('fr-FR');
-                    return r.userName?.toLowerCase().includes(q) ||
-                           r.userEmail?.toLowerCase().includes(q) ||
-                           r.userWhatsapp?.includes(q) ||
-                           r.reservationCode?.toLowerCase().includes(q) ||
-                           dateStr.includes(q) ||
-                           r.courseName?.toLowerCase().includes(q);
-                  }).map(r => {
+                  {filteredReservations.map(r => {
                     const dt = new Date(r.datetime);
                     const isProduct = r.selectedVariants || r.trackingNumber || r.shippingStatus !== 'pending';
                     return (
