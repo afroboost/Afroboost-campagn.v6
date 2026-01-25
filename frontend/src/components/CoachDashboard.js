@@ -1578,7 +1578,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
       await axios.delete(`${API}/chat/participants/${participantId}`);
       console.log('DELETE_DEBUG: API OK pour participant');
       setChatParticipants(prev => {
-        const filtered = prev.filter(p => p.id !== participantId);
+        const filtered = prev.filter(p => p.id !== participantId && p._id !== participantId);
         console.log('DELETE_DEBUG: chatParticipants filtré:', prev.length, '->', filtered.length);
         return filtered;
       });
