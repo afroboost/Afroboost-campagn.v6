@@ -245,9 +245,17 @@ Application de réservation de casques audio pour des cours de fitness Afroboost
   - Test report: `/app/test_reports/iteration_39.json` - 100% passed
 
 - [x] **Scanner QR Réparé** (25 Jan 2026) - NOUVEAU ✅
-  - Import `QRScannerModal` vérifié (ligne 21 de CoachDashboard.js)
+  - CDN Html5Qrcode ajouté dans index.html (ligne 52)
+  - Protection fallback si CDN non chargé → mode manuel automatique
   - Modal s'ouvre correctement sans erreur ReferenceError
   - Options caméra et saisie manuelle fonctionnelles
+  - Test report: `/app/test_reports/iteration_40.json` - 100% passed
+
+- [x] **Suppressions avec mise à jour UI instantanée** (25 Jan 2026) - VÉRIFIÉ ✅
+  - Réservations : `setReservations(prev => prev.filter(r => r.id !== id))`
+  - Conversations : `setChatSessions`, `setEnrichedConversations`, `setChatLinks` tous mis à jour
+  - Logs DELETE_DEBUG confirment les changements d'état (ex: `chatSessions 2->1`)
+  - Test report: `/app/test_reports/iteration_40.json` - 100% passed
 
 ### P1 - À faire
 - [ ] **Gérer les articles dans le Dashboard** : Interface CRUD pour créer/modifier/supprimer des articles
