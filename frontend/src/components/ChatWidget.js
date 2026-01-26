@@ -55,11 +55,35 @@ const GroupIcon = () => (
 
 /**
  * Composant pour afficher un message avec liens cliquables et emojis
+ * Affiche le nom de l'expéditeur au-dessus de chaque bulle
+ * Couleurs: Violet (#8B5CF6) pour le Coach, Gris foncé pour les membres
  */
 const MessageBubble = ({ msg, isUser, onParticipantClick, isCommunity, currentUserId }) => {
   // Convertir le texte en HTML avec liens cliquables
   const htmlContent = linkifyText(msg.text);
   const isOtherUser = isCommunity && msg.type === 'user' && msg.senderId && msg.senderId !== currentUserId;
+  
+  // Déterminer si c'est un message du Coach (type 'coach' ou is_admin)
+  const isCoachMessage = msg.type === 'coach' || msg.is_admin === true || msg.role === 'coach';
+  
+  // Déterminer le nom à afficher
+  const displayName = isCoachMessage 
+    ? '🏋️ Coach' 
+    : (msg.sender || msg.senderName || 'Membre');
+  
+  // Couleur de la bulle selon le type
+  const getBubbleBackground = () => {
+    if (isUser) {
+      // Messages envoyés par l'utilisateur actuel (à droite)
+      return 'linear-gradient(135deg, #d91cd2, #8b5cf6)';
+    }
+    if (isCoachMessage) {
+      // Messages du Coach: Violet solide
+      return '#8B5CF6';
+    }
+    // Messages des autres membres: Gris foncé
+    return '#2D2D2D';
+  };
   
   return (
     <div
@@ -68,46 +92,55 @@ const MessageBubble = ({ msg, isUser, onParticipantClick, isCommunity, currentUs
         maxWidth: '85%'
       }}
     >
+      {/* NOM AU-DESSUS DE LA BULLE - Toujours visible pour les messages reçus */}
+      {!isUser && (
+        <div
+          style={{
+            fontSize: '10px',
+            fontWeight: '600',
+            marginBottom: '3px',
+            marginLeft: '4px',
+            color: isCoachMessage ? '#FBBF24' : '#22D3EE', // Jaune pour Coach, Cyan pour membres
+            letterSpacing: '0.3px'
+          }}
+        >
+          {isOtherUser && onParticipantClick ? (
+            <button
+              onClick={() => onParticipantClick(msg.senderId, msg.sender)}
+              style={{
+                fontSize: '10px',
+                fontWeight: '600',
+                background: 'none',
+                border: 'none',
+                color: '#22D3EE',
+                cursor: 'pointer',
+                padding: 0,
+                textDecoration: 'underline'
+              }}
+              title="Cliquer pour envoyer un message privé"
+            >
+              👤 {displayName}
+            </button>
+          ) : (
+            displayName
+          )}
+        </div>
+      )}
+      
       <div
         style={{
-          background: isUser 
-            ? 'linear-gradient(135deg, #d91cd2, #8b5cf6)' 
-            : 'rgba(255,255,255,0.1)',
+          background: getBubbleBackground(),
           color: '#fff',
           padding: '10px 14px',
           borderRadius: isUser 
             ? '16px 16px 4px 16px' 
             : '16px 16px 16px 4px',
           fontSize: '13px',
-          lineHeight: '1.4'
+          lineHeight: '1.4',
+          // Bordure subtile pour les bulles Coach
+          border: isCoachMessage && !isUser ? '1px solid rgba(251, 191, 36, 0.3)' : 'none'
         }}
       >
-        {/* Indicateur si message du coach */}
-        {msg.type === 'coach' && (
-          <div style={{ fontSize: '10px', opacity: 0.7, marginBottom: '4px' }}>
-            🏋️ Coach
-          </div>
-        )}
-        {/* Nom cliquable pour discussion privée en mode communautaire */}
-        {isOtherUser && msg.sender && (
-          <button
-            onClick={() => onParticipantClick && onParticipantClick(msg.senderId, msg.sender)}
-            style={{
-              fontSize: '10px',
-              opacity: 0.8,
-              marginBottom: '4px',
-              background: 'none',
-              border: 'none',
-              color: '#a78bfa',
-              cursor: 'pointer',
-              padding: 0,
-              textDecoration: 'underline'
-            }}
-            title="Cliquer pour envoyer un message privé"
-          >
-            👤 {msg.sender} (cliquer pour discuter)
-          </button>
-        )}
         {/* Rendu du texte avec liens cliquables */}
         <span 
           dangerouslySetInnerHTML={{ __html: htmlContent }}
