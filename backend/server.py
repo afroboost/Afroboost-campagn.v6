@@ -2840,23 +2840,28 @@ Si la question ne concerne pas un produit ou un cours Afroboost, réponds:
     # --- 3. CAMPAIGN_PROMPT : Récupéré de la base de données ---
     CAMPAIGN_PROMPT = ai_config.get("campaignPrompt", "").strip()
     
+    # GARDE-FOU: Limite à 2000 caractères pour éviter de saturer le contexte OpenAI
+    MAX_CAMPAIGN_LENGTH = 2000
+    if len(CAMPAIGN_PROMPT) > MAX_CAMPAIGN_LENGTH:
+        logger.warning("[CHAT-IA] ⚠️ CAMPAIGN_PROMPT tronqué (dépassement " + str(MAX_CAMPAIGN_LENGTH) + " chars)")
+        CAMPAIGN_PROMPT = CAMPAIGN_PROMPT[:MAX_CAMPAIGN_LENGTH] + "... [TRONQUÉ]"
+    
     # --- INJECTION FINALE : BASE + SECURITY + CAMPAIGN ---
     context += BASE_PROMPT
     context += SECURITY_PROMPT
     
     if CAMPAIGN_PROMPT:
         # PRODUCTION-READY: Concaténation sécurisée (pas de f-string pour éviter les erreurs)
-        # Si CAMPAIGN_PROMPT contient des accolades {} ou %, cela ne cassera pas le formattage
         context += "\n\n--- INSTRUCTIONS PRIORITAIRES DE LA CAMPAGNE ACTUELLE (ÉCRASE TOUT LE RESTE) ---\n"
         context += "╔══════════════════════════════════════════════════════════════════╗\n"
         context += "║   🚨 CAMPAIGN_PROMPT - PRIORITÉ ABSOLUE (ÉCRASE TOUT LE RESTE)   ║\n"
         context += "╚══════════════════════════════════════════════════════════════════╝\n\n"
-        # Injection sécurisée du contenu utilisateur (concaténation simple)
         context += CAMPAIGN_PROMPT
         context += "\n\n╔══════════════════════════════════════════════════════════════════╗\n"
         context += "║              FIN DES INSTRUCTIONS PRIORITAIRES                   ║\n"
         context += "╚══════════════════════════════════════════════════════════════════╝\n"
-        logger.info("[CHAT-IA] ✅ CAMPAIGN_PROMPT injecté (" + str(len(CAMPAIGN_PROMPT)) + " chars) - PRIORITÉ ABSOLUE")
+        # LOG SÉCURISÉ: Uniquement la longueur, pas le contenu
+        logger.info("[CHAT-IA] ✅ Prompt injecté (len: " + str(len(CAMPAIGN_PROMPT)) + ")")
     
     # Assemblage final du prompt système
     full_system_prompt = ai_config.get("systemPrompt", "Tu es l'assistant IA d'Afroboost.") + context
