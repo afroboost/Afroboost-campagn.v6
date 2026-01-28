@@ -2714,29 +2714,47 @@ async def chat_with_ai(data: ChatMessage):
     
     # === SECTION 4: PROMOS SPÉCIALES (avec masquage des codes) ===
     # L'IA peut connaître les remises pour calculer les prix, mais JAMAIS les codes
+    # PRODUCTION-READY: Try/except individuel pour chaque promo
     try:
         active_promos = await db.discount_codes.find({"active": True}, {"_id": 0}).to_list(20)
         if active_promos:
             context += "\n\n🎁 PROMOTIONS EN COURS:\n"
+            promos_injected = 0
             for promo in active_promos[:5]:
-                # MASQUAGE TECHNIQUE: Remplacer le code par un placeholder
-                promo_type = promo.get('type', '%')
-                promo_value = promo.get('value', 0)
-                promo_courses = promo.get('courses', [])
-                
-                # Construire la description SANS le code réel
-                if promo_type == '100%':
-                    context += f"  • Remise 100% disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
-                elif promo_type == '%':
-                    context += f"  • Remise de {promo_value}% disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
-                elif promo_type == 'CHF':
-                    context += f"  • Remise de {promo_value} CHF disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
+                try:
+                    # MASQUAGE TECHNIQUE: Le champ 'code' n'est JAMAIS lu ni transmis
+                    # Seuls 'type' et 'value' sont utilisés pour le calcul
+                    promo_type = promo.get('type', '%')
+                    promo_value = promo.get('value', 0)
+                    
+                    # Validation: S'assurer que value est un nombre valide
+                    if promo_value is None:
+                        promo_value = 0
+                    promo_value = float(promo_value)
+                    
+                    # Construire la description SANS le code réel
+                    # Le placeholder [CODE_APPLIQUÉ_AU_PANIER] est la SEULE chose visible
+                    if promo_type == '100%':
+                        context += "  • Remise 100% disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
+                    elif promo_type == '%':
+                        context += "  • Remise de " + str(promo_value) + "% disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
+                    elif promo_type == 'CHF':
+                        context += "  • Remise de " + str(promo_value) + " CHF disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
+                    else:
+                        # Type inconnu: afficher quand même sans révéler le code
+                        context += "  • Promotion disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
+                    promos_injected += 1
+                except Exception as promo_error:
+                    # Log l'erreur mais continue avec les autres promos
+                    logger.warning(f"[CHAT-IA] ⚠️ Promo ignorée (erreur parsing): {promo_error}")
+                    continue
             
-            context += "  → IMPORTANT: Tu connais le MONTANT des remises pour calculer les prix réduits.\n"
-            context += "  → INTERDIT: Tu ne dois JAMAIS révéler le code textuel. Dis: 'Le code sera appliqué automatiquement au panier.'\n"
-            logger.info(f"[CHAT-IA] ✅ {len(active_promos)} promos injectées (codes masqués)")
+            if promos_injected > 0:
+                context += "  → Tu peux calculer les prix réduits avec ces remises.\n"
+                context += "  → Ne dis JAMAIS le code. Dis simplement: 'Le code est appliqué automatiquement au panier.'\n"
+                logger.info(f"[CHAT-IA] ✅ {promos_injected} promos injectées (codes masqués)")
     except Exception as e:
-        logger.warning(f"[CHAT-IA] Erreur récupération promos: {e}")
+        logger.warning(f"[CHAT-IA] Erreur récupération promos (non bloquant): {e}")
     
     # === SECTION 5: LIEN DE PAIEMENT TWINT ===
     twint_payment_url = ai_config.get("twintPaymentUrl", "")
@@ -3807,29 +3825,47 @@ async def get_ai_response_with_session(request: Request):
     
     # === SECTION 4: PROMOS SPÉCIALES (avec masquage des codes) ===
     # L'IA peut connaître les remises pour calculer les prix, mais JAMAIS les codes
+    # PRODUCTION-READY: Try/except individuel pour chaque promo
     try:
         active_promos = await db.discount_codes.find({"active": True}, {"_id": 0}).to_list(20)
         if active_promos:
             context += "\n\n🎁 PROMOTIONS EN COURS:\n"
+            promos_injected = 0
             for promo in active_promos[:5]:
-                # MASQUAGE TECHNIQUE: Remplacer le code par un placeholder
-                promo_type = promo.get('type', '%')
-                promo_value = promo.get('value', 0)
-                promo_courses = promo.get('courses', [])
-                
-                # Construire la description SANS le code réel
-                if promo_type == '100%':
-                    context += f"  • Remise 100% disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
-                elif promo_type == '%':
-                    context += f"  • Remise de {promo_value}% disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
-                elif promo_type == 'CHF':
-                    context += f"  • Remise de {promo_value} CHF disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
+                try:
+                    # MASQUAGE TECHNIQUE: Le champ 'code' n'est JAMAIS lu ni transmis
+                    # Seuls 'type' et 'value' sont utilisés pour le calcul
+                    promo_type = promo.get('type', '%')
+                    promo_value = promo.get('value', 0)
+                    
+                    # Validation: S'assurer que value est un nombre valide
+                    if promo_value is None:
+                        promo_value = 0
+                    promo_value = float(promo_value)
+                    
+                    # Construire la description SANS le code réel
+                    # Le placeholder [CODE_APPLIQUÉ_AU_PANIER] est la SEULE chose visible
+                    if promo_type == '100%':
+                        context += "  • Remise 100% disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
+                    elif promo_type == '%':
+                        context += "  • Remise de " + str(promo_value) + "% disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
+                    elif promo_type == 'CHF':
+                        context += "  • Remise de " + str(promo_value) + " CHF disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
+                    else:
+                        # Type inconnu: afficher quand même sans révéler le code
+                        context += "  • Promotion disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
+                    promos_injected += 1
+                except Exception as promo_error:
+                    # Log l'erreur mais continue avec les autres promos
+                    logger.warning(f"[CHAT-IA] ⚠️ Promo ignorée (erreur parsing): {promo_error}")
+                    continue
             
-            context += "  → IMPORTANT: Tu connais le MONTANT des remises pour calculer les prix réduits.\n"
-            context += "  → INTERDIT: Tu ne dois JAMAIS révéler le code textuel. Dis: 'Le code sera appliqué automatiquement au panier.'\n"
-            logger.info(f"[CHAT-IA] ✅ {len(active_promos)} promos injectées (codes masqués)")
+            if promos_injected > 0:
+                context += "  → Tu peux calculer les prix réduits avec ces remises.\n"
+                context += "  → Ne dis JAMAIS le code. Dis simplement: 'Le code est appliqué automatiquement au panier.'\n"
+                logger.info(f"[CHAT-IA] ✅ {promos_injected} promos injectées (codes masqués)")
     except Exception as e:
-        logger.warning(f"[CHAT-IA] Erreur récupération promos: {e}")
+        logger.warning(f"[CHAT-IA] Erreur récupération promos (non bloquant): {e}")
     
     # === SECTION 5: LIEN DE PAIEMENT TWINT ===
     twint_payment_url = ai_config.get("twintPaymentUrl", "")
