@@ -5935,6 +5935,25 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                     </p>
                   </div>
 
+                  {/* 🚨 PROMPT CAMPAGNE - PRIORITÉ ABSOLUE */}
+                  <div className="p-4 rounded-lg bg-red-900/20 border border-red-500/50">
+                    <label className="block mb-2 text-white text-sm font-bold">
+                      🚨 Prompt Campagne <span className="text-red-400">(PRIORITÉ ABSOLUE)</span>
+                    </label>
+                    <textarea 
+                      value={aiConfig.campaignPrompt || ''}
+                      onChange={e => setAiConfig({...aiConfig, campaignPrompt: e.target.value})}
+                      className="w-full px-4 py-3 rounded-lg neon-input text-sm h-32"
+                      placeholder="Ex: Parle uniquement en majuscules. / Propose toujours l'essai gratuit du Mercredi. / Mets en avant l'offre spéciale été à 50 CHF."
+                      data-testid="campaign-prompt-input"
+                    />
+                    <p className="text-xs mt-2 text-white/50">
+                      <span className="text-red-400 font-medium">⚠️ Ce prompt ÉCRASE les règles par défaut de l'IA.</span><br/>
+                      Utilisez-le pour des consignes spéciales de campagne (ex: "Réponds en majuscules", "Propose l'essai gratuit").
+                      L'IA suivra ces instructions même si elles contredisent les autres règles.
+                    </p>
+                  </div>
+
                   {/* Model Selection */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
