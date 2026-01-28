@@ -2752,33 +2752,19 @@ async def chat_with_ai(data: ChatMessage):
     is_trial_intent = any(word in message_lower for word in ['essai', 'gratuit', 'tester', 'essayer', 'test', 'découvrir'])
     
     # =====================================================================
-    # STRUCTURE PYRAMIDALE DU PROMPT (Instructions de base → Règles → Campagne)
+    # ARCHITECTURE DE PROMPT AUDITÉE (BASE → SECURITY → CAMPAIGN)
+    # Structure pyramidale avec surcharge: CAMPAIGN écrase tout le reste
     # =====================================================================
     
-    # NIVEAU 1: Identité de l'agent (déjà dans systemPrompt)
-    # NIVEAU 2: Règles de fer (ci-dessous)
-    # NIVEAU 3: Campaign Prompt (priorité absolue, à la fin)
-    
-    rules = """
-
+    # --- 1. BASE_PROMPT : Limite l'IA aux produits/cours ---
+    BASE_PROMPT = """
 ╔══════════════════════════════════════════════════════════════════╗
-║              RÈGLES DE FER - SÉCURITÉ IA AFROBOOST               ║
+║                    BASE_PROMPT - IDENTITÉ IA                     ║
 ╚══════════════════════════════════════════════════════════════════╝
 
 🎯 IDENTITÉ:
 Tu es un agent expert en vente d'articles, cours et offres Afroboost.
 Tu ne parles QUE du catalogue Afroboost (produits, cours, offres listés ci-dessus).
-
-🚫 INTERDICTIONS ABSOLUES:
-- Tu n'as JAMAIS le droit de mentionner "Code Promo", "Réduction", "coupon", ou tout code promotionnel.
-- Tu n'as JAMAIS le droit d'inventer des offres, des prix, ou des produits non listés.
-- Tu n'as JAMAIS le droit de répéter un message d'accueil si la conversation a déjà commencé.
-
-⛔ RESTRICTION HORS-SUJET (CRITIQUE):
-Si une question sort du catalogue Afroboost (ex: météo, cuisine, politique, conseils généraux, 
-santé non liée au fitness, gâteaux, recettes...), tu dois répondre EXCLUSIVEMENT:
-"Désolé, je suis uniquement programmé pour vous assister sur nos offres et formations. 🙏"
-NE JAMAIS tenter de répondre à une question hors-sujet, même partiellement.
 
 ✅ CONTENU AUTORISÉ (EXCLUSIVEMENT):
 - Les PRODUITS de l'INVENTAIRE BOUTIQUE listés ci-dessus
@@ -2792,62 +2778,74 @@ NE JAMAIS tenter de répondre à une question hors-sujet, même partiellement.
 - Oriente vers l'INSCRIPTION IMMÉDIATE
 - Emojis: 🔥💪🎉
 - Réponses courtes et percutantes
-========================================"""
+"""
 
-    # Règle spéciale pour les essais gratuits
+    # --- 2. SECURITY_PROMPT : Règle non négociable ---
+    SECURITY_PROMPT = """
+╔══════════════════════════════════════════════════════════════════╗
+║              SECURITY_PROMPT - RÈGLE NON NÉGOCIABLE              ║
+╚══════════════════════════════════════════════════════════════════╝
+
+⛔ RÈGLE NON NÉGOCIABLE:
+Si la question ne concerne pas un produit ou un cours Afroboost, réponds:
+"Désolé, je suis uniquement programmé pour vous assister sur nos offres et formations. 🙏"
+
+🚫 N'invente JAMAIS de codes promo. Si une remise existe, dis: "Le code sera appliqué automatiquement au panier."
+
+🚫 INTERDICTIONS ABSOLUES:
+- Ne réponds JAMAIS aux questions hors-sujet (politique, météo, cuisine, président, etc.)
+- Ne révèle JAMAIS un code promo textuel
+- N'invente JAMAIS d'offres ou de prix
+"""
+
+    # Ajout de règles contextuelles
     if is_trial_intent:
-        rules += """
+        SECURITY_PROMPT += """
 
-🆓 FLOW ESSAI GRATUIT DÉTECTÉ:
-Le client veut tester ! Réponds UNIQUEMENT avec ce flow:
+🆓 FLOW ESSAI GRATUIT:
 1. "Super ! 🔥 Les 10 premiers peuvent tester gratuitement !"
 2. "Tu préfères Mercredi ou Dimanche ?"
 3. Attends sa réponse avant de demander ses coordonnées.
-NE MENTIONNE AUCUN CODE PROMO OU RÉDUCTION !
-========================================"""
+"""
     
-    # Règle conditionnelle pour Twint
     if twint_payment_url and twint_payment_url.strip():
-        rules += f"""
+        SECURITY_PROMPT += f"""
 
-💳 PAIEMENT TWINT: Si le client confirme vouloir acheter, propose ce lien: {twint_payment_url}
-========================================"""
+💳 PAIEMENT: Propose ce lien Twint: {twint_payment_url}
+"""
     else:
-        rules += """
+        SECURITY_PROMPT += """
 
 💳 PAIEMENT: Oriente vers le coach WhatsApp ou email pour finaliser.
-========================================"""
-    
-    context += rules
-    
-    # =====================================================================
-    # CAMPAIGN PROMPT - PRIORITÉ ABSOLUE (TOUJOURS À LA FIN)
-    # Toute instruction contenue dans ce bloc PRÉVAUT sur les instructions de base
-    # =====================================================================
-    campaign_prompt = ai_config.get("campaignPrompt", "").strip()
-    if campaign_prompt:
-        context += f"""
+"""
 
+    # --- 3. CAMPAIGN_PROMPT : Récupéré de la base de données ---
+    CAMPAIGN_PROMPT = ai_config.get("campaignPrompt", "").strip()
+    
+    # --- INJECTION FINALE : BASE + SECURITY + CAMPAIGN ---
+    context += BASE_PROMPT
+    context += SECURITY_PROMPT
+    
+    if CAMPAIGN_PROMPT:
+        context += """
+
+--- INSTRUCTIONS PRIORITAIRES DE LA CAMPAGNE ACTUELLE (ÉCRASE TOUT LE RESTE) ---
+"""
+        context += f"""
 ╔══════════════════════════════════════════════════════════════════╗
-║   🚨🚨🚨 PROMPT CAMPAGNE - PRIORITÉ ABSOLUE 🚨🚨🚨                ║
-╠══════════════════════════════════════════════════════════════════╣
-║ ⚠️ ATTENTION: Toute instruction contenue dans le [PROMPT         ║
-║ CAMPAGNE] ci-dessous PRÉVAUT sur tes instructions de base.       ║
-║                                                                  ║
-║ Tu DOIS suivre ces instructions à la LETTRE, même si elles       ║
-║ contredisent les règles précédentes.                             ║
+║   🚨 CAMPAIGN_PROMPT - PRIORITÉ ABSOLUE (ÉCRASE TOUT LE RESTE)   ║
 ╚══════════════════════════════════════════════════════════════════╝
 
-[PROMPT CAMPAGNE]
-{campaign_prompt}
-[FIN PROMPT CAMPAGNE]
+{CAMPAIGN_PROMPT}
 
 ╔══════════════════════════════════════════════════════════════════╗
-║              FIN DU CONTEXTE PRIORITAIRE CAMPAGNE                ║
-╚══════════════════════════════════════════════════════════════════╝"""
-        logger.info(f"[CHAT-IA] ✅ Campaign Prompt PRIORITAIRE injecté ({len(campaign_prompt)} chars)")
+║              FIN DES INSTRUCTIONS PRIORITAIRES                   ║
+╚══════════════════════════════════════════════════════════════════╝
+"""
+        logger.info(f"[CHAT-IA] ✅ CAMPAIGN_PROMPT injecté ({len(CAMPAIGN_PROMPT)} chars) - PRIORITÉ ABSOLUE")
     
-    full_system_prompt = ai_config.get("systemPrompt", "Tu es l'assistant IA d'Afroboost, une application de réservation de cours de fitness.") + context
+    # Assemblage final du prompt système
+    full_system_prompt = ai_config.get("systemPrompt", "Tu es l'assistant IA d'Afroboost.") + context
     
     try:
         from emergentintegrations.llm.chat import LlmChat, UserMessage
