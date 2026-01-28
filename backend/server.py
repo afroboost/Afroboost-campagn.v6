@@ -2712,9 +2712,31 @@ async def chat_with_ai(data: ChatMessage):
         logger.warning(f"[CHAT-IA] Erreur récupération articles: {e}")
         # Silencieux si pas de collection articles
     
-    # === SECTION 4: PROMOS SPÉCIALES (codes promo) - DÉSACTIVÉ ===
-    # NOTE: Section supprimée pour éviter que l'IA invente des codes promos
-    # Les codes promos ne doivent JAMAIS être mentionnés par l'IA
+    # === SECTION 4: PROMOS SPÉCIALES (avec masquage des codes) ===
+    # L'IA peut connaître les remises pour calculer les prix, mais JAMAIS les codes
+    try:
+        active_promos = await db.discount_codes.find({"active": True}, {"_id": 0}).to_list(20)
+        if active_promos:
+            context += "\n\n🎁 PROMOTIONS EN COURS:\n"
+            for promo in active_promos[:5]:
+                # MASQUAGE TECHNIQUE: Remplacer le code par un placeholder
+                promo_type = promo.get('type', '%')
+                promo_value = promo.get('value', 0)
+                promo_courses = promo.get('courses', [])
+                
+                # Construire la description SANS le code réel
+                if promo_type == '100%':
+                    context += f"  • Remise 100% disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
+                elif promo_type == '%':
+                    context += f"  • Remise de {promo_value}% disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
+                elif promo_type == 'CHF':
+                    context += f"  • Remise de {promo_value} CHF disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
+            
+            context += "  → IMPORTANT: Tu connais le MONTANT des remises pour calculer les prix réduits.\n"
+            context += "  → INTERDIT: Tu ne dois JAMAIS révéler le code textuel. Dis: 'Le code sera appliqué automatiquement au panier.'\n"
+            logger.info(f"[CHAT-IA] ✅ {len(active_promos)} promos injectées (codes masqués)")
+    except Exception as e:
+        logger.warning(f"[CHAT-IA] Erreur récupération promos: {e}")
     
     # === SECTION 5: LIEN DE PAIEMENT TWINT ===
     twint_payment_url = ai_config.get("twintPaymentUrl", "")
@@ -3785,9 +3807,31 @@ async def get_ai_response_with_session(request: Request):
         logger.warning(f"[CHAT-AI-RESPONSE] Erreur récupération articles: {e}")
         # Silencieux si pas de collection articles
     
-    # === SECTION 4: PROMOS SPÉCIALES (codes promo) - DÉSACTIVÉ ===
-    # NOTE: Section supprimée pour éviter que l'IA invente des codes promos
-    # Les codes promos ne doivent JAMAIS être mentionnés par l'IA
+    # === SECTION 4: PROMOS SPÉCIALES (avec masquage des codes) ===
+    # L'IA peut connaître les remises pour calculer les prix, mais JAMAIS les codes
+    try:
+        active_promos = await db.discount_codes.find({"active": True}, {"_id": 0}).to_list(20)
+        if active_promos:
+            context += "\n\n🎁 PROMOTIONS EN COURS:\n"
+            for promo in active_promos[:5]:
+                # MASQUAGE TECHNIQUE: Remplacer le code par un placeholder
+                promo_type = promo.get('type', '%')
+                promo_value = promo.get('value', 0)
+                promo_courses = promo.get('courses', [])
+                
+                # Construire la description SANS le code réel
+                if promo_type == '100%':
+                    context += f"  • Remise 100% disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
+                elif promo_type == '%':
+                    context += f"  • Remise de {promo_value}% disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
+                elif promo_type == 'CHF':
+                    context += f"  • Remise de {promo_value} CHF disponible (code: [CODE_APPLIQUÉ_AU_PANIER])\n"
+            
+            context += "  → IMPORTANT: Tu connais le MONTANT des remises pour calculer les prix réduits.\n"
+            context += "  → INTERDIT: Tu ne dois JAMAIS révéler le code textuel. Dis: 'Le code sera appliqué automatiquement au panier.'\n"
+            logger.info(f"[CHAT-IA] ✅ {len(active_promos)} promos injectées (codes masqués)")
+    except Exception as e:
+        logger.warning(f"[CHAT-IA] Erreur récupération promos: {e}")
     
     # === SECTION 5: LIEN DE PAIEMENT TWINT ===
     twint_payment_url = ai_config.get("twintPaymentUrl", "")
