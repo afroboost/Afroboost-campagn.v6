@@ -2129,6 +2129,7 @@ Si tu ne connais pas la réponse, oriente vers le contact: contact.artboost@gmai
     provider: str = "openai"
     lastMediaUrl: str = ""
     twintPaymentUrl: str = ""  # Lien de paiement Twint direct pour les ventes
+    campaignPrompt: str = ""  # Prompt Campagne PRIORITAIRE - Ajouté à la fin du contexte
 
 class AIConfigUpdate(BaseModel):
     enabled: Optional[bool] = None
@@ -2137,6 +2138,7 @@ class AIConfigUpdate(BaseModel):
     provider: Optional[str] = None
     lastMediaUrl: Optional[str] = None
     twintPaymentUrl: Optional[str] = None  # Lien de paiement Twint direct
+    campaignPrompt: Optional[str] = None  # Prompt Campagne PRIORITAIRE
 
 class AILog(BaseModel):
     model_config = ConfigDict(extra="ignore")
