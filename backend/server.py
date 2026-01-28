@@ -3733,17 +3733,9 @@ async def get_ai_response_with_session(request: Request):
         logger.warning(f"[CHAT-AI-RESPONSE] Erreur récupération articles: {e}")
         # Silencieux si pas de collection articles
     
-    # === SECTION 4: PROMOS SPÉCIALES (codes promo) ===
-    try:
-        promos = await db.discount_codes.find({"active": True}, {"_id": 0}).to_list(5)
-        if promos:
-            context += "\n\n🎁 CODES PROMO ACTIFS:\n"
-            for p in promos[:3]:
-                code = p.get('code', '')
-                discount = p.get('discountPercent', p.get('value', 0))
-                context += f"  • Code '{code}' : -{discount}% de réduction\n"
-    except:
-        pass  # Pas de promos = silencieux
+    # === SECTION 4: PROMOS SPÉCIALES (codes promo) - DÉSACTIVÉ ===
+    # NOTE: Section supprimée pour éviter que l'IA invente des codes promos
+    # Les codes promos ne doivent JAMAIS être mentionnés par l'IA
     
     # === SECTION 5: LIEN DE PAIEMENT TWINT ===
     twint_payment_url = ai_config.get("twintPaymentUrl", "")
