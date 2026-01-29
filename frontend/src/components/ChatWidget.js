@@ -1,9 +1,10 @@
 // /components/ChatWidget.js - Widget IA flottant avec capture de leads et reconnaissance automatique
 // Architecture modulaire Afroboost - Utilise l'API chat améliorée
-// Fonctionnalités: Notifications push, sons, liens cliquables, suppression historique, chat communautaire
+// Fonctionnalités: Socket.IO temps réel, notifications push, sons, liens cliquables, suppression historique
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
+import { io } from 'socket.io-client';
 import { playNotificationSound, linkifyText } from '../services/notificationService';
 import { 
   isPushSupported, 
@@ -13,6 +14,7 @@ import {
 } from '../services/pushNotificationService';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
+const SOCKET_URL = process.env.REACT_APP_BACKEND_URL; // URL Socket.IO (même que backend)
 
 // Clés localStorage pour la mémorisation client (persistance de session)
 const CHAT_CLIENT_KEY = 'af_chat_client';
