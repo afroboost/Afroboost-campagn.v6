@@ -66,13 +66,13 @@ const MessageBubble = ({ msg, isUser, onParticipantClick, isCommunity, currentUs
   // Déterminer si c'est un message du Coach HUMAIN (pas l'IA)
   const isCoachMessage = msg.type === 'coach' || msg.is_admin === true || msg.role === 'coach';
   
-  // Message IA (assistant automatique)
+  // Message IA (assistant automatique - Coach Bassi)
   const isAIMessage = msg.type === 'ai';
   
   // Déterminer le nom à afficher
   const getDisplayName = () => {
-    if (isCoachMessage) return '🏋️ Coach';
-    if (isAIMessage) return '🤖 Assistant';
+    if (isCoachMessage) return '🏋️ Coach Bassi';
+    if (isAIMessage) return '💪 Coach Bassi';
     return msg.sender || msg.senderName || 'Membre';
   };
   const displayName = getDisplayName();
