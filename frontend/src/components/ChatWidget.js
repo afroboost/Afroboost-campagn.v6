@@ -1770,34 +1770,41 @@ export const ChatWidget = () => {
                           style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}
                         >✕</button>
                       </div>
-                      {customEmojis.map((emoji, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => insertEmoji(emoji)}
-                          style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '8px',
-                            background: 'rgba(255,255,255,0.1)',
-                            border: 'none',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'transform 0.1s, background 0.2s'
-                          }}
-                          onMouseOver={(e) => e.target.style.background = 'rgba(147, 51, 234, 0.3)'}
-                          onMouseOut={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
-                          data-testid={`emoji-${emoji.replace('.svg', '')}`}
-                        >
-                          <img 
-                            src={`${API}/emojis/${emoji}`} 
-                            alt={emoji.replace('.svg', '')}
-                            style={{ width: '24px', height: '24px' }}
-                            onError={(e) => { e.target.style.display = 'none'; }}
-                          />
-                        </button>
-                      ))}
+                      {customEmojis.map((emoji, idx) => {
+                        // Gérer les deux formats: objet API ou string fallback
+                        const emojiName = typeof emoji === 'object' ? emoji.name : emoji.replace('.svg', '');
+                        const emojiFile = typeof emoji === 'object' ? emoji.filename : emoji;
+                        const emojiUrl = typeof emoji === 'object' ? emoji.url : `/emojis/${emoji}`;
+                        
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => insertEmoji(emojiFile)}
+                            style={{
+                              width: '40px',
+                              height: '40px',
+                              borderRadius: '8px',
+                              background: 'rgba(255,255,255,0.1)',
+                              border: 'none',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'transform 0.1s, background 0.2s'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(147, 51, 234, 0.3)'}
+                            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                            data-testid={`emoji-${emojiName}`}
+                          >
+                            <img 
+                              src={`${API}${emojiUrl}`} 
+                              alt={emojiName}
+                              style={{ width: '24px', height: '24px' }}
+                              onError={(e) => { e.target.style.display = 'none'; }}
+                            />
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                   
