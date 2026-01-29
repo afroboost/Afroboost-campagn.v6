@@ -5,13 +5,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
-import { playNotificationSound, linkifyText } from '../services/notificationService';
+import { playNotificationSound, parseMessageContent } from '../services/notificationService';
 import { 
   isPushSupported, 
   promptForNotifications, 
   registerServiceWorker,
   isSubscribed 
 } from '../services/pushNotificationService';
+import EmojiPicker from './EmojiPicker';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
 const SOCKET_URL = process.env.REACT_APP_BACKEND_URL; // URL Socket.IO (même que backend)
