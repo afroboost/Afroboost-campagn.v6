@@ -996,7 +996,8 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
   const [newCampaign, setNewCampaign] = useState({
     name: "", message: "", mediaUrl: "", mediaFormat: "16:9",
     targetType: "all", selectedContacts: [],
-    channels: { whatsapp: true, email: false, instagram: false },
+    channels: { whatsapp: true, email: false, instagram: false, group: false },
+    targetGroupId: 'community',
     scheduleSlots: [] // Multi-date scheduling
   });
   const [selectedContactsForCampaign, setSelectedContactsForCampaign] = useState([]);
