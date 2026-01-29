@@ -84,8 +84,8 @@ const GroupIcon = () => (
  * Couleurs: Violet (#8B5CF6) pour le Coach, Gris foncé pour les membres/IA
  */
 const MessageBubble = ({ msg, isUser, onParticipantClick, isCommunity, currentUserId }) => {
-  // Convertir le texte en HTML avec liens cliquables
-  const htmlContent = linkifyText(msg.text);
+  // Convertir le texte en HTML avec liens cliquables ET emojis parsés
+  const htmlContent = parseMessageContent(msg.text);
   const isOtherUser = isCommunity && msg.type === 'user' && msg.senderId && msg.senderId !== currentUserId;
   
   // Déterminer si c'est un message du Coach HUMAIN (pas l'IA)
