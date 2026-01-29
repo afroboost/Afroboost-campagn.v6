@@ -1,5 +1,37 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 29 Janvier 2026 - MISSION RÉPARATION CRITIQUE V4
+
+### CORRECTIONS IMPLÉMENTÉES ✅
+
+#### 1. INSTANTANÉITÉ (Socket.IO) ✅
+**Statut**: IMPLÉMENTÉ
+- Backend: `python-socketio` configuré avec namespace pour les sessions
+- Frontend: `socket.io-client` connecté automatiquement au chargement
+- Événements `message_received` émis à chaque nouveau message
+- Le polling a été SUPPRIMÉ et remplacé par Socket.IO
+- **Note**: WebSocket peut fallback vers HTTP polling selon le proxy
+
+#### 2. SÉCURITÉ ADMIN (Privilèges) ✅
+**Statut**: CORRIGÉ
+- Variable `isCoachMode` vérifie si l'email === 'contact.artboost@gmail.com'
+- Menu admin (trois points) conditionné par `(step === 'chat' || step === 'coach') && isCoachMode`
+- Boutons "Supprimer l'historique" et "Changer d'identité" invisibles pour les utilisateurs normaux
+- **Règle**: Un client (ex: Papou) ne voit que le champ de texte et ses messages
+
+#### 3. PERSISTANCE AU CHARGEMENT (F5) ✅
+**Statut**: CORRIGÉ
+- `getInitialStep()` vérifie localStorage au montage
+- Si `afroboost_identity` ou `af_chat_client` contient `firstName`, le chat s'ouvre directement
+- `sessionData` initialisé depuis localStorage dans `useState`
+- **Résultat**: Après F5, l'utilisateur connecté voit le chat sans formulaire
+
+### Fichiers modifiés :
+- `/app/backend/server.py`: Socket.IO configuration (lignes 87-160), emit_new_message function
+- `/app/frontend/src/components/ChatWidget.js`: Socket.IO client, isCoachMode fixes, persistance
+
+---
+
 ## Mise à jour du 29 Janvier 2026 - Chat de Groupe, Coach Bassi & Nouvelles Fonctionnalités
 
 ### Phase 1 : Branding "Coach Bassi"
