@@ -2581,22 +2581,67 @@ async def chat_with_ai(data: ChatMessage):
     if not ai_config.get("enabled"):
         return {"response": "L'assistant IA est actuellement désactivé. Veuillez contacter le coach directement.", "responseTime": 0}
     
-    # === 3. CONSTRUIRE LE CONTEXTE DYNAMIQUE (VISION TOTALE DU SITE) ===
-    context = "\n\n========== CONNAISSANCES DU SITE AFROBOOST ==========\n"
-    context += "Utilise EXCLUSIVEMENT ces informations pour répondre sur les produits, cours, offres et articles.\n"
-    context += "IMPORTANT: Vérifie TOUJOURS l'INVENTAIRE BOUTIQUE avant de dire qu'un produit n'existe pas !\n"
+    # === 2.5 DÉTECTION MODE STRICT (AVANT construction du contexte) ===
+    # Vérifier si on a un link_token avec custom_prompt
+    link_token = data.link_token.strip() if data.link_token else ""
+    if not link_token and data.source and data.source.startswith("link_"):
+        link_token = data.source.replace("link_", "")
     
-    # Prénom du client
-    if first_name:
-        context += f"\n👤 CLIENT: {first_name} - Utilise son prénom pour être chaleureux.\n"
+    use_strict_mode = False
+    CUSTOM_PROMPT = ""
     
-    # Concept/Description du site
-    try:
-        concept = await db.concept.find_one({"id": "concept"}, {"_id": 0})
-        if concept and concept.get('description'):
-            context += f"\n📌 À PROPOS D'AFROBOOST:\n{concept.get('description', '')[:500]}\n"
-    except Exception as e:
-        logger.warning(f"[CHAT-IA] Erreur récupération concept: {e}")
+    if link_token:
+        try:
+            session_with_prompt = await db.chat_sessions.find_one(
+                {"link_token": link_token, "is_deleted": {"$ne": True}},
+                {"_id": 0, "custom_prompt": 1}
+            )
+            if session_with_prompt and session_with_prompt.get("custom_prompt"):
+                custom_prompt = session_with_prompt.get("custom_prompt", "").strip()
+                if custom_prompt:
+                    CUSTOM_PROMPT = custom_prompt
+                    use_strict_mode = True
+                    logger.info(f"[CHAT-IA] 🔒 Mode STRICT détecté pour lien {link_token}")
+        except Exception as e:
+            logger.warning(f"[CHAT-IA] Erreur récupération custom_prompt pour {link_token}: {e}")
+    
+    # === 3. CONSTRUIRE LE CONTEXTE DYNAMIQUE ===
+    if use_strict_mode:
+        # MODE STRICT: Contexte minimal (pas de cours/tarifs/vente)
+        context = "\n\n========== MODE STRICT - LIEN SPÉCIFIQUE ==========\n"
+        context += "Tu es l'assistant Afroboost avec un OBJECTIF SPÉCIFIQUE défini ci-dessous.\n"
+        context += "NE PARLE PAS de cours, tarifs, abonnements ou vente SAUF si explicitement demandé dans les instructions.\n"
+        
+        # Prénom du client seulement
+        if first_name:
+            context += f"\n👤 INTERLOCUTEUR: {first_name}\n"
+        
+        # Concept/Description UNIQUEMENT (pas les offres/cours)
+        try:
+            concept = await db.concept.find_one({"id": "concept"}, {"_id": 0})
+            if concept and concept.get('description'):
+                context += f"\n📌 CONCEPT AFROBOOST:\n{concept.get('description', '')[:500]}\n"
+        except Exception as e:
+            pass
+        
+        logger.info("[CHAT-IA] 🔒 Contexte STRICT construit (sans cours/tarifs)")
+    else:
+        # MODE STANDARD: Contexte complet avec cours/tarifs/vente
+        context = "\n\n========== CONNAISSANCES DU SITE AFROBOOST ==========\n"
+        context += "Utilise EXCLUSIVEMENT ces informations pour répondre sur les produits, cours, offres et articles.\n"
+        context += "IMPORTANT: Vérifie TOUJOURS l'INVENTAIRE BOUTIQUE avant de dire qu'un produit n'existe pas !\n"
+        
+        # Prénom du client
+        if first_name:
+            context += f"\n👤 CLIENT: {first_name} - Utilise son prénom pour être chaleureux.\n"
+        
+        # Concept/Description du site
+        try:
+            concept = await db.concept.find_one({"id": "concept"}, {"_id": 0})
+            if concept and concept.get('description'):
+                context += f"\n📌 À PROPOS D'AFROBOOST:\n{concept.get('description', '')[:500]}\n"
+        except Exception as e:
+            logger.warning(f"[CHAT-IA] Erreur récupération concept: {e}")
     
     # === SECTION 1: INVENTAIRE BOUTIQUE (PRODUITS PHYSIQUES) ===
     try:
