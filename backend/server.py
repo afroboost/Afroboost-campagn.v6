@@ -210,7 +210,7 @@ EMOJIS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Monter les fichiers statiques pour les emojis
 try:
-    app.mount("/api/emojis", StaticFiles(directory=str(EMOJIS_DIR)), name="emojis")
+    fastapi_app.mount("/api/emojis", StaticFiles(directory=str(EMOJIS_DIR)), name="emojis")
     logger.info(f"[EMOJIS] Dossier monté: {EMOJIS_DIR}")
 except Exception as e:
     logger.warning(f"[EMOJIS] Impossible de monter le dossier: {e}")
