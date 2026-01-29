@@ -1531,6 +1531,151 @@ export const ChatWidget = () => {
           </div>
         </div>
       )}
+
+      {/* === FENÊTRE FLOTTANTE MP (Style Messenger) === */}
+      {activePrivateChat && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '100px',
+            right: isOpen ? '420px' : '20px',
+            width: '320px',
+            height: '400px',
+            borderRadius: '12px',
+            background: '#1a1a1a',
+            border: '1px solid rgba(147, 51, 234, 0.5)',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            zIndex: 60
+          }}
+          data-testid="private-chat-window"
+        >
+          {/* Header MP */}
+          <div style={{
+            background: 'linear-gradient(135deg, #9333ea, #7c3aed)',
+            padding: '12px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div>
+              <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>
+                💬 {activePrivateChat.recipientName}
+              </div>
+              <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '11px' }}>
+                Message privé
+              </div>
+            </div>
+            <button
+              onClick={closePrivateChat}
+              style={{
+                background: 'rgba(255,255,255,0.2)',
+                border: 'none',
+                borderRadius: '50%',
+                width: '28px',
+                height: '28px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff',
+                fontSize: '16px'
+              }}
+              data-testid="close-private-chat"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Messages MP */}
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '12px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
+          }}>
+            {privateMessages.length === 0 ? (
+              <div style={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', marginTop: '50px' }}>
+                Commencez la conversation...
+              </div>
+            ) : (
+              privateMessages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    alignSelf: msg.isMine ? 'flex-end' : 'flex-start',
+                    maxWidth: '80%'
+                  }}
+                >
+                  {!msg.isMine && (
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', marginBottom: '2px' }}>
+                      {msg.sender}
+                    </div>
+                  )}
+                  <div style={{
+                    background: msg.isMine ? '#9333ea' : '#2d2d2d',
+                    color: '#fff',
+                    padding: '8px 12px',
+                    borderRadius: msg.isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                    fontSize: '13px'
+                  }}>
+                    {msg.text}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Input MP */}
+          <div style={{
+            padding: '12px',
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+            display: 'flex',
+            gap: '8px'
+          }}>
+            <input
+              type="text"
+              value={privateInput}
+              onChange={(e) => setPrivateInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && sendPrivateMessage()}
+              placeholder="Message privé..."
+              style={{
+                flex: 1,
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: '20px',
+                padding: '8px 16px',
+                color: '#fff',
+                fontSize: '13px'
+              }}
+              data-testid="private-message-input"
+            />
+            <button
+              onClick={sendPrivateMessage}
+              disabled={!privateInput.trim()}
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: privateInput.trim() ? '#9333ea' : '#444',
+                border: 'none',
+                cursor: privateInput.trim() ? 'pointer' : 'not-allowed',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff'
+              }}
+              data-testid="send-private-btn"
+            >
+              →
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 };
