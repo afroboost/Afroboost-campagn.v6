@@ -471,7 +471,8 @@ class Campaign(BaseModel):
     mediaFormat: str = "16:9"  # "9:16" or "16:9"
     targetType: str = "all"  # "all" or "selected"
     selectedContacts: List[str] = []
-    channels: dict = Field(default_factory=lambda: {"whatsapp": True, "email": False, "instagram": False})
+    channels: dict = Field(default_factory=lambda: {"whatsapp": True, "email": False, "instagram": False, "group": False})
+    targetGroupId: Optional[str] = "community"  # ID du groupe cible pour le canal "group"
     scheduledAt: Optional[str] = None  # ISO date or null for immediate
     status: str = "draft"  # "draft", "scheduled", "sending", "completed"
     results: List[dict] = []
@@ -485,7 +486,8 @@ class CampaignCreate(BaseModel):
     mediaFormat: str = "16:9"
     targetType: str = "all"
     selectedContacts: List[str] = []
-    channels: dict = Field(default_factory=lambda: {"whatsapp": True, "email": False, "instagram": False})
+    channels: dict = Field(default_factory=lambda: {"whatsapp": True, "email": False, "instagram": False, "group": False})
+    targetGroupId: Optional[str] = "community"  # ID du groupe cible pour le canal "group"
     scheduledAt: Optional[str] = None
 
 class Concept(BaseModel):
