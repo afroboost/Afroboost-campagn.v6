@@ -4138,9 +4138,17 @@ Si la question ne concerne pas un produit ou un cours Afroboost, réponds:
         if not emergent_key:
             return {"response": "Configuration IA incomplète.", "ai_active": False}
         
+        # MODE STRICT: Utiliser un session_id UNIQUE pour éviter la persistance d'historique
+        # Cela empêche l'IA de récupérer des infos de prix des messages précédents
+        if use_strict_mode:
+            llm_session_id = f"afroboost_strict_{uuid.uuid4().hex[:12]}"
+            logger.info("[CHAT-AI-RESPONSE] 🔒 Mode STRICT: Session LLM isolée (pas d'historique)")
+        else:
+            llm_session_id = f"afroboost_session_{session_id}"
+        
         chat = LlmChat(
             api_key=emergent_key,
-            session_id=f"afroboost_session_{session_id}",
+            session_id=llm_session_id,
             system_message=full_system_prompt
         )
         
