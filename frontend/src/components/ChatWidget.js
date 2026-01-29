@@ -322,6 +322,7 @@ export const ChatWidget = () => {
   const [activePrivateChat, setActivePrivateChat] = useState(null); // MP actuellement ouverte
   const [privateMessages, setPrivateMessages] = useState([]); // Messages de la MP active
   const [privateInput, setPrivateInput] = useState(''); // Input de la MP
+  const [unreadPrivateCount, setUnreadPrivateCount] = useState(0); // Compteur MP non lus (pastille rouge)
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null); // Référence Socket.IO
   const chatContainerRef = useRef(null); // Ref pour le mode plein écran
