@@ -1124,6 +1124,27 @@ export const ChatWidget = () => {
           color: #c4b5fd;
         }
         
+        /* Emoji inline dans les messages */
+        .chat-emoji {
+          width: 20px;
+          height: 20px;
+          vertical-align: middle;
+          display: inline-block;
+          margin: 0 2px;
+        }
+        
+        /* Animation pastille notification MP */
+        @keyframes pulse {
+          0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+          }
+          50% {
+            transform: scale(1.1);
+            box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+          }
+        }
+        
         /* Chat widget responsive - plus grand sur mobile */
         @media (max-width: 640px) {
           .chat-widget-window {
