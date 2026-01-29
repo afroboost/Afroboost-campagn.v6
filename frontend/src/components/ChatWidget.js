@@ -508,6 +508,14 @@ export const ChatWidget = () => {
         createdAt: m.created_at
       })));
       
+      // === SOCKET.IO: Rejoindre la room de conversation privée ===
+      if (socketRef.current) {
+        socketRef.current.emit('join_private_conversation', {
+          conversation_id: conversation.id,
+          participant_id: participantId
+        });
+      }
+      
       console.log(`💬 MP ouverte avec ${targetName}`);
       
     } catch (err) {
