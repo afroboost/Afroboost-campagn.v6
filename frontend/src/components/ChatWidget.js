@@ -929,7 +929,7 @@ export const ChatWidget = () => {
     }
   };
 
-  // === SUPPRIMER L'HISTORIQUE ===
+  // === SUPPRIMER L'HISTORIQUE - ROUTE SÉCURISÉE ADMIN ===
   const handleDeleteHistory = async () => {
     if (!sessionData?.id) return;
     
@@ -937,24 +937,30 @@ export const ChatWidget = () => {
     if (!confirm) return;
     
     try {
-      // Marquer tous les messages comme supprimés
-      for (const msg of messages) {
-        if (msg.id) {
-          await axios.put(`${API}/chat/messages/${msg.id}/delete`);
-        }
+      // Utiliser la route sécurisée qui vérifie l'email
+      const response = await axios.post(`${API}/admin/delete-history`, {
+        session_id: sessionData.id,
+        email: leadData.email || ''
+      });
+      
+      if (response.data.success) {
+        // Vider l'affichage local
+        setMessages([{
+          type: 'ai',
+          text: '🗑️ Historique supprimé. Comment puis-je vous aider ?'
+        }]);
+        setLastMessageCount(1);
+        setShowMenu(false);
+        console.log('[ADMIN] ✅ Historique supprimé:', response.data.deleted_count, 'messages');
       }
       
-      // Vider l'affichage local
-      setMessages([{
-        type: 'ai',
-        text: '🗑️ Historique supprimé. Comment puis-je vous aider ?'
-      }]);
-      setLastMessageCount(1);
-      setShowMenu(false);
-      
     } catch (err) {
-      console.error('Delete history error:', err);
-      alert('Erreur lors de la suppression de l\'historique');
+      console.error('[SECURITY] ❌ Delete history error:', err.response?.data?.detail || err.message);
+      if (err.response?.status === 403) {
+        alert('⛔ Accès refusé. Seul le coach peut supprimer l\'historique.');
+      } else {
+        alert('Erreur lors de la suppression de l\'historique');
+      }
     }
   };
 
@@ -964,18 +970,81 @@ export const ChatWidget = () => {
     setShowMenu(false);
   };
 
-  // Option pour changer d'identité (nouveau client)
-  const handleChangeIdentity = () => {
-    localStorage.removeItem(CHAT_CLIENT_KEY);
-    localStorage.removeItem(CHAT_SESSION_KEY);
-    setLeadData({ firstName: '', whatsapp: '', email: '' });
-    setIsReturningClient(false);
-    setStep('form');
-    setMessages([]);
-    setSessionData(null);
-    setParticipantId(null);
-    setShowMenu(false);
-    setLastMessageCount(0);
+  // === CHANGER D'IDENTITÉ - ROUTE SÉCURISÉE ADMIN ===
+  const handleChangeIdentity = async () => {
+    try {
+      // Vérifier côté serveur (optionnel mais recommandé)
+      await axios.post(`${API}/admin/change-identity`, {
+        participant_id: participantId,
+        email: leadData.email || ''
+      });
+      
+      // Réinitialiser localement
+      localStorage.removeItem(CHAT_CLIENT_KEY);
+      localStorage.removeItem(CHAT_SESSION_KEY);
+      localStorage.removeItem(AFROBOOST_IDENTITY_KEY);
+      setLeadData({ firstName: '', whatsapp: '', email: '' });
+      setIsReturningClient(false);
+      setStep('form');
+      setMessages([]);
+      setSessionData(null);
+      setParticipantId(null);
+      setShowMenu(false);
+      setLastMessageCount(0);
+      setIsCoachMode(false);
+      console.log('[ADMIN] ✅ Identité réinitialisée');
+      
+    } catch (err) {
+      console.error('[SECURITY] ❌ Change identity error:', err.response?.data?.detail || err.message);
+      if (err.response?.status === 403) {
+        alert('⛔ Accès refusé. Seul le coach peut changer l\'identité.');
+      } else {
+        // En cas d'erreur réseau, on fait quand même le reset local (coach mode)
+        localStorage.removeItem(CHAT_CLIENT_KEY);
+        localStorage.removeItem(CHAT_SESSION_KEY);
+        localStorage.removeItem(AFROBOOST_IDENTITY_KEY);
+        setLeadData({ firstName: '', whatsapp: '', email: '' });
+        setStep('form');
+        setMessages([]);
+        setSessionData(null);
+        setParticipantId(null);
+        setShowMenu(false);
+        setIsCoachMode(false);
+      }
+    }
+  };
+
+  // === FONCTION POUR ÉMETTRE L'ÉVÉNEMENT TYPING ===
+  const emitTyping = (isTyping) => {
+    if (!socketRef.current || !sessionData?.id) return;
+    
+    const now = Date.now();
+    // Éviter le spam (max 1 événement par seconde)
+    if (isTyping && now - lastTypingEmitRef.current < 1000) return;
+    lastTypingEmitRef.current = now;
+    
+    const eventName = isTyping ? 'typing_start' : 'typing_stop';
+    socketRef.current.emit(eventName, {
+      session_id: sessionData.id,
+      user_name: isCoachMode ? '💪 Coach Bassi' : leadData.firstName || 'Utilisateur',
+      user_type: isCoachMode ? 'coach' : 'user'
+    });
+  };
+
+  // Handler pour l'input avec émission typing
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setInput(value);
+    
+    // Émettre l'événement typing
+    if (value.length > 0) {
+      emitTyping(true);
+    }
+  };
+
+  // Arrêter l'indicateur typing quand on perd le focus
+  const handleInputBlur = () => {
+    emitTyping(false);
   };
 
   return (
