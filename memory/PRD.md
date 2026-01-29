@@ -1,5 +1,47 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 29 Janvier 2026 - PROGRAMMATION GROUPE COMMUNAUTÉ ✅
+
+### NOUVELLE FONCTIONNALITÉ: Programmation Messages Groupe
+
+#### Implémentation complète ✅
+- **Frontend**: Option "💬 Groupe Afroboost" ajoutée au formulaire de campagne
+- **Backend**: Collection `scheduled_messages` avec support canal "group"
+- **Scheduler**: Worker toutes les 10 secondes vérifie et envoie les messages programmés
+- **Socket.IO**: Messages émis en temps réel dans la session communautaire
+- **Variable {prénom}**: Remplacée par "Communauté" pour les envois groupés
+
+#### Tests passés (5/5) ✅
+| Test | Résultat |
+|------|----------|
+| Sécurité non-admin | ✅ Menu admin ABSENT du DOM pour `papou@test.com` |
+| Sécurité admin | ✅ Menu admin VISIBLE pour `contact.artboost@gmail.com` |
+| Persistance F5 | ✅ Chat reste connecté après refresh |
+| Rendu emojis | ✅ `[emoji:fire.svg]` → 🔥 (images avec fallback natif) |
+| Option Groupe | ✅ "💬 Groupe Afroboost" existe dans Campagnes |
+
+#### Architecture technique
+```
+Campagne créée (scheduledAt) 
+  → Scheduler vérifie toutes les 10s
+  → À l'heure: scheduler_send_group_message_sync()
+    → Insert message en DB
+    → POST /api/scheduler/emit-group-message
+    → Socket.IO emit('message_received') 
+  → Message visible en temps réel dans le chat groupe
+```
+
+#### Fichiers modifiés
+- `/app/backend/server.py`: Ajout targetGroupId, endpoint emit-group-message, scheduler groupe
+- `/app/frontend/src/components/CoachDashboard.js`: Canal groupe + sélecteur de groupe
+
+### GARDE-FOUS VÉRIFIÉS ✅
+- Prix CHF 10.-: INTACT
+- Module Twint/Visa: NON MODIFIÉ
+- Fonctionnalité WhatsApp/Email: INTACTE
+
+---
+
 ## Mise à jour du 29 Janvier 2026 - CORRECTION RADICALE & VERROUILLAGE
 
 ### PREUVES DE VALIDATION ✅
