@@ -1,5 +1,41 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 29 Janvier 2026 - Chat de Groupe, Coach Bassi & Nouvelles Fonctionnalités
+
+### Phase 1 : Branding "Coach Bassi"
+**Implémenté** ✅
+- Label "Assistant" remplacé par "💪 Coach Bassi" partout (header, bulles)
+- BASE_PROMPT mis à jour avec identité Coach Bassi
+- L'IA se présente comme "Coach Bassi" et signe parfois ses messages
+
+### Phase 2 : Persistance & Mode Plein Écran
+**Implémenté** ✅
+- Nouvelle clé `afroboost_identity` dans localStorage (migration auto depuis `af_chat_client`)
+- Reconnexion automatique : l'utilisateur ne revoit JAMAIS le formulaire après la 1ère connexion
+- Bouton "Agrandir" (icône plein écran) dans le header du chat
+- API `requestFullscreen` pour immersion totale sur mobile/desktop
+
+### Phase 3 : Messagerie Privée (MP) & Emojis
+**Implémenté** ✅
+- **Fenêtre flottante MP** style Messenger (positionnée à gauche du chat principal)
+- Collection MongoDB `private_messages` isolée (invisible pour l'IA)
+- Collection MongoDB `private_conversations` pour les conversations
+- Endpoints API : `/api/private/conversations`, `/api/private/messages`, `/api/private/messages/read/{id}`
+- **Emojis personnalisés** : Dossier `/uploads/emojis/` monté sur `/api/emojis/`
+- Endpoints : `/api/custom-emojis/list`, `/api/custom-emojis/upload`
+
+### Fichiers modifiés :
+- `/app/backend/server.py` : Modèles `PrivateMessage`, `PrivateConversation`, endpoints MP et Emojis
+- `/app/frontend/src/components/ChatWidget.js` : Icônes, états MP, fenêtre flottante, mode plein écran
+
+### Tests de non-régression :
+- ✅ Mode STANDARD : Prix affichés (30 CHF, etc.)
+- ✅ Mode STRICT : Refus de donner des prix
+- ✅ API MP : Conversations créées et messages fonctionnels
+- ✅ Liens Ads existants : Aucune régression
+
+---
+
 ## Mise à jour du 29 Janvier 2026 - Étanchéité TOTALE du Mode STRICT
 
 ### Architecture de filtrage physique des données
