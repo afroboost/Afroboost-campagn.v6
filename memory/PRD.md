@@ -1,5 +1,27 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 29 Janvier 2026 - VALIDATION AUTOMATE & CONVERSATIONS ✅
+
+### AUTOMATE D'ENVOI VALIDÉ ✅
+- **Scheduler**: Vérifie les campagnes programmées toutes les **60 secondes**
+- **Log de succès**: `[SCHEDULER] ✅ Scheduled Group Message Sent: [Campaign: ...] -> community`
+- **Preuve d'envoi**: Message "Test Automate 2min" programmé à 20:58:48, envoyé à 20:59:23 UTC
+
+### TESTS PASSÉS (4/4) ✅
+| Critère | Résultat |
+|---------|----------|
+| Message programmé 2min | ✅ Envoyé automatiquement par le scheduler |
+| Onglet Conversations | ✅ Layout 2 colonnes (sessions / chat) |
+| Export CSV | ✅ 27 contacts CRM exportables |
+| Messages Coach Bassi | ✅ 3 messages visibles dans le groupe |
+
+### Messages Coach Bassi en DB
+1. `2026-01-29T20:39:29` - 🎉 Test immédiat! Bonjour Communauté!
+2. `2026-01-29T20:42:17` - 🏃 Rendez-vous demain pour le cours Afrobeat!
+3. `2026-01-29T20:59:23` - 🏋️ Message automatique! (scheduler)
+
+---
+
 ## Mise à jour du 29 Janvier 2026 - PROGRAMMATION GROUPE COMMUNAUTÉ ✅
 
 ### NOUVELLE FONCTIONNALITÉ: Programmation Messages Groupe
@@ -7,7 +29,7 @@
 #### Implémentation complète ✅
 - **Frontend**: Option "💬 Groupe Afroboost" ajoutée au formulaire de campagne
 - **Backend**: Collection `scheduled_messages` avec support canal "group"
-- **Scheduler**: Worker toutes les 10 secondes vérifie et envoie les messages programmés
+- **Scheduler**: Worker toutes les 60 secondes vérifie et envoie les messages programmés
 - **Socket.IO**: Messages émis en temps réel dans la session communautaire
 - **Variable {prénom}**: Remplacée par "Communauté" pour les envois groupés
 
@@ -23,7 +45,7 @@
 #### Architecture technique
 ```
 Campagne créée (scheduledAt) 
-  → Scheduler vérifie toutes les 10s
+  → Scheduler vérifie toutes les 60s
   → À l'heure: scheduler_send_group_message_sync()
     → Insert message en DB
     → POST /api/scheduler/emit-group-message
