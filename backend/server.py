@@ -3711,6 +3711,17 @@ async def send_private_message(request: Request):
         }}
     )
     
+    # === SOCKET.IO: Émettre le message privé en temps réel ===
+    await sio.emit('private_message_received', {
+        "conversation_id": conversation_id,
+        "id": message.id,
+        "text": content,
+        "sender": sender_name,
+        "senderId": sender_id,
+        "recipientId": recipient_id,
+        "created_at": message.created_at
+    }, room=f"pm_{conversation_id}")
+    
     logger.info(f"[MP] Message envoyé de {sender_name} dans conversation {conversation_id}")
     return message.model_dump()
 
