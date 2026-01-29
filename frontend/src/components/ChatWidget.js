@@ -1331,7 +1331,7 @@ export const ChatWidget = () => {
                   alignItems: 'center'
                 }}>
                   <span style={{ color: '#d91cd2', fontSize: '12px', fontWeight: 'bold' }}>
-                    🏋️ Mode Coach
+                    💪 Mode Coach
                   </span>
                   <button
                     onClick={loadCoachSessions}
