@@ -1732,9 +1732,97 @@ export const ChatWidget = () => {
                     borderTop: '1px solid rgba(255,255,255,0.1)',
                     display: 'flex',
                     gap: '8px',
-                    flexShrink: 0
+                    flexShrink: 0,
+                    position: 'relative'
                   }}
                 >
+                  {/* === SÉLECTEUR D'EMOJIS PERSONNALISÉS === */}
+                  {showEmojiPicker && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        bottom: '60px',
+                        left: '12px',
+                        background: '#1a1a1a',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        borderRadius: '12px',
+                        padding: '12px',
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(4, 1fr)',
+                        gap: '8px',
+                        zIndex: 100,
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
+                      }}
+                      data-testid="emoji-picker"
+                    >
+                      <div style={{ 
+                        gridColumn: '1 / -1', 
+                        fontSize: '11px', 
+                        color: 'rgba(255,255,255,0.5)', 
+                        marginBottom: '4px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}>
+                        <span>Emojis 💪</span>
+                        <button 
+                          onClick={() => setShowEmojiPicker(false)}
+                          style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}
+                        >✕</button>
+                      </div>
+                      {customEmojis.map((emoji, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => insertEmoji(emoji)}
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '8px',
+                            background: 'rgba(255,255,255,0.1)',
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'transform 0.1s, background 0.2s'
+                          }}
+                          onMouseOver={(e) => e.target.style.background = 'rgba(147, 51, 234, 0.3)'}
+                          onMouseOut={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+                          data-testid={`emoji-${emoji.replace('.svg', '')}`}
+                        >
+                          <img 
+                            src={`${API}/emojis/${emoji}`} 
+                            alt={emoji.replace('.svg', '')}
+                            style={{ width: '24px', height: '24px' }}
+                            onError={(e) => { e.target.style.display = 'none'; }}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Bouton Emoji */}
+                  <button
+                    type="button"
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      background: showEmojiPicker ? '#9333ea' : 'rgba(255,255,255,0.1)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      fontSize: '18px'
+                    }}
+                    data-testid="emoji-btn"
+                  >
+                    😊
+                  </button>
+                  
                   <input
                     type="text"
                     value={inputMessage}
