@@ -81,7 +81,12 @@ if not mongo_url:
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ.get('DB_NAME', 'afroboost_db')]
 
-app = FastAPI(title="Afroboost API")
+# Configure logging FIRST (needed for socketio)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# Créer l'application FastAPI (interne)
+fastapi_app = FastAPI(title="Afroboost API")
 api_router = APIRouter(prefix="/api")
 
 # ==================== SOCKET.IO CONFIGURATION ====================
@@ -158,12 +163,8 @@ async def emit_new_message(session_id: str, message_data: dict):
         await sio.emit('message_received', message_data, room=session_id)
         logger.info(f"[SOCKET.IO] Message émis dans session {session_id}")
 
-# Créer l'app ASGI combinée
-socket_app = socketio.ASGIApp(sio, other_asgi_app=app)
-
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+# Créer l'app ASGI combinée - C'EST CELLE-CI QUI EST EXPOSÉE COMME 'app'
+app = socketio.ASGIApp(sio, other_asgi_app=fastapi_app)
 
 # ==================== HEALTH CHECK (Required for Kubernetes) ====================
 
