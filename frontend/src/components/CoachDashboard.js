@@ -7126,23 +7126,40 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                 <p className="text-white/60 text-xs mb-3">
                   Créez un lien avec l'IA activée pour Instagram, Facebook ou WhatsApp.
                 </p>
-                <div className="flex gap-2">
+                <div className="space-y-3">
                   <input
                     type="text"
                     value={newLinkTitle}
                     onChange={(e) => setNewLinkTitle(e.target.value)}
                     placeholder="Titre du lien"
-                    className="flex-1 px-3 py-2 rounded-lg text-sm"
+                    className="w-full px-3 py-2 rounded-lg text-sm"
                     style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
                     data-testid="new-link-title"
                   />
+                  <div>
+                    <label className="text-white/70 text-xs mb-1 block">
+                      Prompt spécifique pour ce lien (Optionnel)
+                    </label>
+                    <textarea
+                      value={newLinkCustomPrompt}
+                      onChange={(e) => setNewLinkCustomPrompt(e.target.value)}
+                      placeholder="Instructions spécifiques pour l'IA sur ce lien. Ex: 'Propose uniquement l'offre -20% sur les cours.' (Laissez vide pour utiliser le prompt global)"
+                      rows={3}
+                      className="w-full px-3 py-2 rounded-lg text-sm resize-none"
+                      style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
+                      data-testid="new-link-custom-prompt"
+                    />
+                    <p className="text-white/40 text-xs mt-1">
+                      ⚡ Ce prompt est PRIORITAIRE sur le prompt global de campagne.
+                    </p>
+                  </div>
                   <button
                     onClick={generateShareableLink}
-                    className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                    className="w-full px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
                     style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', color: '#fff' }}
                     data-testid="generate-link-btn"
                   >
-                    🤖 Créer
+                    🤖 Créer le lien
                   </button>
                 </div>
               </div>
