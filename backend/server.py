@@ -6488,6 +6488,43 @@ def scheduler_loop():
                                 fail_count += 1
                                 continue  # PASSER AU CONTACT SUIVANT
                     
+                    # ========== GROUPE AFROBOOST (envoi unique dans le chat communautaire) ==========
+                    if channels.get("group"):
+                        try:
+                            target_group_id = campaign.get("targetGroupId", "community")
+                            print(f"[SCHEDULER-GROUP] 🎯 Envoi au groupe: {target_group_id}")
+                            
+                            success, error, session_id = scheduler_send_group_message_sync(
+                                scheduler_db=scheduler_db,
+                                target_group_id=target_group_id,
+                                message_text=message
+                            )
+                            
+                            result_entry = {
+                                "contactId": "group",
+                                "contactName": f"Groupe {target_group_id}",
+                                "channel": "group",
+                                "status": "sent" if success else "failed",
+                                "error": error if not success else None,
+                                "sessionId": session_id,
+                                "sentAt": now.isoformat()
+                            }
+                            results.append(result_entry)
+                            
+                            if success:
+                                success_count += 1
+                                logger.info(f"[SCHEDULER] ✅ Message groupe envoyé ({target_group_id})")
+                                print(f"[SCHEDULER] ✅ Groupe OK: {target_group_id}")
+                            else:
+                                fail_count += 1
+                                logger.error(f"[SCHEDULER] ❌ Message groupe échoué: {error}")
+                                print(f"[SCHEDULER] ❌ Groupe ÉCHEC: {error}")
+                                
+                        except Exception as e:
+                            logger.error(f"[SCHEDULER] ❌ Exception Groupe: {e}")
+                            print(f"[SCHEDULER] ❌ Exception Groupe: {e}")
+                            fail_count += 1
+                    
                     # Vérifier si c'est un échec de quota email (pour le retry automatique)
                     has_quota_error = any(
                         r.get("error") and ("quota" in r.get("error", "").lower() or "limit" in r.get("error", "").lower())
