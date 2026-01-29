@@ -93,7 +93,7 @@ const MessageBubble = ({ msg, isUser, onParticipantClick, isCommunity, currentUs
   
   // Déterminer le nom à afficher
   const getDisplayName = () => {
-    if (isCoachMessage) return '🏋️ Coach Bassi';
+    if (isCoachMessage) return '💪 Coach Bassi';
     if (isAIMessage) return '💪 Coach Bassi';
     return msg.sender || msg.senderName || 'Membre';
   };
