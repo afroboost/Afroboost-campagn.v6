@@ -2804,16 +2804,17 @@ async def chat_with_ai(data: ChatMessage):
                 context += "  → Tu peux calculer les prix réduits avec ces remises.\n"
                 context += "  → Ne dis JAMAIS le code. Dis simplement: 'Le code est appliqué automatiquement au panier.'\n"
                 logger.info(f"[CHAT-IA] ✅ {promos_injected} promos injectées (codes masqués)")
-    except Exception as e:
-        logger.warning(f"[CHAT-IA] Erreur récupération promos (non bloquant): {e}")
-    
-    # === SECTION 5: LIEN DE PAIEMENT TWINT ===
-    twint_payment_url = ai_config.get("twintPaymentUrl", "")
-    if twint_payment_url and twint_payment_url.strip():
-        context += f"\n\n💳 LIEN DE PAIEMENT TWINT:\n"
-        context += f"  URL: {twint_payment_url}\n"
-        context += "  → Quand un client confirme vouloir acheter, propose-lui ce lien de paiement sécurisé Twint.\n"
-        print(f"[DEBUG IA CONTEXT] ✅ Lien Twint injecté: {twint_payment_url[:50]}...")
+        except Exception as e:
+            logger.warning(f"[CHAT-IA] Erreur récupération promos (non bloquant): {e}")
+        
+        # === SECTION 5: LIEN DE PAIEMENT TWINT ===
+        twint_payment_url = ai_config.get("twintPaymentUrl", "")
+        if twint_payment_url and twint_payment_url.strip():
+            context += f"\n\n💳 LIEN DE PAIEMENT TWINT:\n"
+            context += f"  URL: {twint_payment_url}\n"
+            context += "  → Quand un client confirme vouloir acheter, propose-lui ce lien de paiement sécurisé Twint.\n"
+            print(f"[DEBUG IA CONTEXT] ✅ Lien Twint injecté: {twint_payment_url[:50]}...")
+    # === FIN DES SECTIONS VENTE (uniquement en mode STANDARD) ===
     
     # === RÈGLES STRICTES POUR L'IA ===
     # Détecter intention essai gratuit
