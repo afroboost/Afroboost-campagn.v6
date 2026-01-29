@@ -1627,6 +1627,31 @@ export const ChatWidget = () => {
                     />
                   ))}
                   
+                  {/* === INDICATEUR DE SAISIE (Typing Indicator) === */}
+                  {typingUser && (
+                    <div style={{ alignSelf: 'flex-start', marginTop: '4px' }}>
+                      <div
+                        style={{
+                          background: 'rgba(167, 139, 250, 0.2)',
+                          color: '#a78bfa',
+                          padding: '8px 14px',
+                          borderRadius: '16px 16px 16px 4px',
+                          fontSize: '12px',
+                          fontStyle: 'italic',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        <span className="animate-pulse">💪</span>
+                        <span>{typingUser.type === 'coach' ? 'Coach Bassi' : typingUser.name} est en train d'écrire...</span>
+                        <span className="animate-bounce" style={{ animationDelay: '0.1s' }}>.</span>
+                        <span className="animate-bounce" style={{ animationDelay: '0.2s' }}>.</span>
+                        <span className="animate-bounce" style={{ animationDelay: '0.3s' }}>.</span>
+                      </div>
+                    </div>
+                  )}
+                  
                   {isLoading && (
                     <div style={{ alignSelf: 'flex-start' }}>
                       <div
