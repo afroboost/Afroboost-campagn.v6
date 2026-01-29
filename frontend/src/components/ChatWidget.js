@@ -849,7 +849,7 @@ export const ChatWidget = () => {
                       ? '👥 Chat Groupe'
                       : sessionData?.is_ai_active === false 
                         ? '👤 Mode Coach'
-                        : '🤖 Assistant IA'}
+                        : '💪 Coach Bassi'}
                 </div>
               </div>
             </div>
