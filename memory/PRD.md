@@ -1,5 +1,45 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 5 Février 2026 - RESTAURATION CRM ET SÉCURISATION ✅
+
+### MISSION ACCOMPLIE : Interface sécurisée et unifiée
+
+#### 1. Sécurisation des affichages ✅
+- Toutes les références à `contact.name` sont maintenant protégées par des gardes null
+- Format: `{contact.name ? contact.name.substring(0, 25) : 'Contact sans nom'}`
+- Lignes corrigées: 5035, 5079, 5215, 6211, 6229
+
+#### 2. Système de sélection triple restauré ✅
+- **A. Chat Interne**: Sélecteur de conversation (groupes/utilisateurs)
+- **B. CRM WhatsApp/Email**: "Tous les contacts" OU "Sélection manuelle"
+- **C. Groupe Afroboost**: Sélecteur de groupe (community/vip/promo)
+
+#### 3. Structure du formulaire finale
+```
+1. Nom de campagne
+2. 📍 Destinataire Chat Interne (recherche unifiée)
+3. Message + Variables
+4. Média optionnel
+5. ⚙️ Paramètres avancés:
+   - WhatsApp/Email avec sélecteur CRM (47+ contacts)
+   - Groupe Afroboost
+6. Programmation
+7. 📋 Récapitulatif
+8. 🚀 Créer
+```
+
+#### 4. Données disponibles
+- 47 utilisateurs (`/api/users`)
+- 27 participants CRM (`/api/chat/participants`)
+- 17 conversations actives (6 groupes, 11 utilisateurs)
+
+### Non-régression vérifiée
+- ✅ Code Twilio/WhatsApp intact dans l'accordéon
+- ✅ Frontend compile avec 24 warnings (pas d'erreur)
+- ✅ APIs backend fonctionnelles
+
+---
+
 ## Mise à jour du 5 Février 2026 - UNIFICATION INTERFACE CAMPAGNES ✅
 
 ### MISSION ACCOMPLIE : Interface simplifiée
