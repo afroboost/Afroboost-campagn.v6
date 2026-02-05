@@ -409,6 +409,159 @@ export const ChatWidget = () => {
     }
   };
   
+  // === OUVRIR UN DM (Message Privé) ===
+  const openDirectMessage = async (memberId, memberName) => {
+    if (!participantId) return;
+    
+    try {
+      console.log('[DM] 📩 Ouverture DM avec:', memberName);
+      
+      // Créer ou récupérer la conversation privée
+      const res = await axios.post(`${API}/private/conversations`, {
+        participant_1_id: participantId,
+        participant_1_name: afroboostProfile?.name || leadData?.firstName || 'Moi',
+        participant_2_id: memberId,
+        participant_2_name: memberName
+      });
+      
+      const conversation = res.data;
+      setActivePrivateChat(conversation);
+      
+      // Charger les messages existants
+      const messagesRes = await axios.get(`${API}/private/messages/${conversation.id}`);
+      setPrivateMessages(messagesRes.data || []);
+      
+      // Rejoindre la room Socket.IO pour les mises à jour temps réel
+      if (socketRef.current) {
+        socketRef.current.emit('join_private_conversation', {
+          conversation_id: conversation.id,
+          participant_id: participantId
+        });
+      }
+      
+      // Marquer comme lu
+      await axios.put(`${API}/private/messages/read/${conversation.id}?reader_id=${participantId}`);
+      
+      // Persister la conversation active pour F5
+      localStorage.setItem('afroboost_active_dm', JSON.stringify(conversation));
+      
+      console.log('[DM] ✅ Conversation ouverte:', conversation.id);
+    } catch (err) {
+      console.error('[DM] ❌ Erreur ouverture DM:', err);
+    }
+  };
+  
+  // === FERMER LE DM ===
+  const closeDirectMessage = () => {
+    if (activePrivateChat && socketRef.current) {
+      socketRef.current.emit('leave_private_conversation', {
+        conversation_id: activePrivateChat.id
+      });
+    }
+    setActivePrivateChat(null);
+    setPrivateMessages([]);
+    setPrivateInput('');
+    localStorage.removeItem('afroboost_active_dm');
+    console.log('[DM] 📭 DM fermé');
+  };
+  
+  // === ENVOYER UN MESSAGE PRIVÉ ===
+  const sendPrivateMessage = async () => {
+    if (!privateInput.trim() || !activePrivateChat) return;
+    
+    try {
+      const recipientId = activePrivateChat.participant_1_id === participantId 
+        ? activePrivateChat.participant_2_id 
+        : activePrivateChat.participant_1_id;
+      const recipientName = activePrivateChat.participant_1_id === participantId
+        ? activePrivateChat.participant_2_name
+        : activePrivateChat.participant_1_name;
+      
+      const res = await axios.post(`${API}/private/messages`, {
+        conversation_id: activePrivateChat.id,
+        sender_id: participantId,
+        sender_name: afroboostProfile?.name || leadData?.firstName || 'Moi',
+        recipient_id: recipientId,
+        recipient_name: recipientName,
+        content: privateInput.trim()
+      });
+      
+      // Ajouter le message localement
+      setPrivateMessages(prev => [...prev, res.data]);
+      setPrivateInput('');
+      
+      console.log('[DM] ✅ Message envoyé');
+    } catch (err) {
+      console.error('[DM] ❌ Erreur envoi message:', err);
+    }
+  };
+  
+  // === UPLOAD PHOTO DE PROFIL ===
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Vérifier le type et la taille
+    if (!file.type.startsWith('image/')) {
+      alert('Veuillez sélectionner une image');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image trop volumineuse (max 2MB)');
+      return;
+    }
+    
+    setUploadingPhoto(true);
+    
+    try {
+      // Créer un FormData
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('participant_id', participantId || 'guest');
+      
+      // Upload vers le serveur
+      const res = await axios.post(`${API}/upload/profile-photo`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      if (res.data?.url) {
+        const photoUrl = res.data.url;
+        setProfilePhoto(photoUrl);
+        
+        // Mettre à jour le profil dans localStorage
+        const profile = getStoredProfile() || {};
+        profile.photoUrl = photoUrl;
+        localStorage.setItem(AFROBOOST_PROFILE_KEY, JSON.stringify(profile));
+        setAfroboostProfile(profile);
+        
+        console.log('[PHOTO] ✅ Photo uploadée:', photoUrl);
+      }
+    } catch (err) {
+      console.error('[PHOTO] ❌ Erreur upload:', err);
+      alert('Erreur lors de l\'upload de la photo');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+  
+  // === RESTAURER DM ACTIVE APRÈS F5 ===
+  useEffect(() => {
+    const savedDM = localStorage.getItem('afroboost_active_dm');
+    if (savedDM && participantId) {
+      try {
+        const conversation = JSON.parse(savedDM);
+        openDirectMessage(
+          conversation.participant_1_id === participantId 
+            ? conversation.participant_2_id 
+            : conversation.participant_1_id,
+          conversation.participant_1_id === participantId
+            ? conversation.participant_2_name
+            : conversation.participant_1_name
+        );
+      } catch (e) {}
+    }
+  }, [participantId]);
+  
   // === INDICATEUR DE SAISIE (Typing Indicator) ===
   const [typingUser, setTypingUser] = useState(null); // Qui est en train d'écrire
   const typingTimeoutRef = useRef(null); // Timer pour cacher l'indicateur après 3s
