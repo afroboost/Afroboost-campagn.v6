@@ -1776,30 +1776,32 @@ export const ChatWidget = () => {
                 </button>
               )}
               
-              {/* === BOUTON PARTAGE + MENU UTILISATEUR (Visible pour tous) === */}
+              {/* === ICÔNES MINIMALISTES (Partage + Menu) === */}
               {step === 'chat' && (
-                <div className="relative afro-share-menu">
-                  {/* Icône Partager */}
+                <div className="relative afro-share-menu" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  {/* Icône Partager (filaire fine) */}
                   <button
                     onClick={handleShareLink}
-                    title={linkCopied ? "Lien copié !" : "Partager le lien"}
+                    title={linkCopied ? "Lien copié !" : "Partager"}
                     style={{
-                      background: linkCopied ? 'rgba(34, 197, 94, 0.4)' : 'rgba(255,255,255,0.2)',
-                      border: linkCopied ? '1px solid rgba(34, 197, 94, 0.5)' : 'none',
-                      borderRadius: '8px',
-                      width: '32px',
-                      height: '32px',
+                      background: 'none',
+                      border: 'none',
+                      padding: '4px',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: linkCopied ? '#22c55e' : '#fff',
-                      transition: 'all 0.2s ease'
+                      opacity: linkCopied ? 1 : 0.6,
+                      transition: 'opacity 0.2s ease'
                     }}
                     data-testid="share-link-btn"
                   >
-                    {linkCopied ? '✓' : (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    {linkCopied ? (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="1.5">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5">
                         <circle cx="18" cy="5" r="3"></circle>
                         <circle cx="6" cy="12" r="3"></circle>
                         <circle cx="18" cy="19" r="3"></circle>
@@ -1809,67 +1811,142 @@ export const ChatWidget = () => {
                     )}
                   </button>
                   
-                  {/* Menu utilisateur (⋮) - Visible si abonné identifié */}
-                  {afroboostProfile?.code && (
-                    <>
-                      <button
-                        onClick={() => setShowUserMenu(!showUserMenu)}
+                  {/* Icône Menu (⋮) filaire fine */}
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: '4px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: 0.6,
+                      transition: 'opacity 0.2s ease'
+                    }}
+                    data-testid="user-menu-btn"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
+                      <circle cx="12" cy="5" r="1.5"></circle>
+                      <circle cx="12" cy="12" r="1.5"></circle>
+                      <circle cx="12" cy="19" r="1.5"></circle>
+                    </svg>
+                  </button>
+                  
+                  {/* Menu déroulant utilisateur */}
+                  {showUserMenu && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '35px',
+                        right: '0',
+                        background: '#1a1a1a',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        overflow: 'hidden',
+                        minWidth: '180px',
+                        zIndex: 100,
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
+                      }}
+                    >
+                      {/* Upload Photo de profil */}
+                      <label
                         style={{
-                          background: 'rgba(255,255,255,0.2)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          padding: '10px 14px',
+                          color: '#fff',
+                          fontSize: '12px',
+                          cursor: 'pointer'
+                        }}
+                        className="hover:bg-white/10"
+                      >
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            handlePhotoUpload(e);
+                            setShowUserMenu(false);
+                          }}
+                          style={{ display: 'none' }}
+                        />
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                          <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        {uploadingPhoto ? 'Upload...' : 'Photo de profil'}
+                        {profilePhoto && (
+                          <img 
+                            src={profilePhoto} 
+                            alt="" 
+                            style={{ width: '20px', height: '20px', borderRadius: '50%', marginLeft: 'auto' }}
+                          />
+                        )}
+                      </label>
+                      
+                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+                      
+                      {/* Mode Visiteur - seulement si abonné */}
+                      {afroboostProfile?.code && (
+                        <>
+                          <button
+                            onClick={() => { handleVisitorMode(); setShowUserMenu(false); }}
+                            style={{
+                              width: '100%',
+                              padding: '10px 14px',
+                              textAlign: 'left',
+                              fontSize: '12px',
+                              color: '#fff',
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '10px'
+                            }}
+                            className="hover:bg-white/10"
+                            data-testid="visitor-mode-btn"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                              <polyline points="4 14 10 14 10 20"></polyline>
+                              <polyline points="20 10 14 10 14 4"></polyline>
+                              <line x1="14" y1="10" x2="21" y2="3"></line>
+                              <line x1="3" y1="21" x2="10" y2="14"></line>
+                            </svg>
+                            Mode Visiteur
+                          </button>
+                          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+                        </>
+                      )}
+                      
+                      {/* Rafraîchir */}
+                      <button
+                        onClick={() => { window.location.reload(); }}
+                        style={{
+                          width: '100%',
+                          padding: '10px 14px',
+                          textAlign: 'left',
+                          fontSize: '12px',
+                          color: '#fff',
+                          background: 'none',
                           border: 'none',
-                          borderRadius: '8px',
-                          width: '32px',
-                          height: '32px',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#fff',
-                          fontSize: '16px',
-                          marginLeft: '4px'
+                          gap: '10px'
                         }}
-                        data-testid="user-menu-btn"
+                        className="hover:bg-white/10"
                       >
-                        ⋮
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <polyline points="23 4 23 10 17 10"></polyline>
+                          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg>
+                        Rafraîchir
                       </button>
-                      
-                      {/* Menu déroulant utilisateur */}
-                      {showUserMenu && (
-                        <div
-                          style={{
-                            position: 'absolute',
-                            top: '40px',
-                            right: '0',
-                            background: '#1a1a1a',
-                            borderRadius: '8px',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            overflow: 'hidden',
-                            minWidth: '200px',
-                            zIndex: 100,
-                            boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
-                          }}
-                        >
-                          <button
-                            onClick={handleVisitorMode}
-                            className="w-full px-4 py-3 text-left text-sm hover:bg-white/10 flex items-center gap-2"
-                            style={{ color: '#fff', border: 'none', background: 'none' }}
-                            data-testid="visitor-mode-btn"
-                          >
-                            🏃 Mode Visiteur
-                            <span style={{ fontSize: '10px', opacity: 0.6, marginLeft: 'auto' }}>Réduire le chat</span>
-                          </button>
-                          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }} />
-                          <button
-                            onClick={() => { handleShareLink(); }}
-                            className="w-full px-4 py-3 text-left text-sm hover:bg-white/10 flex items-center gap-2"
-                            style={{ color: '#a855f7', border: 'none', background: 'none' }}
-                            data-testid="share-menu-btn"
-                          >
-                            🔗 Partager le site
-                          </button>
-                        </div>
-                      )}
-                    </>
+                    </div>
                   )}
                 </div>
               )}
