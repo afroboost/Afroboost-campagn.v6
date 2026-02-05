@@ -6786,6 +6786,66 @@ async def startup_scheduler():
     print(f"[SYSTEM] 📱 Twilio FROM: {TWILIO_FROM_NUMBER}")
     print("[SYSTEM] ============================================")
     
+    # === NETTOYAGE DES ZOMBIE JOBS (campagnes bloquées > 30 min) ===
+    try:
+        thirty_minutes_ago = datetime.now(timezone.utc) - timedelta(minutes=30)
+        
+        # Trouver les campagnes bloquées à l'état "sending" depuis plus de 30 minutes
+        zombie_filter = {
+            "status": "sending",
+            "updatedAt": {"$lt": thirty_minutes_ago.isoformat()}
+        }
+        
+        zombie_campaigns = await db.campaigns.find(zombie_filter, {"_id": 0, "id": 1, "name": 1}).to_list(100)
+        
+        if zombie_campaigns:
+            logger.warning(f"[ZOMBIE-CLEANUP] 🧟 {len(zombie_campaigns)} campagne(s) zombie détectée(s)")
+            
+            for zombie in zombie_campaigns:
+                zombie_id = zombie.get("id")
+                zombie_name = zombie.get("name", "Sans nom")
+                
+                # Mettre à jour le statut en "failed"
+                await db.campaigns.update_one(
+                    {"id": zombie_id},
+                    {
+                        "$set": {
+                            "status": "failed",
+                            "updatedAt": datetime.now(timezone.utc).isoformat()
+                        },
+                        "$push": {
+                            "results": {
+                                "contactId": "system",
+                                "contactName": "Système",
+                                "channel": "system",
+                                "status": "failed",
+                                "error": "Timeout : Serveur redémarré après 30 min d'inactivité",
+                                "sentAt": datetime.now(timezone.utc).isoformat()
+                            }
+                        }
+                    }
+                )
+                
+                # Enregistrer l'erreur dans campaign_errors
+                await db.campaign_errors.insert_one({
+                    "campaign_id": zombie_id,
+                    "campaign_name": zombie_name,
+                    "error_type": "zombie_timeout",
+                    "error_message": "Timeout : Serveur redémarré après 30 min d'inactivité",
+                    "error_code": "ZOMBIE_JOB_TIMEOUT",
+                    "channel": "system",
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                })
+                
+                logger.info(f"[ZOMBIE-CLEANUP] ✅ Campagne '{zombie_name}' ({zombie_id}) remise en échec")
+            
+            print(f"[SYSTEM] 🧟 {len(zombie_campaigns)} campagne(s) zombie nettoyée(s)")
+        else:
+            logger.info("[ZOMBIE-CLEANUP] ✅ Aucune campagne zombie détectée")
+            
+    except Exception as e:
+        logger.error(f"[ZOMBIE-CLEANUP] ❌ Erreur nettoyage: {e}")
+    
     # Ajouter le job s'il n'existe pas déjà (persiste dans MongoDB)
     try:
         existing_job = apscheduler.get_job('campaign_scheduler_job')
