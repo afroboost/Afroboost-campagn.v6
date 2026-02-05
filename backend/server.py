@@ -6614,15 +6614,10 @@ def scheduler_job():
                     logger.error(f"[SCHEDULER] ❌ Erreur campagne {campaign.get('id')}: {campaign_error}")
                     continue  # PASSER À LA CAMPAGNE SUIVANTE
             
-        except Exception as e:
-            logger.error(f"[SCHEDULER] ❌ Erreur dans la boucle: {e}")
-        
-        # Attendre avant le prochain cycle
-        time_module.sleep(SCHEDULER_INTERVAL)
-    
-    logger.info("[SCHEDULER] Thread arrêté")
+    except Exception as e:
+        logger.error(f"[SCHEDULER] ❌ Erreur dans le job: {e}")
 
-# Variable pour le thread du scheduler
+# Variable pour le thread du scheduler (legacy - gardée pour compatibilité)
 scheduler_thread = None
 
 @fastapi_app.on_event("startup")
