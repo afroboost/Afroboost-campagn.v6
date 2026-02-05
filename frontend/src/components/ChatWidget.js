@@ -2024,7 +2024,7 @@ export const ChatWidget = () => {
             {/* === MODE COACH: Interface de gestion des conversations === */}
             {step === 'coach' && isCoachMode && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                {/* Header Coach avec Partage, Rafraîchir et Déconnexion */}
+                {/* Header Coach MINIMALISTE - Icônes uniquement */}
                 <div style={{ 
                   background: 'rgba(217, 28, 210, 0.2)', 
                   padding: '8px 16px', 
@@ -2036,90 +2036,169 @@ export const ChatWidget = () => {
                   <span style={{ color: '#d91cd2', fontSize: '12px', fontWeight: 'bold' }}>
                     💪 Mode Coach
                   </span>
-                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                    {/* Bouton Partage */}
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }} className="coach-icons-menu">
+                    {/* Icône Partage (SVG minimaliste) */}
                     <button
                       onClick={handleShareLink}
                       title={linkCopied ? "Lien copié !" : "Partager"}
                       style={{ 
-                        background: linkCopied ? 'rgba(34, 197, 94, 0.3)' : 'rgba(255,255,255,0.1)', 
-                        border: linkCopied ? '1px solid rgba(34, 197, 94, 0.5)' : 'none', 
-                        padding: '4px 8px', 
-                        borderRadius: '4px',
-                        color: linkCopied ? '#22c55e' : '#fff',
-                        fontSize: '11px',
+                        background: 'none', 
+                        border: 'none', 
+                        padding: '4px',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '4px',
-                        transition: 'all 0.2s ease'
+                        justifyContent: 'center',
+                        opacity: linkCopied ? 1 : 0.7,
+                        transition: 'opacity 0.2s ease'
                       }}
                       data-testid="coach-chat-share"
                     >
-                      {linkCopied ? '✓' : '🔗'}
+                      {linkCopied ? (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      ) : (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5">
+                          <circle cx="18" cy="5" r="3"></circle>
+                          <circle cx="6" cy="12" r="3"></circle>
+                          <circle cx="18" cy="19" r="3"></circle>
+                          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                        </svg>
+                      )}
                     </button>
                     
-                    {/* Bouton Rafraîchir */}
-                    <button
-                      onClick={async () => {
-                        console.log('[COACH] 🔄 Rafraîchissement des conversations...');
-                        await loadCoachSessions();
-                        console.log('[COACH] ✅ Conversations rafraîchies');
-                      }}
-                      style={{ 
-                        background: 'rgba(255,255,255,0.1)', 
-                        border: 'none', 
-                        padding: '4px 8px', 
-                        borderRadius: '4px',
-                        color: '#fff',
-                        fontSize: '11px',
-                        cursor: 'pointer'
-                      }}
-                      data-testid="coach-chat-refresh"
-                    >
-                      🔄 Rafraîchir
-                    </button>
-                    
-                    {/* Bouton Déconnexion */}
-                    <button
-                      onClick={() => {
-                        // Nettoyer localStorage/sessionStorage
-                        localStorage.removeItem('afroboost_coach_mode');
-                        localStorage.removeItem('afroboost_coach_user');
-                        localStorage.removeItem('afroboost_coach_tab');
-                        localStorage.removeItem(AFROBOOST_IDENTITY_KEY);
-                        localStorage.removeItem(CHAT_CLIENT_KEY);
-                        localStorage.removeItem(CHAT_SESSION_KEY);
-                        sessionStorage.clear();
-                        
-                        // Réinitialiser l'état
-                        setIsCoachMode(false);
-                        setStep('form');
-                        setMessages([]);
-                        setSessionData(null);
-                        setLeadData({ firstName: '', whatsapp: '', email: '' });
-                        setSelectedCoachSession(null);
-                        setCoachSessions([]);
-                        
-                        console.log('[COACH] 🚪 Déconnexion depuis le chat');
-                        
-                        // Recharger la page pour reset complet
-                        window.location.reload();
-                      }}
-                      title="Déconnexion"
-                      style={{ 
-                        background: 'rgba(239, 68, 68, 0.3)', 
-                        border: '1px solid rgba(239, 68, 68, 0.5)', 
-                        padding: '4px 8px', 
-                        borderRadius: '4px',
-                        color: '#ef4444',
-                        fontSize: '11px',
-                        cursor: 'pointer'
-                      }}
-                      data-testid="coach-chat-logout"
-                    >
-                      🚪
-                    </button>
+                    {/* Icône Menu (⋮) avec badge notifications */}
+                    <div style={{ position: 'relative' }}>
+                      <button
+                        onClick={() => setShowCoachMenu(!showCoachMenu)}
+                        style={{ 
+                          background: 'none', 
+                          border: 'none', 
+                          padding: '4px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          opacity: 0.7,
+                          transition: 'opacity 0.2s ease'
+                        }}
+                        data-testid="coach-chat-menu"
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
+                          <circle cx="12" cy="5" r="2"></circle>
+                          <circle cx="12" cy="12" r="2"></circle>
+                          <circle cx="12" cy="19" r="2"></circle>
+                        </svg>
+                      </button>
+                      
+                      {/* Badge notification (point rouge) */}
+                      {coachSessions.length > 0 && (
+                        <span style={{
+                          position: 'absolute',
+                          top: '0',
+                          right: '0',
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          background: '#ef4444',
+                          border: '1px solid rgba(0,0,0,0.3)'
+                        }} />
+                      )}
+                      
+                      {/* Menu déroulant coach */}
+                      {showCoachMenu && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: '30px',
+                            right: '0',
+                            background: '#1a1a1a',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            overflow: 'hidden',
+                            minWidth: '160px',
+                            zIndex: 100,
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
+                          }}
+                        >
+                          <button
+                            onClick={async () => {
+                              setShowCoachMenu(false);
+                              console.log('[COACH] 🔄 Rafraîchissement...');
+                              await loadCoachSessions();
+                            }}
+                            style={{
+                              width: '100%',
+                              padding: '10px 14px',
+                              textAlign: 'left',
+                              fontSize: '12px',
+                              color: '#fff',
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px'
+                            }}
+                            className="hover:bg-white/10"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <polyline points="23 4 23 10 17 10"></polyline>
+                              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                            </svg>
+                            Rafraîchir
+                          </button>
+                          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }} />
+                          <button
+                            onClick={() => {
+                              setShowCoachMenu(false);
+                              // Nettoyer localStorage/sessionStorage
+                              localStorage.removeItem('afroboost_coach_mode');
+                              localStorage.removeItem('afroboost_coach_user');
+                              localStorage.removeItem('afroboost_coach_tab');
+                              localStorage.removeItem(AFROBOOST_IDENTITY_KEY);
+                              localStorage.removeItem(CHAT_CLIENT_KEY);
+                              localStorage.removeItem(CHAT_SESSION_KEY);
+                              sessionStorage.clear();
+                              
+                              setIsCoachMode(false);
+                              setStep('form');
+                              setMessages([]);
+                              setSessionData(null);
+                              setLeadData({ firstName: '', whatsapp: '', email: '' });
+                              setSelectedCoachSession(null);
+                              setCoachSessions([]);
+                              
+                              console.log('[COACH] 🚪 Déconnexion');
+                              window.location.reload();
+                            }}
+                            style={{
+                              width: '100%',
+                              padding: '10px 14px',
+                              textAlign: 'left',
+                              fontSize: '12px',
+                              color: '#ef4444',
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px'
+                            }}
+                            className="hover:bg-white/10"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                              <polyline points="16 17 21 12 16 7"></polyline>
+                              <line x1="21" y1="12" x2="9" y2="12"></line>
+                            </svg>
+                            Déconnexion
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
