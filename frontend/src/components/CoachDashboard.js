@@ -6226,7 +6226,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                                 showCampaignToast(`✅ Destinataire "${conv.name}" sélectionné`, 'success');
                               }}
                               className="w-full text-left px-3 py-2 rounded hover:bg-blue-600/30 text-white text-sm flex items-center gap-2">
-                              <span>👤</span><span className="truncate">{conv.name}</span>
+                              <span>👤</span><span className="truncate">{conv.name || 'Utilisateur'}</span>
                             </button>
                           ))}
                         </div>
