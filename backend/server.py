@@ -7183,53 +7183,79 @@ def scheduler_job():
                 # CONDITION D'ISOLATION: Si internal est activé, on NE DÉCLENCHE PAS Twilio/WhatsApp
                 if channels.get("internal"):
                     try:
+                        # NOUVEAU: Support des targetIds (panier multiple)
+                        target_ids = campaign.get("targetIds", [])
                         target_conv_id = campaign.get("targetConversationId")
                         target_conv_name = campaign.get("targetConversationName", "")
                         
-                        if not target_conv_id:
-                            print(f"[SCHEDULER-INTERNAL] ⚠️ Pas de conversation cible - SKIP")
+                        # Fallback: si pas de targetIds mais un targetConversationId
+                        if not target_ids and target_conv_id:
+                            target_ids = [target_conv_id]
+                        
+                        if not target_ids:
+                            print(f"[SCHEDULER-INTERNAL] ⚠️ Pas de destinataires - SKIP")
                             results.append({
                                 "contactId": "internal",
                                 "contactName": "Messagerie Interne",
                                 "channel": "internal",
                                 "status": "failed",
-                                "error": "Aucune conversation cible définie",
+                                "error": "Aucun destinataire défini",
                                 "sentAt": now.isoformat()
                             })
                             fail_count += 1
                         else:
-                            print(f"[SCHEDULER-INTERNAL] 🎯 Envoi vers: {target_conv_name} ({target_conv_id})")
+                            print(f"[SCHEDULER-INTERNAL] 🎯 Envoi vers {len(target_ids)} destinataire(s)")
                             
-                            success, error, session_id = scheduler_send_internal_message_sync(
-                                scheduler_db=scheduler_db,
-                                conversation_id=target_conv_id,
-                                message_text=message,
-                                conversation_name=target_conv_name
-                            )
-                            
-                            result_entry = {
-                                "contactId": "internal",
-                                "contactName": target_conv_name or f"Conversation {target_conv_id[:8]}",
-                                "channel": "internal",
-                                "status": "sent" if success else "failed",
-                                "error": error if not success else None,
-                                "sessionId": session_id,
-                                "sentAt": now.isoformat()
-                            }
-                            results.append(result_entry)
-                            
-                            if success:
-                                success_count += 1
-                                logger.info(f"[SCHEDULER] ✅ Message interne envoyé: {target_conv_name}")
-                                print(f"[SCHEDULER] ✅ Scheduled Internal Message Sent: [Campaign: {campaign_name}] -> {target_conv_name}")
-                            else:
-                                fail_count += 1
-                                logger.error(f"[SCHEDULER] ❌ Message interne échoué: {error}")
-                                print(f"[SCHEDULER] ❌ Interne ÉCHEC: {error}")
-                                
+                            # Boucle sur tous les targetIds
+                            for idx, tid in enumerate(target_ids):
+                                try:
+                                    # Récupérer le nom du destinataire si possible
+                                    conv_name = target_conv_name if idx == 0 else f"Destinataire {idx+1}"
+                                    
+                                    success, error, session_id = scheduler_send_internal_message_sync(
+                                        scheduler_db=scheduler_db,
+                                        conversation_id=tid,
+                                        message_text=message,
+                                        conversation_name=conv_name
+                                    )
+                                    
+                                    result_entry = {
+                                        "contactId": tid,
+                                        "contactName": conv_name,
+                                        "channel": "internal",
+                                        "status": "sent" if success else "failed",
+                                        "error": error if not success else None,
+                                        "sessionId": session_id,
+                                        "sentAt": now.isoformat()
+                                    }
+                                    results.append(result_entry)
+                                    
+                                    if success:
+                                        success_count += 1
+                                        logger.info(f"[SCHEDULER] ✅ Message interne envoyé: {conv_name} ({tid[:8]}...)")
+                                        print(f"[SCHEDULER] ✅ Interne [{idx+1}/{len(target_ids)}]: {conv_name}")
+                                    else:
+                                        fail_count += 1
+                                        logger.error(f"[SCHEDULER] ❌ Message interne échoué ({tid[:8]}...): {error}")
+                                        print(f"[SCHEDULER] ❌ Interne [{idx+1}/{len(target_ids)}] ÉCHEC: {error}")
+                                        
+                                except Exception as inner_e:
+                                    fail_count += 1
+                                    results.append({
+                                        "contactId": tid,
+                                        "contactName": f"Destinataire {idx+1}",
+                                        "channel": "internal",
+                                        "status": "failed",
+                                        "error": str(inner_e),
+                                        "sentAt": now.isoformat()
+                                    })
+                                    print(f"[SCHEDULER] ❌ Exception Interne [{idx+1}]: {inner_e}")
+                                    # Continue avec le suivant au lieu de tout arrêter
+                                    continue
+                                    
                     except Exception as e:
-                        logger.error(f"[SCHEDULER] ❌ Exception Interne: {e}")
-                        print(f"[SCHEDULER] ❌ Exception Interne: {e}")
+                        logger.error(f"[SCHEDULER] ❌ Exception Interne globale: {e}")
+                        print(f"[SCHEDULER] ❌ Exception Interne globale: {e}")
                         results.append({
                             "contactId": "internal",
                             "contactName": "Messagerie Interne",
@@ -7238,7 +7264,6 @@ def scheduler_job():
                             "error": str(e),
                             "sentAt": now.isoformat()
                         })
-                        fail_count += 1
                     
                     # Si UNIQUEMENT le canal internal est activé, on skip les autres canaux
                     only_internal = not any([
