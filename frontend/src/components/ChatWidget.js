@@ -952,38 +952,6 @@ export const ChatWidget = () => {
     setPrivateInput('');
   };
 
-  // Envoyer un message privé
-  const sendPrivateMessage = async () => {
-    if (!activePrivateChat || !privateInput.trim()) return;
-    
-    const content = privateInput.trim();
-    setPrivateInput('');
-    
-    try {
-      const response = await axios.post(`${API}/private/messages`, {
-        conversation_id: activePrivateChat.id,
-        sender_id: participantId,
-        sender_name: leadData.firstName,
-        recipient_id: activePrivateChat.recipientId,
-        recipient_name: activePrivateChat.recipientName,
-        content: content
-      });
-      
-      // Ajouter le message à la liste
-      setPrivateMessages(prev => [...prev, {
-        id: response.data.id,
-        text: content,
-        sender: leadData.firstName,
-        senderId: participantId,
-        isMine: true,
-        createdAt: response.data.created_at
-      }]);
-      
-    } catch (err) {
-      console.error('Erreur envoi MP:', err);
-    }
-  };
-
   // === SOCKET.IO pour les MP - Remplace le polling ===
   useEffect(() => {
     if (!socketRef.current) return;
