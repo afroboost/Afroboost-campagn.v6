@@ -1,5 +1,43 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 5 Février 2026 - SYSTÈME PANIER DE DESTINATAIRES ✅
+
+### MISSION ACCOMPLIE : Sélection multiple avec tags
+
+#### 1. Système de panier avec tags ✅
+- **État** `selectedRecipients`: Tableau `[{id, name, type: 'group'|'user'}]`
+- **Tags visuels**: Badges colorés (👥 purple pour groupes, 👤 blue pour utilisateurs)
+- **Bouton "× Supprimer"** sur chaque tag
+- **Bouton "+ Tous (17)"** pour ajouter tous les destinataires en un clic
+- **Bouton "Vider le panier"** pour reset
+
+#### 2. Backend mis à jour ✅
+- **Nouveau champ `targetIds`**: `List[str]` dans les modèles `Campaign` et `CampaignCreate`
+- **Compatibilité legacy**: `targetConversationId` = premier ID du panier
+
+#### 3. Récapitulatif enrichi ✅
+- Affiche: "💌 Envoi prévu pour: X destinataire(s) (Y 👥, Z 👤)"
+- Bouton désactivé si panier vide: "⚠️ Ajoutez des destinataires"
+
+#### 4. Non-régression vérifiée ✅
+- Code Twilio/WhatsApp intact dans accordéon
+- Null guards conservés sur tous les `contact.name`
+- Programmation multi-dates fonctionne
+
+### Structure des données campagne
+```json
+{
+  "name": "Test Panier",
+  "message": "...",
+  "targetIds": ["id-1", "id-2", "id-3"],
+  "targetConversationId": "id-1",
+  "channels": {"internal": true},
+  "scheduleSlots": [...]
+}
+```
+
+---
+
 ## Mise à jour du 5 Février 2026 - RESTAURATION CRM ET SÉCURISATION ✅
 
 ### MISSION ACCOMPLIE : Interface sécurisée et unifiée
