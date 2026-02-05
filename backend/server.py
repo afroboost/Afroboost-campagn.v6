@@ -1100,7 +1100,7 @@ async def create_reservation(reservation: ReservationCreate):
                 """
                 
                 params = {
-                    "from": "Afroboost <notifications@afroboost.com>",
+                    "from": "Afroboost <notifications@afroboosteur.com>",
                     "to": [coach_email],
                     "subject": f"💎 Nouvelle réservation abonné - {reservation.userName}",
                     "html": html_content
