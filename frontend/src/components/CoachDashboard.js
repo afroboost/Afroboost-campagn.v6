@@ -6427,10 +6427,10 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                   <thead className="sticky top-0 bg-black z-10">
                     <tr className="text-left text-white text-sm opacity-70 border-b border-purple-500/30">
                       <th className="pb-3 pt-2 pr-4 bg-black">Campagne</th>
-                      <th className="pb-3 pt-2 pr-4 bg-black">Contacts</th>
-                      <th className="pb-3 pt-2 pr-4 bg-black">Canaux</th>
+                      <th className="pb-3 pt-2 pr-4 bg-black">Destinataire</th>
+                      <th className="pb-3 pt-2 pr-4 bg-black">Type</th>
                       <th className="pb-3 pt-2 pr-4 bg-black">Statut</th>
-                      <th className="pb-3 pt-2 pr-4 bg-black">Date programmée</th>
+                      <th className="pb-3 pt-2 pr-4 bg-black">Date</th>
                       <th className="pb-3 pt-2 bg-black">Actions</th>
                     </tr>
                   </thead>
