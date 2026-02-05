@@ -3516,21 +3516,27 @@ async def get_active_conversations_for_messaging():
         for user in all_users:
             try:
                 user_id = user.get("id", "")
-                user_name = user.get("name", "").strip()
-                user_email = user.get("email", "").strip().lower()
+                user_name = (user.get("name") or "").strip()
+                user_email = (user.get("email") or "").strip().lower()
                 
-                # Ignorer les utilisateurs sans nom ou déjà vus (par email)
-                if not user_name or not user_id:
+                # Ignorer les utilisateurs sans ID
+                if not user_id:
                     continue
+                # Éviter les doublons par email
                 if user_email and user_email in seen_emails:
                     continue
                 if user_email:
                     seen_emails.add(user_email)
                 
-                # Construire le nom d'affichage
-                display_name = f"👤 {user_name}"
-                if user_email:
-                    display_name += f" ({user_email})"
+                # Construire le nom d'affichage (fallback sur email si pas de nom)
+                if user_name:
+                    display_name = f"👤 {user_name}"
+                    if user_email:
+                        display_name += f" ({user_email})"
+                elif user_email:
+                    display_name = f"👤 {user_email}"
+                else:
+                    display_name = f"👤 Contact {user_id[:8]}"
                 
                 conversations.append({
                     "conversation_id": user_id,  # Utilise l'ID utilisateur pour cibler directement
