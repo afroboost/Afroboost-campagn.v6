@@ -999,14 +999,17 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     targetType: "all", selectedContacts: [],
     channels: { whatsapp: false, email: false, instagram: false, group: false, internal: true },
     targetGroupId: 'community',
-    targetConversationId: '', // ID de la conversation interne sélectionnée
-    targetConversationName: '', // Nom pour affichage
+    targetConversationId: '', // ID de la conversation interne sélectionnée (legacy)
+    targetConversationName: '', // Nom pour affichage (legacy)
     scheduleSlots: [] // Multi-date scheduling
   });
   const [selectedContactsForCampaign, setSelectedContactsForCampaign] = useState([]);
   const [contactSearchQuery, setContactSearchQuery] = useState("");
   const [campaignLogs, setCampaignLogs] = useState([]); // Error logs
   const [editingCampaignId, setEditingCampaignId] = useState(null); // ID de la campagne en édition
+  
+  // === PANIER DE DESTINATAIRES (TAGS) ===
+  const [selectedRecipients, setSelectedRecipients] = useState([]); // [{id, name, type: 'group'|'user'}]
   
   // === CONVERSATIONS ACTIVES POUR MESSAGERIE INTERNE ===
   const [activeConversations, setActiveConversations] = useState([]);
