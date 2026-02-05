@@ -1,5 +1,31 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 5 Février 2026 - OPTIMISATION UX CHATBOT ET RÉSERVATIONS ✅
+
+### MISSION ACCOMPLIE
+
+#### 1. ChatWidget optimisé ✅
+- **Gros bouton supprimé** - "📅 RÉSERVER MON COURS" retiré
+- **Icône calendrier compacte** - SVG dans la barre de saisie (à côté de l'emoji)
+- **Panneau réservation** - S'ouvre au clic sur l'icône, avec bouton fermeture ×
+- **Position** : Icône entre 😊 et le champ de saisie
+
+#### 2. Dashboard Coach amélioré ✅
+- **Colonne Spécifications enrichie** :
+  - 📏 Taille (selectedVariants.size OU metadata.size)
+  - 🎨 Couleur (selectedVariants.color OU metadata.color)
+  - 🏷️ Variant (metadata.variant)
+- **Bouton suivi colis 🔗** :
+  - Ouvre La Poste Suisse si numéro commence par 99
+  - Sinon ouvre parcelsapp.com
+
+#### 3. Non-régression vérifiée ✅
+- Frontend compile (24 warnings)
+- Badge ⏳ Auto préservé
+- Code Twilio/WhatsApp intact
+
+---
+
 ## Mise à jour du 5 Février 2026 - CHATBOT FULL-SCREEN ET RÉSERVATIONS INTELLIGENTES ✅
 
 ### MISSION ACCOMPLIE
