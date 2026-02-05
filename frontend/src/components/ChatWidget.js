@@ -354,6 +354,13 @@ export const ChatWidget = () => {
   
   // === PROFIL ABONNÉ VALIDÉ (afroboost_profile) ===
   const [afroboostProfile, setAfroboostProfile] = useState(getStoredProfile);
+  const [profilePhoto, setProfilePhoto] = useState(() => {
+    try {
+      const profile = getStoredProfile();
+      return profile?.photoUrl || null;
+    } catch { return null; }
+  });
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   
   // === MENU UTILISATEUR (Partage + Mode Visiteur) ===
   const [showUserMenu, setShowUserMenu] = useState(false);
