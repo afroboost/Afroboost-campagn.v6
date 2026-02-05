@@ -2327,15 +2327,40 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
       mediaFormat: campaign.mediaFormat || "16:9",
       targetType: campaign.targetType || "all",
       selectedContacts: campaign.selectedContacts || [],
-      channels: campaign.channels || { whatsapp: true, email: false, instagram: false },
+      channels: campaign.channels || { whatsapp: false, email: false, instagram: false, internal: true },
+      targetGroupId: campaign.targetGroupId || 'community',
+      targetConversationId: campaign.targetConversationId || '',
+      targetConversationName: campaign.targetConversationName || '',
       scheduleSlots: [] // On ne peut pas modifier les schedules existants
     });
-    // Pré-sélectionner les contacts si mode "selected"
+    // Pré-sélectionner les contacts CRM si mode "selected"
     if (campaign.targetType === "selected" && campaign.selectedContacts) {
       setSelectedContactsForCampaign(campaign.selectedContacts);
     }
+    // Recharger le panier de destinataires (targetIds)
+    if (campaign.targetIds && campaign.targetIds.length > 0) {
+      // Retrouver les infos de chaque destinataire depuis activeConversations
+      const recipients = campaign.targetIds.map(id => {
+        const conv = activeConversations.find(c => c.conversation_id === id);
+        return conv 
+          ? { id: conv.conversation_id, name: conv.name || 'Sans nom', type: conv.type }
+          : { id, name: campaign.targetConversationName || 'Destinataire', type: 'user' };
+      });
+      setSelectedRecipients(recipients);
+    } else if (campaign.targetConversationId) {
+      // Legacy: single target
+      const conv = activeConversations.find(c => c.conversation_id === campaign.targetConversationId);
+      setSelectedRecipients([{
+        id: campaign.targetConversationId,
+        name: conv?.name || campaign.targetConversationName || 'Destinataire',
+        type: conv?.type || 'user'
+      }]);
+    } else {
+      setSelectedRecipients([]);
+    }
     // Scroll vers le formulaire
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    showCampaignToast(`📝 Mode édition: "${campaign.name}"`, 'info');
   };
 
   // Annuler l'édition et réinitialiser le formulaire
@@ -2344,11 +2369,14 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     setNewCampaign({ 
       name: "", message: "", mediaUrl: "", mediaFormat: "16:9", 
       targetType: "all", selectedContacts: [], 
-      channels: { whatsapp: true, email: false, instagram: false, group: false },
+      channels: { whatsapp: false, email: false, instagram: false, group: false, internal: true },
       targetGroupId: 'community',
+      targetConversationId: '',
+      targetConversationName: '',
       scheduleSlots: [] 
     });
     setSelectedContactsForCampaign([]);
+    setSelectedRecipients([]); // Vider aussi le panier
   };
 
   // Create OR Update campaign (supports multiple schedule slots)
