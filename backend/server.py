@@ -6718,6 +6718,119 @@ def scheduler_send_whatsapp_sync(to_phone, message, media_url=None):
     if not clean_to.startswith("+"):
         clean_to = "+41" + clean_to.lstrip("0") if clean_to.startswith("0") else "+" + clean_to
     clean_from = from_number if from_number.startswith("+") else "+" + from_number
+
+def scheduler_send_internal_message_sync(scheduler_db, conversation_id, message_text, conversation_name=""):
+    """
+    Envoi synchrone de message INTERNE dans une conversation (utilisateur ou groupe).
+    Fonctionne de la même manière quelle que soit la cible car les deux possèdent un conversation_id.
+    
+    Args:
+        scheduler_db: Connexion MongoDB synchrone
+        conversation_id: ID de la session/conversation cible
+        message_text: Contenu du message
+        conversation_name: Nom de la conversation (pour logs)
+    
+    Returns:
+        (success: bool, error: str|None, session_id: str|None)
+    """
+    import requests
+    import uuid as uuid_module
+    from datetime import datetime, timezone
+    
+    try:
+        # Remplacer {prénom} par le nom de la conversation ou "ami(e)"
+        processed_message = message_text.replace("{prénom}", conversation_name or "ami(e)").replace("{prenom}", conversation_name or "ami(e)")
+        
+        # Vérifier si la conversation existe
+        session = scheduler_db.chat_sessions.find_one(
+            {"id": conversation_id, "is_deleted": {"$ne": True}},
+            {"_id": 0, "id": 1, "mode": 1}
+        )
+        
+        # Si pas de session, chercher ou créer une session standard
+        if not session:
+            # Vérifier si c'est un groupe standard (community, vip, promo)
+            if conversation_id in ["community", "vip", "promo"]:
+                # Créer la session de groupe
+                new_session_id = str(uuid_module.uuid4())
+                new_session = {
+                    "id": new_session_id,
+                    "participant_ids": [],
+                    "mode": conversation_id,
+                    "is_ai_active": False,
+                    "is_deleted": False,
+                    "link_token": str(uuid_module.uuid4())[:12],
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "title": f"💬 Groupe {conversation_id.capitalize()}"
+                }
+                scheduler_db.chat_sessions.insert_one(new_session)
+                session = new_session
+                conversation_id = new_session_id
+                print(f"[SCHEDULER-INTERNAL] ✅ Nouvelle session '{conversation_id}' créée")
+            else:
+                print(f"[SCHEDULER-INTERNAL] ❌ Session non trouvée: {conversation_id}")
+                return False, f"Session non trouvée: {conversation_id}", None
+        else:
+            conversation_id = session.get("id")
+        
+        mode = session.get("mode", "user")
+        
+        # Créer le message du Coach
+        coach_message = {
+            "id": str(uuid_module.uuid4()),
+            "session_id": conversation_id,
+            "sender_id": "coach",
+            "sender_name": "💪 Coach Bassi",
+            "sender_type": "coach",
+            "content": processed_message,
+            "mode": mode,
+            "is_deleted": False,
+            "notified": False,
+            "scheduled": True,  # Marqueur pour identifier les messages programmés
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # INSERTION DIRECTE dans la collection messages
+        scheduler_db.chat_messages.insert_one(coach_message)
+        
+        print(f"[SCHEDULER-INTERNAL] ✅ Message inséré dans DB - Session: {conversation_id}")
+        print(f"[SCHEDULER-INTERNAL] 📝 Contenu: {processed_message[:80]}...")
+        
+        # Émettre via Socket.IO pour mise à jour temps réel
+        try:
+            response = requests.post(
+                "http://localhost:8001/api/scheduler/emit-group-message",
+                json={
+                    "session_id": conversation_id,
+                    "message": {
+                        "id": coach_message["id"],
+                        "type": "coach",
+                        "text": processed_message,
+                        "sender": "💪 Coach Bassi",
+                        "senderId": "coach",
+                        "sender_type": "coach",
+                        "scheduled": True,
+                        "created_at": coach_message["created_at"]
+                    }
+                },
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                print(f"[SCHEDULER-INTERNAL] ✅ Socket.IO émis avec succès")
+            else:
+                print(f"[SCHEDULER-INTERNAL] ⚠️ Socket.IO warning: {response.status_code}")
+                # Le message est quand même en DB, donc succès partiel
+                
+        except Exception as socket_err:
+            print(f"[SCHEDULER-INTERNAL] ⚠️ Socket.IO exception: {socket_err}")
+            # Le message est quand même en DB
+        
+        return True, None, conversation_id
+        
+    except Exception as e:
+        print(f"[SCHEDULER-INTERNAL] ❌ Exception: {e}")
+        return False, str(e), None
     
     twilio_url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
     data = {
