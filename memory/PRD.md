@@ -1,5 +1,56 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 5 Février 2026 - CHATBOT HYBRIDE (IDENTIFICATION UNIQUE ET PARCOURS CIBLÉ) ✅
+
+### MISSION ACCOMPLIE
+
+#### 1. Formulaire d'entrée "Abonné" (Identification Unique) ✅
+- **Bouton "💎 S'identifier comme abonné"** visible dans le formulaire visiteur
+- **Formulaire 4 champs** : Nom complet, WhatsApp, Email, Code Promo
+- **Validation API** : `/api/discount-codes/validate` vérifie le code
+- **Mémorisation** : `localStorage.setItem('afroboost_profile', JSON.stringify(data))`
+- **Retour automatique** : Si `afroboost_profile` existe → DIRECT au chat plein écran
+
+#### 2. Parcours Abonné (Interface Calendrier) ✅
+- **Mode plein écran activé automatiquement** pour les abonnés reconnus
+- **Header** affiche "💎 Abonné • {nom}"
+- **Icône calendrier violet** visible dans la barre d'entrée
+- **Panneau réservation** avec badge code promo et liste des cours dynamique
+
+#### 3. Parcours Visiteur (Chat Classique) ✅
+- **Formulaire 3 champs** : Prénom, WhatsApp, Email
+- **Chat bulle classique** (380px, pas de plein écran)
+- **Icône calendrier MASQUÉE** pour les visiteurs sans code
+- **Header** affiche "💪 Coach Bassi"
+
+#### 4. Backend API amélioré ✅
+- **Validation code promo** sans courseId obligatoire (identification flow)
+- **Gestion assignedEmail null** : correction du bug NoneType.strip()
+- **Codes publics** : PROMO20SECRET utilisable par tous
+- **Codes restreints** : basxx réservé à un email spécifique
+
+#### 5. Tests automatisés (100% pass rate) ✅
+- **14 tests Playwright** frontend
+- **11 tests pytest** backend
+- **Fichier de test** : `/app/backend/tests/test_chatwidget_hybrid.py`
+
+### Clés localStorage utilisées
+```javascript
+AFROBOOST_PROFILE_KEY = 'afroboost_profile'  // Profil abonné avec code validé
+AFROBOOST_IDENTITY_KEY = 'afroboost_identity' // Identité utilisateur
+CHAT_CLIENT_KEY = 'af_chat_client'            // Données client
+CHAT_SESSION_KEY = 'af_chat_session'          // Session chat
+```
+
+### Non-régression vérifiée ✅
+- Frontend compile (warnings source maps uniquement)
+- Backend démarre sans erreur
+- Code Twilio/WhatsApp intact
+- Badge "⏳ Auto" campagnes préservé
+- Article Manager intact
+
+---
+
 ## Mise à jour du 5 Février 2026 - OPTIMISATION UX CHATBOT ET RÉSERVATIONS ✅
 
 ### MISSION ACCOMPLIE
