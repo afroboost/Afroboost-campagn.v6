@@ -1,5 +1,26 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 5 Février 2026 - INDICATEUR FRAPPE & SYNC AVATAR ✅
+
+### MISSION ACCOMPLIE - Tests 100% réussis (Backend: 22/22, Frontend: 13/13)
+
+#### Indicateur de Frappe DM (Typing Indicator) ✅
+- **Socket.IO Events** : `dm_typing_start`, `dm_typing_stop`
+- **Affichage** : Trois points animés (...) avec animation `dmTypingDot`
+- **Auto-hide** : Disparaît après 3 secondes d'inactivité
+- **NULL-SAFE** : Erreurs d'émission ne bloquent pas le chat
+
+#### Synchronisation Avatar Temps Réel ✅
+- **Socket.IO Event** : `avatar_updated` émis après upload via crop modal
+- **Réception** : `user_avatar_changed` met à jour les messages de l'interlocuteur
+- **Diffusion** : Tous les participants voient le changement instantanément
+
+#### Fonctions Frontend Ajoutées
+- `emitDmTyping(isTyping)` - Émet typing_start/stop pour les DM
+- `emitAvatarUpdate(photoUrl)` - Diffuse la nouvelle photo à tous
+
+---
+
 ## Mise à jour du 5 Février 2026 - RECADRAGE PHOTO ET DM FINALISÉS ✅
 
 ### MISSION ACCOMPLIE - Tests 100% réussis (Backend: 14/14, Frontend: 11/11)
