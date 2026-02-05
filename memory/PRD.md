@@ -1,5 +1,42 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 5 Février 2026 - PROGRAMMATION MESSAGERIE INTERNE ✅
+
+### FONCTIONNALITÉ IMPLÉMENTÉE : Programmation Messages Internes
+
+#### 1. Sélecteur de Destinataire Unifié (Frontend) ✅
+- **Canal ajouté**: "💌 Chat Interne" dans les canaux de campagne
+- **Sélecteur**: Liste toutes les conversations actives (groupes + utilisateurs)
+- **Endpoint**: `GET /api/conversations/active`
+- **Données envoyées**: `targetConversationId`, `targetConversationName`
+
+#### 2. Moteur d'Envoi Interne (Backend) ✅
+- **Fonction créée**: `scheduler_send_internal_message_sync()`
+- **Insertion directe**: `db.chat_messages.insert_one()` avec `scheduled: true`
+- **Socket.IO**: Émission temps réel via `/api/scheduler/emit-group-message`
+- **Polyvalence**: Fonctionne pour utilisateurs ET groupes via `conversation_id`
+
+#### 3. Isolation et Sécurité ✅
+- **Condition d'isolation**: `if channels.get("internal"):` (pas de Twilio/WhatsApp)
+- **Code existant préservé**: Aucune modification des fonctions Twilio/Resend
+- **Try/except global**: Protège le serveur contre les ID invalides
+
+### Preuves de Fonctionnement
+```
+[SCHEDULER-INTERNAL] 🎯 Envoi vers: Groupe Communauté (5c8b0ed0...)
+[SCHEDULER-INTERNAL] ✅ Message inséré dans DB - Session: 5c8b0ed0...
+[SCHEDULER-INTERNAL] ✅ Socket.IO émis avec succès
+[SCHEDULER] ✅ Scheduled Internal Message Sent: [Campaign: ...] -> Groupe Communauté
+[SCHEDULER] 🟢 Campagne Interne '...' → completed
+```
+
+### Nouveaux Champs Campaign
+- `channels.internal`: boolean (nouveau canal)
+- `targetConversationId`: string (ID session/conversation)
+- `targetConversationName`: string (nom pour affichage)
+
+---
+
 ## Mise à jour du 5 Février 2026 - FIABILISATION INDUSTRIELLE (POST-V5) ✅
 
 ### TÂCHE 1 : Gestion des Zombie Jobs ✅
