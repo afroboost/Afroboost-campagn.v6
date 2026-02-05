@@ -6341,26 +6341,20 @@ def scheduler_send_group_message_sync(scheduler_db, target_group_id, message_tex
         print(f"[SCHEDULER-GROUP] ❌ Exception: {e}")
         return False, str(e), None
 
-def scheduler_loop():
-    """Boucle principale du scheduler - tourne en arrière-plan."""
-    global SCHEDULER_RUNNING, SCHEDULER_LAST_HEARTBEAT
+def scheduler_job():
+    """
+    Job APScheduler - s'exécute toutes les 60 secondes.
+    Les jobs sont persistés dans MongoDB et survivent aux redémarrages.
+    """
+    global SCHEDULER_LAST_HEARTBEAT
     
-    from pymongo import MongoClient
+    # Utiliser le client MongoDB synchrone global
+    scheduler_db = mongo_client_sync[os.environ.get('DB_NAME', 'test_database')]
     
-    # Connexion MongoDB synchrone pour le thread
-    mongo_client = MongoClient(os.environ.get('MONGO_URL'))
-    scheduler_db = mongo_client[os.environ.get('DB_NAME', 'test_database')]
-    
-    logger.info("[SCHEDULER] ✅ Thread démarré - Mode DAEMON actif")
-    print("[SYSTEM] ✅ Scheduler is ONLINE - Checking campaigns every 60s")
-    
-    SCHEDULER_RUNNING = True
-    
-    while SCHEDULER_RUNNING:
-        try:
-            now = datetime.now(timezone.utc)
-            now_str = now.strftime('%H:%M:%S')
-            SCHEDULER_LAST_HEARTBEAT = now.isoformat()
+    try:
+        now = datetime.now(timezone.utc)
+        now_str = now.strftime('%H:%M:%S')
+        SCHEDULER_LAST_HEARTBEAT = now.isoformat()
             
             # Chercher les campagnes programmées (inclut pending_quota pour retry automatique)
             campaigns = list(scheduler_db.campaigns.find(
