@@ -7,7 +7,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://coach-bassi.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://message-campaign-1.preview.emergentagent.com')
 
 class TestDiscountCodesAPI:
     """Test discount codes CRUD operations"""
