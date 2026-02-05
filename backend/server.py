@@ -490,7 +490,8 @@ class CampaignCreate(BaseModel):
     selectedContacts: List[str] = []
     channels: dict = Field(default_factory=lambda: {"whatsapp": True, "email": False, "instagram": False, "group": False, "internal": False})
     targetGroupId: Optional[str] = "community"  # ID du groupe cible pour le canal "group"
-    targetConversationId: Optional[str] = None  # ID de la conversation interne (session_id)
+    targetIds: Optional[List[str]] = []  # Tableau des IDs du panier (nouveau système)
+    targetConversationId: Optional[str] = None  # ID de la conversation interne (legacy - premier du panier)
     targetConversationName: Optional[str] = None  # Nom de la conversation pour affichage
     scheduledAt: Optional[str] = None
 
