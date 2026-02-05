@@ -3658,9 +3658,43 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
               </div>
             )}
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
+            {/* === ICÔNE PARTAGE COACH === */}
+            <button 
+              onClick={handleCoachShareLink}
+              title={linkCopied ? "Lien copié !" : "Partager le site"}
+              className="px-3 py-2 rounded-lg glass text-white text-sm flex items-center gap-2"
+              style={{ 
+                background: linkCopied ? 'rgba(34, 197, 94, 0.3)' : undefined,
+                borderColor: linkCopied ? 'rgba(34, 197, 94, 0.5)' : undefined,
+                transition: 'all 0.2s ease'
+              }}
+              data-testid="coach-share"
+            >
+              {linkCopied ? (
+                <span style={{ color: '#22c55e' }}>✓ Copié</span>
+              ) : (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="18" cy="5" r="3"></circle>
+                    <circle cx="6" cy="12" r="3"></circle>
+                    <circle cx="18" cy="19" r="3"></circle>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                  </svg>
+                  Partager
+                </>
+              )}
+            </button>
             <button onClick={onBack} className="px-4 py-2 rounded-lg glass text-white text-sm" data-testid="coach-back">{t('back')}</button>
-            <button onClick={onLogout} className="px-4 py-2 rounded-lg glass text-white text-sm" data-testid="coach-logout">{t('logout')}</button>
+            <button 
+              onClick={handleSecureLogout} 
+              className="px-4 py-2 rounded-lg text-white text-sm"
+              style={{ background: 'rgba(239, 68, 68, 0.3)', border: '1px solid rgba(239, 68, 68, 0.5)' }}
+              data-testid="coach-logout"
+            >
+              🚪 {t('logout')}
+            </button>
           </div>
         </div>
 
