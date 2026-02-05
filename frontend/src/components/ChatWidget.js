@@ -1450,25 +1450,30 @@ export const ChatWidget = () => {
                   {isCommunityMode ? 'Communauté Afroboost' : 'Afroboost'}
                 </div>
                 <div className="text-white text-xs" style={{ opacity: 0.8 }}>
-                  {isReturningClient && step === 'chat' 
-                    ? `👋 ${leadData.firstName}` 
-                    : isCommunityMode 
-                      ? '👥 Chat Groupe'
-                      : sessionData?.is_ai_active === false 
-                        ? '👤 Mode Coach'
-                        : '💪 Coach Bassi'}
+                  {/* Afficher le statut abonné si profil validé */}
+                  {afroboostProfile?.code && step === 'chat'
+                    ? `💎 Abonné • ${afroboostProfile.name}`
+                    : isReturningClient && step === 'chat' 
+                      ? `👋 ${leadData.firstName}` 
+                      : isCommunityMode 
+                        ? '👥 Chat Groupe'
+                        : sessionData?.is_ai_active === false 
+                          ? '👤 Mode Coach'
+                          : '💪 Coach Bassi'}
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {/* Bouton Plein Écran */}
+              {/* Bouton Plein Écran - TOUJOURS visible en mode abonné */}
               {step === 'chat' && (
                 <button
                   onClick={toggleFullscreen}
                   title={isFullscreen ? "Quitter le plein écran" : "Mode plein écran"}
                   style={{
-                    background: 'rgba(255,255,255,0.2)',
-                    border: 'none',
+                    background: afroboostProfile?.code 
+                      ? 'linear-gradient(135deg, rgba(147, 51, 234, 0.4), rgba(99, 102, 241, 0.4))'
+                      : 'rgba(255,255,255,0.2)',
+                    border: afroboostProfile?.code ? '1px solid rgba(147, 51, 234, 0.5)' : 'none',
                     borderRadius: '8px',
                     width: '32px',
                     height: '32px',
