@@ -996,7 +996,11 @@ async def get_reservations(
         "variantsText": 1,
         "isProduct": 1,
         "shippingStatus": 1,
-        "trackingNumber": 1
+        "trackingNumber": 1,
+        # === NOUVEAUX CHAMPS POUR LE TABLEAU COACH ===
+        "promoCode": 1,
+        "source": 1,
+        "type": 1
     }
     
     if all_data:
