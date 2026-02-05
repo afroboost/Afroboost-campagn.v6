@@ -1,5 +1,37 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 5 Février 2026 - DÉBLOCAGE CRITIQUE FLUX RÉSERVATION ✅
+
+### MISSION ACCOMPLIE
+
+#### 1. Réparation Validation Code Promo ✅
+- **Case-insensitive** : "basxx" et "BASXX" acceptés de la même façon
+- **Email optionnel** : Ne vérifie l'email assigné que si le code en a un ET que l'utilisateur en fournit un
+- **Gestion null-safe** : Fix du bug `NoneType.strip()` quand `assignedEmail` est null
+
+#### 2. Déblocage Bouton "Confirmer" ✅
+- **État de chargement** : `reservationLoading` affiche "⏳ Envoi en cours..."
+- **Feedback visuel** : Message d'erreur rouge en cas d'échec (pas de `alert()`)
+- **Try/catch/finally** : Bouton toujours réactivé après l'envoi
+- **Logs console** : `[RESERVATION] 📤 Envoi des données:` pour debug
+- **Fix userId manquant** : Ajout du champ `userId: participantId || 'guest-${Date.now()}'`
+
+#### 3. Tableau Coach enrichi ✅
+- **Projection API** mise à jour pour inclure `promoCode`, `source`, `type`
+- **Colonnes visibles** : Code promo, Type (abonné/achat direct), Source
+
+### Critères de réussite validés ✅
+1. ✅ Code "basxx" accepté immédiatement (minuscule/majuscule)
+2. ✅ Bouton "Confirmer" : chargement → message succès → panneau fermé
+3. ✅ Coach voit: Nom, WhatsApp, Email, Code promo, Type, Source
+
+### Non-régression vérifiée ✅
+- Badge "⏳ Auto" préservé
+- Code Twilio/WhatsApp intact
+- JSX équilibré
+
+---
+
 ## Mise à jour du 5 Février 2026 - CHATBOT HYBRIDE (IDENTIFICATION UNIQUE ET PARCOURS CIBLÉ) ✅
 
 ### MISSION ACCOMPLIE
