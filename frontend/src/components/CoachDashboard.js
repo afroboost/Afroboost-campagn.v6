@@ -5583,7 +5583,6 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                   </button>
                 )}
               </div>
-            </div>
             
             {/* ========== SECTION CANAUX EXTERNES (REPLIABLE) ========== */}
             <div className="mb-6 rounded-xl glass border border-gray-500/30">
