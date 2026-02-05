@@ -3842,8 +3842,8 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                       </tr>
                     );
                   })}
-                  {reservations.length === 0 && !reservationsSearch && <tr><td colSpan="13" className="text-center py-8" style={{ opacity: 0.5 }}>{t('noReservations')}</td></tr>}
-                  {filteredReservations.length === 0 && reservationsSearch && <tr><td colSpan="13" className="text-center py-8" style={{ opacity: 0.5 }}>Aucune réservation correspondante</td></tr>}
+                  {reservations.length === 0 && !reservationsSearch && <tr><td colSpan="15" className="text-center py-8" style={{ opacity: 0.5 }}>{t('noReservations')}</td></tr>}
+                  {filteredReservations.length === 0 && reservationsSearch && <tr><td colSpan="15" className="text-center py-8" style={{ opacity: 0.5 }}>Aucune réservation correspondante</td></tr>}
                 </tbody>
               </table>
             </div>
