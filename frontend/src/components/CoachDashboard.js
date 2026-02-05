@@ -6317,7 +6317,27 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                 {/* === SÉLECTEUR DE CONVERSATION AVEC RECHERCHE (Chat Interne) === */}
                 {newCampaign.channels.internal && (
                   <div className="mt-3 p-3 rounded-lg border border-green-500/30 bg-green-900/20" data-testid="internal-conversation-selector">
-                    <label className="block mb-2 text-green-400 text-xs">📍 Destinataire (Groupe ou Utilisateur)</label>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-green-400 text-xs">📍 Destinataire (Groupe ou Utilisateur)</label>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const res = await axios.get(`${API}/conversations/active`);
+                            if (res.data.success) {
+                              setActiveConversations(res.data.conversations || []);
+                              showCampaignToast(`Liste actualisée : ${res.data.total} conversation(s)`, 'info');
+                            }
+                          } catch (err) {
+                            showCampaignToast('Erreur de synchronisation', 'error');
+                          }
+                        }}
+                        className="px-2 py-1 rounded text-xs bg-green-600/30 hover:bg-green-600/50 text-green-400 transition-all"
+                        data-testid="refresh-conversations-btn"
+                      >
+                        🔄 Actualiser
+                      </button>
+                    </div>
                     <div className="relative">
                       <input
                         type="text"
@@ -6354,13 +6374,14 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                           {/* Groupes */}
                           {activeConversations.filter(c => c.type === 'group' && (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))).length > 0 && (
                             <div className="p-2 border-b border-purple-500/20">
-                              <p className="text-xs text-purple-400 font-semibold mb-1 px-2">👥 GROUPES</p>
+                              <p className="text-xs text-purple-400 font-semibold mb-1 px-2">👥 GROUPES ({activeConversations.filter(c => c.type === 'group').length})</p>
                               {activeConversations.filter(c => c.type === 'group' && (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))).map(conv => (
                                 <button key={conv.conversation_id} type="button"
                                   onClick={() => {
                                     setNewCampaign({...newCampaign, targetConversationId: conv.conversation_id, targetConversationName: conv.name});
                                     setConversationSearch(conv.name);
                                     setShowConversationDropdown(false);
+                                    showCampaignToast(`Destinataire "${conv.name}" validé`, 'success');
                                   }}
                                   className="w-full text-left px-3 py-2 rounded hover:bg-purple-600/30 text-white text-sm flex items-center gap-2">
                                   <span>👥</span><span>{conv.name}</span>
@@ -6371,13 +6392,14 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                           {/* Utilisateurs */}
                           {activeConversations.filter(c => c.type === 'user' && (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))).length > 0 && (
                             <div className="p-2">
-                              <p className="text-xs text-blue-400 font-semibold mb-1 px-2">👤 UTILISATEURS</p>
-                              {activeConversations.filter(c => c.type === 'user' && (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))).slice(0, 10).map(conv => (
+                              <p className="text-xs text-blue-400 font-semibold mb-1 px-2">👤 UTILISATEURS ({activeConversations.filter(c => c.type === 'user').length})</p>
+                              {activeConversations.filter(c => c.type === 'user' && (conversationSearch === '' || c.name.toLowerCase().includes(conversationSearch.toLowerCase()))).slice(0, 15).map(conv => (
                                 <button key={conv.conversation_id} type="button"
                                   onClick={() => {
                                     setNewCampaign({...newCampaign, targetConversationId: conv.conversation_id, targetConversationName: conv.name});
                                     setConversationSearch(conv.name);
                                     setShowConversationDropdown(false);
+                                    showCampaignToast(`Destinataire "${conv.name}" validé`, 'success');
                                   }}
                                   className="w-full text-left px-3 py-2 rounded hover:bg-blue-600/30 text-white text-sm flex items-center gap-2">
                                   <span>👤</span><span className="truncate">{conv.name}</span>
