@@ -5076,7 +5076,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                           {courses.map(c => (
                             <button key={c.id} type="button" onClick={() => toggleCourseSelection(c.id)}
                               className={`px-2 py-1 rounded text-xs transition-all ${newCode.courses.includes(c.id) ? 'bg-purple-600' : 'bg-gray-700 hover:bg-gray-600'}`}
-                              style={{ color: 'white' }} data-testid={`course-select-${c.id}`}>{c.name.split(' – ')[0]}</button>
+                              style={{ color: 'white' }} data-testid={`course-select-${c.id}`}>{c.name ? c.name.split(' – ')[0] : 'Cours'}</button>
                           ))}
                         </div>
                       </div>
