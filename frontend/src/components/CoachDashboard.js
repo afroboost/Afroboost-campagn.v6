@@ -6299,6 +6299,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                           setShowConversationDropdown(true);
                         }}
                         onFocus={() => setShowConversationDropdown(true)}
+                        autoFocus={true}
                         className="w-full px-3 py-2 rounded-lg neon-input text-sm"
                         data-testid="recipient-search-input"
                       />
