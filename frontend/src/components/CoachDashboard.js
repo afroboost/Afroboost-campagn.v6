@@ -6367,6 +6367,53 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                       </label>
                     </div>
                     
+                    {/* === SÉLECTEUR CRM POUR WHATSAPP/EMAIL === */}
+                    {(newCampaign.channels.whatsapp || newCampaign.channels.email) && (
+                      <div className="mb-3 p-3 rounded-lg border border-blue-500/30 bg-blue-900/20">
+                        <label className="block mb-2 text-blue-400 text-xs font-medium">📇 Contacts CRM ({allContacts.length} au total)</label>
+                        
+                        {/* Mode de sélection */}
+                        <div className="flex gap-4 mb-3">
+                          <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
+                            <input type="radio" name="targetType" checked={newCampaign.targetType === "all"} 
+                              onChange={() => setNewCampaign({...newCampaign, targetType: "all"})} />
+                            ✅ Tous les contacts ({allContacts.length})
+                          </label>
+                          <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
+                            <input type="radio" name="targetType" checked={newCampaign.targetType === "selected"} 
+                              onChange={() => setNewCampaign({...newCampaign, targetType: "selected"})} />
+                            🎯 Sélection manuelle
+                          </label>
+                        </div>
+                        
+                        {/* Liste des contacts avec cases à cocher */}
+                        {newCampaign.targetType === "selected" && (
+                          <div className="border border-blue-500/20 rounded-lg p-2" style={{ maxHeight: '180px', overflowY: 'auto' }}>
+                            <div className="flex items-center gap-2 mb-2">
+                              <input type="text" placeholder="🔍 Filtrer les contacts..." value={contactSearchQuery}
+                                onChange={e => setContactSearchQuery(e.target.value)}
+                                className="flex-1 px-3 py-2 rounded-lg neon-input text-xs" />
+                              <button type="button" onClick={toggleAllContacts} 
+                                className="px-2 py-1 rounded-lg glass text-white text-xs whitespace-nowrap">
+                                {selectedContactsForCampaign.length === allContacts.length ? '✗ Aucun' : '✓ Tous'}
+                              </button>
+                            </div>
+                            <div className="space-y-1">
+                              {filteredContacts.map(contact => (
+                                <div key={contact.id} className="flex items-center gap-2 text-white text-xs hover:bg-blue-500/10 p-1 rounded">
+                                  <input type="checkbox" checked={selectedContactsForCampaign.includes(contact.id)}
+                                    onChange={() => toggleContactForCampaign(contact.id)} className="cursor-pointer" />
+                                  <span className="truncate flex-1">{contact.name ? contact.name.substring(0, 25) : 'Contact sans nom'}</span>
+                                  <span className="text-gray-500 truncate text-xs">({contact.email ? contact.email.substring(0, 20) : 'pas d\'email'})</span>
+                                </div>
+                              ))}
+                            </div>
+                            <p className="text-xs text-blue-400 mt-2">{selectedContactsForCampaign.length} contact(s) sélectionné(s)</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
                     {/* Sélecteur de groupe si canal groupe activé */}
                     {newCampaign.channels.group && (
                       <div className="p-3 rounded-lg border border-purple-500/30 bg-purple-900/20">
