@@ -408,6 +408,63 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     }
   };
 
+  // === PERSISTANCE ONGLET : Sauvegarder l'onglet actif ===
+  useEffect(() => {
+    if (tab) {
+      localStorage.setItem(COACH_TAB_KEY, tab);
+      console.log('[COACH] 💾 Onglet sauvegardé:', tab);
+    }
+  }, [tab]);
+  
+  // === FONCTION PARTAGE COACH ===
+  const handleCoachShareLink = async () => {
+    try {
+      const shareUrl = window.location.origin;
+      await navigator.clipboard.writeText(shareUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+      console.log('[COACH] ✅ Lien copié:', shareUrl);
+    } catch (err) {
+      // Fallback
+      const textArea = document.createElement('textarea');
+      textArea.value = window.location.origin;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    }
+  };
+  
+  // === DÉCONNEXION SÉCURISÉE ===
+  const handleSecureLogout = () => {
+    try {
+      // Vider localStorage (sauf les clés critiques)
+      const keysToRemove = [
+        COACH_TAB_KEY,
+        COACH_SESSION_KEY,
+        'afroboost_coach_user',
+        'afroboost_identity',
+        'af_chat_client',
+        'af_chat_session'
+      ];
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
+      // Vider sessionStorage
+      sessionStorage.clear();
+      
+      console.log('[COACH] 🚪 Déconnexion sécurisée effectuée');
+      
+      // Appeler la fonction onLogout du parent
+      if (onLogout) onLogout();
+    } catch (err) {
+      console.error('[COACH] ❌ Erreur déconnexion:', err);
+      // Forcer la déconnexion même en cas d'erreur
+      if (onLogout) onLogout();
+    }
+  };
+
   // Fonction pour charger les réservations avec pagination
   const loadReservations = async (page = 1, limit = 20) => {
     setLoadingReservations(true);
