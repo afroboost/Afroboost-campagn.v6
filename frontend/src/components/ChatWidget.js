@@ -355,6 +355,52 @@ export const ChatWidget = () => {
   // === PROFIL ABONNÉ VALIDÉ (afroboost_profile) ===
   const [afroboostProfile, setAfroboostProfile] = useState(getStoredProfile);
   
+  // === MENU UTILISATEUR (Partage + Mode Visiteur) ===
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [isVisitorMode, setIsVisitorMode] = useState(false); // Mode visiteur (chat réduit mais profil conservé)
+  
+  // Fonction pour copier le lien du site
+  const handleShareLink = async () => {
+    try {
+      const shareUrl = window.location.origin;
+      await navigator.clipboard.writeText(shareUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+      console.log('[SHARE] ✅ Lien copié:', shareUrl);
+    } catch (err) {
+      console.error('[SHARE] ❌ Erreur copie:', err);
+      // Fallback pour navigateurs sans clipboard API
+      const textArea = document.createElement('textarea');
+      textArea.value = window.location.origin;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    }
+    setShowUserMenu(false);
+  };
+  
+  // Fonction pour passer en mode visiteur (réduit le chat sans effacer le profil)
+  const handleVisitorMode = () => {
+    setIsFullscreen(false);
+    setIsVisitorMode(true);
+    setShowUserMenu(false);
+    setShowReservationPanel(false);
+    console.log('[MODE] 🏃 Mode visiteur activé (profil conservé)');
+  };
+  
+  // Fonction pour réactiver le mode abonné
+  const handleReactivateSubscriber = () => {
+    if (afroboostProfile?.code) {
+      setIsFullscreen(true);
+      setIsVisitorMode(false);
+      console.log('[MODE] 💎 Mode abonné réactivé');
+    }
+  };
+  
   // === INDICATEUR DE SAISIE (Typing Indicator) ===
   const [typingUser, setTypingUser] = useState(null); // Qui est en train d'écrire
   const typingTimeoutRef = useRef(null); // Timer pour cacher l'indicateur après 3s
