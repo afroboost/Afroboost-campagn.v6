@@ -3775,7 +3775,21 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                             </span>
                           )}
                         </td>
-                        <td>{r.userName || 'N/A'}</td><td>{r.userEmail || '-'}</td><td>{r.userWhatsapp || '-'}</td>
+                        <td>{r.userName || 'N/A'}</td>
+                        <td>{r.userEmail || '-'}</td>
+                        <td>
+                          {r.userWhatsapp ? (
+                            <a 
+                              href={`https://wa.me/${r.userWhatsapp.replace(/[+\s]/g, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-green-400 hover:text-green-300 underline"
+                              title="Contacter sur WhatsApp"
+                            >
+                              {r.userWhatsapp} 📲
+                            </a>
+                          ) : '-'}
+                        </td>
                         <td>{r.courseName || '-'}</td><td>{dt.toLocaleDateString('fr-CH')}</td>
                         <td>{dt.toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' })}</td>
                         <td>{r.offerName || '-'}</td>
