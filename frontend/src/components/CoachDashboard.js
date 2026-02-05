@@ -5350,30 +5350,32 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
               })()}
             </div>
             
-            {/* === COMPTEUR DE CLIENTS CIBLÉS (Responsive) === */}
-            <div className="mb-6 p-4 rounded-xl glass border border-purple-500/30">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-white font-semibold text-base sm:text-lg">
-                    👥 Clients ciblés : <span className="text-pink-400">{contactStats.total}</span>
-                  </h3>
-                  <p className="text-xs sm:text-sm text-white/60 mt-1">
-                    📧 {contactStats.withEmail} email • 📱 {contactStats.withPhone} WhatsApp
-                  </p>
-                </div>
-                {/* Bouton envoi direct - responsive */}
-                <div className="w-full sm:w-auto">
-                  <button 
-                    type="button"
-                    onClick={() => setDirectSendMode(!directSendMode)}
-                    className={`w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-medium transition-all ${directSendMode ? 'bg-pink-600 text-white' : 'glass text-white border border-purple-500/30'}`}
-                    data-testid="direct-send-mode-btn"
-                  >
-                    {directSendMode ? '✓ Mode Envoi Direct' : '🚀 Envoi Direct'}
-                  </button>
+            {/* === SECTION CANAUX EXTERNES (masquée par défaut - pour plus tard) === */}
+            <div style={{ display: externalChannelsExpanded ? 'block' : 'none' }}>
+              {/* === COMPTEUR DE CLIENTS CIBLÉS (Responsive) === */}
+              <div className="mb-6 p-4 rounded-xl glass border border-purple-500/30">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-white font-semibold text-base sm:text-lg">
+                      👥 Clients ciblés : <span className="text-pink-400">{contactStats.total}</span>
+                    </h3>
+                    <p className="text-xs sm:text-sm text-white/60 mt-1">
+                      📧 {contactStats.withEmail} email • 📱 {contactStats.withPhone} WhatsApp
+                    </p>
+                  </div>
+                  {/* Bouton envoi direct - responsive */}
+                  <div className="w-full sm:w-auto">
+                    <button 
+                      type="button"
+                      onClick={() => setDirectSendMode(!directSendMode)}
+                      className={`w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-medium transition-all ${directSendMode ? 'bg-pink-600 text-white' : 'glass text-white border border-purple-500/30'}`}
+                      data-testid="direct-send-mode-btn"
+                    >
+                      {directSendMode ? '✓ Mode Envoi Direct' : '🚀 Envoi Direct'}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
 
             {/* === MODE ENVOI DIRECT === */}
             {directSendMode && (
