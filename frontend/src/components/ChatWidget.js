@@ -2234,6 +2234,7 @@ export const ChatWidget = () => {
                                 userName: afroboostProfile?.name?.trim() || leadData?.firstName?.trim() || 'Abonné',
                                 userEmail: (afroboostProfile?.email || leadData?.email || '').trim(),
                                 userWhatsapp: (afroboostProfile?.whatsapp || leadData?.whatsapp || '').trim(),
+                                userId: participantId || `guest-${Date.now()}`, // ID utilisateur requis
                                 courseId: selectedCourse.id,
                                 courseName: selectedCourse.name,
                                 courseTime: selectedCourse.time,
