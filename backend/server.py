@@ -6114,18 +6114,55 @@ async def get_dynamic_manifest():
     from fastapi.responses import JSONResponse
     return JSONResponse(content=manifest, media_type="application/manifest+json")
 
-# ==================== SCHEDULER INTÉGRÉ (THREAD AUTOMATIQUE) ====================
-# Le scheduler tourne en arrière-plan dès le démarrage du serveur
-# Il vérifie les campagnes programmées toutes les 60 secondes
+# ==================== SCHEDULER INTÉGRÉ (APSCHEDULER AVEC PERSISTANCE) ====================
+# Le scheduler utilise APScheduler avec un JobStore MongoDB pour que les jobs
+# survivent aux redémarrages du serveur
 
 import threading
 import time as time_module
 from datetime import datetime, timezone, timedelta
 
+# APScheduler imports pour persistance MongoDB
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.jobstores.mongodb import MongoDBJobStore
+from apscheduler.executors.pool import ThreadPoolExecutor
+from apscheduler.triggers.interval import IntervalTrigger
+from pymongo import MongoClient
+
 # Variable globale pour contrôler le scheduler
 SCHEDULER_RUNNING = False
 SCHEDULER_LAST_HEARTBEAT = None
 SCHEDULER_INTERVAL = 60  # secondes - Heartbeat toutes les 60s (1 minute)
+
+# Configuration du JobStore MongoDB pour persistance
+mongo_client_sync = MongoClient(os.environ.get('MONGO_URL'))
+jobstores = {
+    'default': MongoDBJobStore(
+        database=os.environ.get('DB_NAME', 'test_database'),
+        collection='scheduled_jobs',
+        client=mongo_client_sync
+    )
+}
+
+executors = {
+    'default': ThreadPoolExecutor(10)
+}
+
+job_defaults = {
+    'coalesce': True,  # Combine les jobs manqués en un seul
+    'max_instances': 1,  # Un seul job à la fois
+    'misfire_grace_time': 60  # Tolérance de 60s pour les jobs manqués
+}
+
+# Création du scheduler avec persistance MongoDB
+apscheduler = BackgroundScheduler(
+    jobstores=jobstores,
+    executors=executors,
+    job_defaults=job_defaults,
+    timezone="UTC"
+)
+
+print("✅ APScheduler configuré avec persistance MongoDB : OK")
 
 def parse_campaign_date(date_str):
     """Parse une date ISO et la convertit en datetime UTC."""
