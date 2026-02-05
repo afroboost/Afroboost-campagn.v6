@@ -6356,48 +6356,51 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
               )}
             </div>
 
-            {/* New Campaign Form */}
-            <form onSubmit={createCampaign} className="mb-8 p-5 rounded-xl glass">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-white font-semibold">
-                  {editingCampaignId ? '✏️ Modifier la Campagne' : 'Nouvelle Campagne'}
-                </h3>
-                {editingCampaignId && (
-                  <button 
-                    type="button" 
-                    onClick={cancelEditCampaign}
-                    className="px-3 py-1 rounded text-xs bg-gray-600 hover:bg-gray-700 text-white"
-                  >
-                    ❌ Annuler
-                  </button>
-                )}
-              </div>
-              
-              {/* Campaign Name */}
-              <div className="mb-4">
-                <label className="block mb-2 text-white text-sm">Nom de la campagne</label>
-                <input type="text" required value={newCampaign.name} onChange={e => setNewCampaign({...newCampaign, name: e.target.value})}
-                  className="w-full px-4 py-3 rounded-lg neon-input" placeholder="Ex: Promo Noël 2024" />
-              </div>
-              
-              {/* Target Selection */}
-              <div className="mb-4">
-                <label className="block mb-2 text-white text-sm">Contacts ciblés</label>
-                <div className="flex gap-4 mb-3">
-                  <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
-                    <input type="radio" name="targetType" checked={newCampaign.targetType === "all"} 
-                      onChange={() => setNewCampaign({...newCampaign, targetType: "all"})} />
-                    Tous les contacts ({allContacts.length})
-                  </label>
-                  <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
-                    <input type="radio" name="targetType" checked={newCampaign.targetType === "selected"} 
-                      onChange={() => setNewCampaign({...newCampaign, targetType: "selected"})} />
-                    Sélection individuelle
-                  </label>
-                </div>
+            {/* ========== HISTORIQUE DES CAMPAGNES AVEC FILTRES ========== */}
+            <div>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                <h3 className="text-white font-semibold">📊 Historique des campagnes</h3>
                 
-                {/* Contact Selection List */}
-                {newCampaign.targetType === "selected" && (
+                {/* Boutons de filtrage rapide */}
+                <div className="flex gap-2" data-testid="campaign-history-filters">
+                  <button
+                    type="button"
+                    onClick={() => setCampaignHistoryFilter('all')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      campaignHistoryFilter === 'all' 
+                        ? 'bg-purple-600 text-white' 
+                        : 'bg-gray-700/50 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    Tout ({campaigns.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCampaignHistoryFilter('groups')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      campaignHistoryFilter === 'groups' 
+                        ? 'bg-purple-600 text-white' 
+                        : 'bg-gray-700/50 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    👥 Groupes ({campaigns.filter(c => c.channels?.group || c.channels?.internal && activeConversations.find(ac => ac.conversation_id === c.targetConversationId)?.type === 'group').length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCampaignHistoryFilter('individuals')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      campaignHistoryFilter === 'individuals' 
+                        ? 'bg-purple-600 text-white' 
+                        : 'bg-gray-700/50 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    👤 Individuels ({campaigns.filter(c => c.channels?.internal && activeConversations.find(ac => ac.conversation_id === c.targetConversationId)?.type === 'user').length})
+                  </button>
+                </div>
+              </div>
+              
+              {/* Error Logs Panel - Shows if there are errors */}
+              {campaignLogs.filter(l => l.type === 'error').length > 0 && (
                   <div className="border border-purple-500/30 rounded-lg p-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                     <div className="flex items-center gap-2 mb-2">
                       <input type="text" placeholder="🔍 Rechercher..." value={contactSearchQuery}
