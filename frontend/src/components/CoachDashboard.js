@@ -6898,6 +6898,16 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
           </div>
         )}
 
+        {/* ========== ONGLET ARTICLES - Gestion des articles ========== */}
+        {tab === "articles" && (
+          <div className="space-y-6" data-testid="articles-tab">
+            <ArticleManager 
+              userEmail={coachUser?.email || ''} 
+              isVisible={true} 
+            />
+          </div>
+        )}
+
         {/* ========== ONGLET MÉDIAS - Lecteur Afroboost ========== */}
         {tab === "media" && (
           <div className="space-y-6" data-testid="media-tab">
