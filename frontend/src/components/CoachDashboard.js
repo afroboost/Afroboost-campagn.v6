@@ -6405,6 +6405,40 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
             <div>
               <h3 className="text-white font-semibold mb-4">Historique des campagnes</h3>
               
+              {/* Filtres pour l'historique */}
+              <div className="mb-4 flex gap-2 flex-wrap">
+                <button
+                  onClick={() => setCampaignHistoryFilter('all')}
+                  className={`px-3 py-1 rounded text-sm ${
+                    campaignHistoryFilter === 'all' 
+                      ? 'bg-purple-600 text-white' 
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+                >
+                  📋 Toutes
+                </button>
+                <button
+                  onClick={() => setCampaignHistoryFilter('groups')}
+                  className={`px-3 py-1 rounded text-sm ${
+                    campaignHistoryFilter === 'groups' 
+                      ? 'bg-purple-600 text-white' 
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+                >
+                  👥 Groupes
+                </button>
+                <button
+                  onClick={() => setCampaignHistoryFilter('individuals')}
+                  className={`px-3 py-1 rounded text-sm ${
+                    campaignHistoryFilter === 'individuals' 
+                      ? 'bg-purple-600 text-white' 
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+                >
+                  👤 Individuels
+                </button>
+              </div>
+              
               {/* Error Logs Panel - Shows if there are errors */}
               {campaignLogs.filter(l => l.type === 'error').length > 0 && (
                 <div className="mb-4 p-3 rounded-lg bg-red-600/20 border border-red-500/30">
