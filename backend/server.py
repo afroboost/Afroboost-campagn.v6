@@ -1178,10 +1178,12 @@ async def validate_discount_code(data: dict):
             return {"valid": False, "message": "Code non applicable à ce cours"}
     
     # Check assigned email (only if assignedEmail is set AND email is provided)
-    assigned = code.get("assignedEmail", "").strip()
-    if assigned and user_email:
-        if assigned.lower() != user_email.lower():
-            return {"valid": False, "message": "Code réservé à un autre compte"}
+    assigned = code.get("assignedEmail") or ""
+    if assigned and isinstance(assigned, str):
+        assigned = assigned.strip()
+        if assigned and user_email:
+            if assigned.lower() != user_email.lower():
+                return {"valid": False, "message": "Code réservé à un autre compte"}
     
     return {"valid": True, "code": code}
 
