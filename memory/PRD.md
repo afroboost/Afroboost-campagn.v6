@@ -1,5 +1,42 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 5 Février 2026 - UNIFICATION INTERFACE CAMPAGNES ✅
+
+### MISSION ACCOMPLIE : Interface simplifiée
+
+#### 1. Suppression du bloc CRM redondant ✅
+- Le bloc "Contacts ciblés" (cases à cocher Tous/Sélection individuelle) a été supprimé du flux principal
+- L'ancien sélecteur de contacts TEST_ n'est plus visible
+
+#### 2. Centralisation sur la recherche unique ✅
+- **UN SEUL** champ de recherche : "🔍 Rechercher un groupe ou utilisateur"
+- Placé juste après le nom de la campagne
+- Compteur dynamique : "X groupes • Y utilisateurs"
+- Bouton 🔄 pour actualiser la liste
+
+#### 3. Canaux externes dans un accordéon ✅
+- Les canaux WhatsApp, Email, Instagram, Groupe sont masqués par défaut
+- Accessibles via "⚙️ Paramètres avancés"
+- Le code Twilio/Resend n'est PAS supprimé, seulement masqué
+
+#### 4. Récapitulatif avant création ✅
+- Affichage clair : Campagne + Destinataire + Programmation
+- Alerte si aucun destinataire sélectionné
+
+### Structure du formulaire simplifié :
+```
+1. Nom de la campagne
+2. 📍 Destinataire (recherche unifiée)
+3. Message
+4. Média (optionnel)  
+5. ⚙️ Paramètres avancés (accordéon fermé)
+6. Programmation
+7. 📋 Récapitulatif
+8. 🚀 Créer la campagne
+```
+
+---
+
 ## Mise à jour du 5 Février 2026 - MISSION P0 RÉPARATION SÉLECTEUR ✅
 
 ### PROBLÈME RÉSOLU
