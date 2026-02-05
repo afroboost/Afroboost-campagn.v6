@@ -6078,6 +6078,18 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                 </div>
               )}
             </div>
+            </div>{/* Fin section canaux externes masquée */}
+            
+            {/* Bouton pour afficher/masquer les canaux externes */}
+            <div className="mb-4">
+              <button 
+                type="button"
+                onClick={() => setExternalChannelsExpanded(!externalChannelsExpanded)}
+                className="px-4 py-2 rounded-lg text-sm font-medium glass text-gray-400 hover:text-white border border-gray-500/30 hover:border-purple-500/30 transition-all"
+              >
+                {externalChannelsExpanded ? '▼ Masquer canaux externes' : '▶ Afficher canaux externes (WhatsApp, Email, Instagram...)'}
+              </button>
+            </div>
 
             {/* New Campaign Form */}
             <form onSubmit={createCampaign} className="mb-8 p-5 rounded-xl glass">
