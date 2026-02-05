@@ -93,17 +93,19 @@ class TestChatSmartEntry:
     
     def test_smart_entry_new_user(self):
         """Test smart entry for a new user"""
+        import uuid
+        unique_id = str(uuid.uuid4())[:8]
         response = requests.post(f"{BASE_URL}/api/chat/smart-entry", json={
-            "name": "TEST_NewUser",
-            "email": "test_newuser@example.com",
-            "whatsapp": "+41791234567"
+            "name": f"TEST_NewUser_{unique_id}",
+            "email": f"test_newuser_{unique_id}@example.com",
+            "whatsapp": f"+4179{unique_id[:7]}"
         })
         assert response.status_code == 200
         data = response.json()
         assert "participant" in data
         assert "session" in data
         assert "message" in data
-        assert data["participant"]["name"] == "TEST_NewUser"
+        assert f"TEST_NewUser_{unique_id}" in data["participant"]["name"]
         print(f"✅ Smart entry created new user: {data['participant']['id']}")
     
     def test_smart_entry_returning_user(self):
