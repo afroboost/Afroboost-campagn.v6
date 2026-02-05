@@ -6412,7 +6412,25 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
             
             {/* Campaign History */}
             <div>
-              <h3 className="text-white font-semibold mb-4">Historique des campagnes</h3>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                <h3 className="text-white font-semibold">📊 Historique des campagnes</h3>
+                
+                {/* Boutons de filtrage rapide */}
+                <div className="flex gap-2" data-testid="campaign-history-filters">
+                  <button type="button" onClick={() => setCampaignHistoryFilter('all')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${campaignHistoryFilter === 'all' ? 'bg-purple-600 text-white' : 'bg-gray-700/50 text-gray-400 hover:text-white'}`}>
+                    Tout ({campaigns.length})
+                  </button>
+                  <button type="button" onClick={() => setCampaignHistoryFilter('groups')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${campaignHistoryFilter === 'groups' ? 'bg-purple-600 text-white' : 'bg-gray-700/50 text-gray-400 hover:text-white'}`}>
+                    👥 Groupes
+                  </button>
+                  <button type="button" onClick={() => setCampaignHistoryFilter('individuals')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${campaignHistoryFilter === 'individuals' ? 'bg-purple-600 text-white' : 'bg-gray-700/50 text-gray-400 hover:text-white'}`}>
+                    👤 Individuels
+                  </button>
+                </div>
+              </div>
               
               {/* Error Logs Panel - Shows if there are errors */}
               {campaignLogs.filter(l => l.type === 'error').length > 0 && (
