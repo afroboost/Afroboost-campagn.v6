@@ -6355,16 +6355,16 @@ def scheduler_job():
         now = datetime.now(timezone.utc)
         now_str = now.strftime('%H:%M:%S')
         SCHEDULER_LAST_HEARTBEAT = now.isoformat()
-            
-            # Chercher les campagnes programmées (inclut pending_quota pour retry automatique)
-            campaigns = list(scheduler_db.campaigns.find(
-                {"status": {"$in": ["scheduled", "sending", "pending_quota"]}},
-                {"_id": 0}
-            ))
-            
-            logger.info(f"[SCHEDULER] 📋 {len(campaigns)} campagne(s) à vérifier ({now_str} UTC)")
-            
-            for campaign in campaigns:
+        
+        # Chercher les campagnes programmées (inclut pending_quota pour retry automatique)
+        campaigns = list(scheduler_db.campaigns.find(
+            {"status": {"$in": ["scheduled", "sending", "pending_quota"]}},
+            {"_id": 0}
+        ))
+        
+        logger.info(f"[SCHEDULER] 📋 {len(campaigns)} campagne(s) à vérifier ({now_str} UTC)")
+        
+        for campaign in campaigns:
                 try:
                     campaign_id = campaign.get("id")
                     campaign_name = campaign.get("name", "Sans nom")
