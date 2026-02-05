@@ -2748,6 +2748,7 @@ export const ChatWidget = () => {
                       onParticipantClick={startPrivateChat}
                       isCommunity={isCommunityMode}
                       currentUserId={participantId}
+                      profilePhotoUrl={profilePhoto}
                     />
                   ))}
                   
