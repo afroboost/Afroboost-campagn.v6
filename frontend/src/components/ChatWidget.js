@@ -2023,7 +2023,7 @@ export const ChatWidget = () => {
             {/* === MODE COACH: Interface de gestion des conversations === */}
             {step === 'coach' && isCoachMode && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                {/* Header Coach */}
+                {/* Header Coach avec Partage, Rafraîchir et Déconnexion */}
                 <div style={{ 
                   background: 'rgba(217, 28, 210, 0.2)', 
                   padding: '8px 16px', 
@@ -2035,20 +2035,91 @@ export const ChatWidget = () => {
                   <span style={{ color: '#d91cd2', fontSize: '12px', fontWeight: 'bold' }}>
                     💪 Mode Coach
                   </span>
-                  <button
-                    onClick={loadCoachSessions}
-                    style={{ 
-                      background: 'rgba(255,255,255,0.1)', 
-                      border: 'none', 
-                      padding: '4px 8px', 
-                      borderRadius: '4px',
-                      color: '#fff',
-                      fontSize: '11px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    🔄 Rafraîchir
-                  </button>
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    {/* Bouton Partage */}
+                    <button
+                      onClick={handleShareLink}
+                      title={linkCopied ? "Lien copié !" : "Partager"}
+                      style={{ 
+                        background: linkCopied ? 'rgba(34, 197, 94, 0.3)' : 'rgba(255,255,255,0.1)', 
+                        border: linkCopied ? '1px solid rgba(34, 197, 94, 0.5)' : 'none', 
+                        padding: '4px 8px', 
+                        borderRadius: '4px',
+                        color: linkCopied ? '#22c55e' : '#fff',
+                        fontSize: '11px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        transition: 'all 0.2s ease'
+                      }}
+                      data-testid="coach-chat-share"
+                    >
+                      {linkCopied ? '✓' : '🔗'}
+                    </button>
+                    
+                    {/* Bouton Rafraîchir */}
+                    <button
+                      onClick={async () => {
+                        console.log('[COACH] 🔄 Rafraîchissement des conversations...');
+                        await loadCoachSessions();
+                        console.log('[COACH] ✅ Conversations rafraîchies');
+                      }}
+                      style={{ 
+                        background: 'rgba(255,255,255,0.1)', 
+                        border: 'none', 
+                        padding: '4px 8px', 
+                        borderRadius: '4px',
+                        color: '#fff',
+                        fontSize: '11px',
+                        cursor: 'pointer'
+                      }}
+                      data-testid="coach-chat-refresh"
+                    >
+                      🔄 Rafraîchir
+                    </button>
+                    
+                    {/* Bouton Déconnexion */}
+                    <button
+                      onClick={() => {
+                        // Nettoyer localStorage/sessionStorage
+                        localStorage.removeItem('afroboost_coach_mode');
+                        localStorage.removeItem('afroboost_coach_user');
+                        localStorage.removeItem('afroboost_coach_tab');
+                        localStorage.removeItem(AFROBOOST_IDENTITY_KEY);
+                        localStorage.removeItem(CHAT_CLIENT_KEY);
+                        localStorage.removeItem(CHAT_SESSION_KEY);
+                        sessionStorage.clear();
+                        
+                        // Réinitialiser l'état
+                        setIsCoachMode(false);
+                        setStep('form');
+                        setMessages([]);
+                        setSessionData(null);
+                        setLeadData({ firstName: '', whatsapp: '', email: '' });
+                        setSelectedCoachSession(null);
+                        setCoachSessions([]);
+                        
+                        console.log('[COACH] 🚪 Déconnexion depuis le chat');
+                        
+                        // Recharger la page pour reset complet
+                        window.location.reload();
+                      }}
+                      title="Déconnexion"
+                      style={{ 
+                        background: 'rgba(239, 68, 68, 0.3)', 
+                        border: '1px solid rgba(239, 68, 68, 0.5)', 
+                        padding: '4px 8px', 
+                        borderRadius: '4px',
+                        color: '#ef4444',
+                        fontSize: '11px',
+                        cursor: 'pointer'
+                      }}
+                      data-testid="coach-chat-logout"
+                    >
+                      🚪
+                    </button>
+                  </div>
                 </div>
 
                 {/* Liste des sessions ou messages */}
