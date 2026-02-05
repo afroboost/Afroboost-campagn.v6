@@ -3379,6 +3379,53 @@ export const ChatWidget = () => {
                 </div>
               ))
             )}
+            
+            {/* === INDICATEUR DE FRAPPE DM (minimaliste) === */}
+            {dmTypingUser && (
+              <div 
+                style={{ 
+                  alignSelf: 'flex-start', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '6px',
+                  padding: '4px 0'
+                }}
+                data-testid="dm-typing-indicator"
+              >
+                <div style={{
+                  display: 'flex',
+                  gap: '3px',
+                  padding: '8px 12px',
+                  background: 'rgba(255,255,255,0.05)',
+                  borderRadius: '16px'
+                }}>
+                  <span style={{ 
+                    width: '6px', 
+                    height: '6px', 
+                    borderRadius: '50%', 
+                    background: 'rgba(255,255,255,0.4)',
+                    animation: 'dmTypingDot 1.4s infinite ease-in-out',
+                    animationDelay: '0s'
+                  }}></span>
+                  <span style={{ 
+                    width: '6px', 
+                    height: '6px', 
+                    borderRadius: '50%', 
+                    background: 'rgba(255,255,255,0.4)',
+                    animation: 'dmTypingDot 1.4s infinite ease-in-out',
+                    animationDelay: '0.2s'
+                  }}></span>
+                  <span style={{ 
+                    width: '6px', 
+                    height: '6px', 
+                    borderRadius: '50%', 
+                    background: 'rgba(255,255,255,0.4)',
+                    animation: 'dmTypingDot 1.4s infinite ease-in-out',
+                    animationDelay: '0.4s'
+                  }}></span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Input MP */}
