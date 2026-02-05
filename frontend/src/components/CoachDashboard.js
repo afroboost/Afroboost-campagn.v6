@@ -6183,9 +6183,17 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                     </span>
                     <button type="button"
                       onClick={() => {
-                        const allItems = activeConversations.map(c => ({id: c.conversation_id, name: c.name || 'Sans nom', type: c.type}));
-                        setSelectedRecipients(allItems);
-                        showCampaignToast(`✅ ${allItems.length} destinataires ajoutés`, 'success');
+                        // Anti-doublons: filtrer ceux déjà dans le panier
+                        const existingIds = new Set(selectedRecipients.map(r => r.id));
+                        const newItems = activeConversations
+                          .filter(c => !existingIds.has(c.conversation_id))
+                          .map(c => ({id: c.conversation_id, name: c.name || 'Sans nom', type: c.type}));
+                        if (newItems.length > 0) {
+                          setSelectedRecipients(prev => [...prev, ...newItems]);
+                          showCampaignToast(`✅ ${newItems.length} destinataires ajoutés au panier`, 'success');
+                        } else {
+                          showCampaignToast('ℹ️ Tous les destinataires sont déjà dans le panier', 'info');
+                        }
                       }}
                       className="px-2 py-1 rounded text-xs bg-purple-600/30 hover:bg-purple-600/50 text-purple-400"
                       data-testid="add-all-btn"
