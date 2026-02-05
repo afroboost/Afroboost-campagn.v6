@@ -277,6 +277,16 @@ try:
 except Exception as e:
     logger.warning(f"[EMOJIS] Impossible de monter le dossier: {e}")
 
+# Monter les fichiers statiques pour les photos de profil
+try:
+    import os
+    UPLOADS_DIR = "/app/backend/uploads/profiles"
+    os.makedirs(UPLOADS_DIR, exist_ok=True)
+    fastapi_app.mount("/api/uploads/profiles", StaticFiles(directory=UPLOADS_DIR), name="profile_photos")
+    logger.info(f"[UPLOADS] Dossier photos de profil monté: {UPLOADS_DIR}")
+except Exception as e:
+    logger.warning(f"[UPLOADS] Impossible de monter le dossier: {e}")
+
 # ==================== MODELS ====================
 
 class Course(BaseModel):
