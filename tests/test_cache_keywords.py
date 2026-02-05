@@ -7,7 +7,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://bassi-scheduler.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://coach-bassi.preview.emergentagent.com')
 
 class TestCacheAndKeywords:
     """Tests for cache system and keywords functionality"""

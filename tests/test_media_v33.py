@@ -10,7 +10,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://bassi-scheduler.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://coach-bassi.preview.emergentagent.com')
 
 class TestMediaEndpoints:
     """Test GET and PUT /api/media/{slug} endpoints"""
