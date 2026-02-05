@@ -1,5 +1,56 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 5 Février 2026 - SCHEDULER AVEC PERSISTANCE MONGODB ✅
+
+### MIGRATION APScheduler COMPLÈTE ✅
+- **Ancien système**: Thread Python avec boucle while + sleep
+- **Nouveau système**: APScheduler avec BackgroundScheduler et MongoDBJobStore
+- **Avantage clé**: **Les jobs planifiés survivent aux redémarrages du serveur**
+
+### Configuration technique
+```python
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.jobstores.mongodb import MongoDBJobStore
+
+jobstores = {
+    'default': MongoDBJobStore(
+        database="afroboost",
+        collection="scheduled_jobs",
+        client=mongo_client_sync
+    )
+}
+
+apscheduler = BackgroundScheduler(
+    jobstores=jobstores,
+    executors={'default': ThreadPoolExecutor(10)},
+    job_defaults={'coalesce': True, 'max_instances': 1, 'misfire_grace_time': 60},
+    timezone="UTC"
+)
+```
+
+### Endpoint de statut amélioré
+`GET /api/scheduler/status` retourne:
+```json
+{
+  "scheduler_running": true,
+  "scheduler_state": "running",
+  "interval_seconds": 60,
+  "persistence": "MongoDB (survit aux redémarrages)",
+  "job": {
+    "id": "campaign_scheduler_job",
+    "name": "Campaign Scheduler",
+    "next_run_time": "2026-02-05T14:43:38+00:00",
+    "trigger": "interval[0:01:00]"
+  }
+}
+```
+
+### Collection MongoDB créée
+- **Collection**: `scheduled_jobs`
+- **Contenu**: Job APScheduler sérialisé (id, next_run_time, job_state)
+
+---
+
 ## Mise à jour du 29 Janvier 2026 - VALIDATION AUTOMATE & CONVERSATIONS ✅
 
 ### AUTOMATE D'ENVOI VALIDÉ ✅
