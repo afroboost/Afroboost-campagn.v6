@@ -1,5 +1,34 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 5 Février 2026 - RÉPARATION AFFICHAGE ET ÉDITION ✅
+
+### MISSION ACCOMPLIE : Logique d'affichage corrigée
+
+#### 1. Boutons d'action historique corrigés ✅
+- **Status `draft`** → Bouton "🚀 Lancer" visible
+- **Status `scheduled`** → Badge "⏳ Auto" (pas de bouton Lancer)
+- **Status `completed`/`sent`/`failed`** → Bouton "🔄 Relancer"
+
+#### 2. Édition avec rechargement du panier ✅
+- `handleEditCampaign` recharge maintenant les `targetIds` dans `selectedRecipients`
+- Support legacy pour `targetConversationId` (single target)
+- Toast de confirmation "📝 Mode édition: [nom]"
+
+#### 3. Visibilité CRM ✅
+- 11 emails uniques dans la base (47 users sont des doublons)
+- Le système déduplique correctement par email
+- 17 conversations totales (6 groupes + 11 utilisateurs)
+
+### Tests validés
+```
+✅ POST /api/campaigns avec scheduledAt → status: scheduled
+✅ Frontend compile (24 warnings, 0 erreur)
+✅ Badge "⏳ Auto" pour campagnes programmées
+✅ Code Twilio/WhatsApp préservé
+```
+
+---
+
 ## Mise à jour du 5 Février 2026 - FINALISATION PANIER ANTI-RÉGRESSION ✅
 
 ### MISSION ACCOMPLIE : Panier sécurisé et synchronisé
