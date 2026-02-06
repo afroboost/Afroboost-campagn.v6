@@ -1494,25 +1494,40 @@ export const ChatWidget = () => {
     };
   }, [sessionData?.id, step, participantId]);
 
-  // === RÉCUPÉRATION MESSAGES AU RETOUR (focus/visibilité) ===
+  // === RÉCUPÉRATION MESSAGES AU RETOUR (focus/visibilité) - ARCHITECTURE "RAMASSER" ===
   // Garantit ZÉRO PERTE de message même si l'app était en veille
   useEffect(() => {
     if (!sessionData?.id || step !== 'chat') return;
     
-    // Fonction de récupération des messages
+    // Stocker la dernière date de sync pour optimiser les requêtes
+    let lastSyncTime = null;
+    
+    // Fonction de récupération via le nouvel endpoint /api/messages/sync
     const fetchLatestMessages = async () => {
       try {
-        const response = await fetch(`${API}/chat/sessions/${sessionData.id}/messages`);
+        // Construire l'URL avec le paramètre "since" si on a une date
+        let url = `${API}/messages/sync?session_id=${sessionData.id}&limit=100`;
+        if (lastSyncTime) {
+          url += `&since=${encodeURIComponent(lastSyncTime)}`;
+        }
+        
+        const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
+          
+          // Mettre à jour lastSyncTime
+          if (data.synced_at) {
+            lastSyncTime = data.synced_at;
+          }
+          
           if (data.messages && data.messages.length > 0) {
-            console.log(`[FOCUS] 📥 Récupération de ${data.messages.length} messages`);
+            console.log(`[RAMASSER] 📥 ${data.count} message(s) récupéré(s) depuis DB`);
             setMessages(prev => {
               // Fusionner sans doublons (basé sur ID)
               const existingIds = new Set(prev.map(m => m.id));
               const newMsgs = data.messages.filter(m => !existingIds.has(m.id));
               if (newMsgs.length > 0) {
-                console.log(`[FOCUS] ✅ ${newMsgs.length} nouveaux messages ajoutés`);
+                console.log(`[RAMASSER] ✅ ${newMsgs.length} NOUVEAUX messages ajoutés`);
                 // Trier par date
                 return [...prev, ...newMsgs].sort((a, b) => 
                   new Date(a.created_at || 0) - new Date(b.created_at || 0)
@@ -1520,24 +1535,47 @@ export const ChatWidget = () => {
               }
               return prev;
             });
+          } else {
+            console.log('[RAMASSER] ℹ️ Aucun nouveau message');
           }
         }
       } catch (err) {
-        console.warn('[FOCUS] ⚠️ Erreur récupération:', err);
+        console.warn('[RAMASSER] ⚠️ Erreur récupération:', err);
+        // Fallback vers l'ancien endpoint si le nouveau échoue
+        try {
+          const fallback = await fetch(`${API}/chat/sessions/${sessionData.id}/messages`);
+          if (fallback.ok) {
+            const data = await fallback.json();
+            if (Array.isArray(data) && data.length > 0) {
+              setMessages(prev => {
+                const existingIds = new Set(prev.map(m => m.id));
+                const newMsgs = data.filter(m => !existingIds.has(m.id));
+                if (newMsgs.length > 0) {
+                  return [...prev, ...newMsgs].sort((a, b) => 
+                    new Date(a.created_at || 0) - new Date(b.created_at || 0)
+                  );
+                }
+                return prev;
+              });
+            }
+          }
+        } catch (fallbackErr) {
+          console.warn('[RAMASSER] ⚠️ Fallback aussi échoué:', fallbackErr);
+        }
       }
     };
     
     // Listener visibilité (changement d'onglet ou retour de veille)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log('[VISIBILITY] 👀 App visible - Récupération messages...');
+        console.log('[VISIBILITY] 👀 App visible - RAMASSER messages...');
         fetchLatestMessages();
       }
     };
     
     // Listener focus (clic sur la fenêtre)
     const handleFocus = () => {
-      console.log('[FOCUS] 🎯 App focus - Récupération messages...');
+      console.log('[FOCUS] 🎯 App focus - RAMASSER messages...');
       fetchLatestMessages();
     };
     
