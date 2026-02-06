@@ -174,31 +174,10 @@ const ClockIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColo
 const TrashIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>;
 const FolderIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>;
 
-// Parse media URL helper
-function parseMediaUrl(url) {
-  if (!url || typeof url !== 'string') return null;
-  const trimmedUrl = url.trim();
-  if (!trimmedUrl) return null;
-  
-  const ytMatch = trimmedUrl.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  if (ytMatch) return { type: 'youtube', id: ytMatch[1] };
-  
-  const vimeoMatch = trimmedUrl.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-  if (vimeoMatch) return { type: 'vimeo', id: vimeoMatch[1] };
-  
-  const videoExtensions = ['.mp4', '.webm', '.mov', '.avi', '.m4v', '.ogv'];
-  const lowerUrl = trimmedUrl.toLowerCase();
-  if (videoExtensions.some(ext => lowerUrl.includes(ext))) {
-    return { type: 'video', url: trimmedUrl };
-  }
-  
-  return { type: 'image', url: trimmedUrl };
-}
-
-// MediaDisplay component (simplified version for admin preview)
+// MediaDisplay component - Utilise parseMediaUrl importé de MediaParser.js
 const MediaDisplay = ({ url, className }) => {
   const media = parseMediaUrl(url);
-  if (!media || !url || url.trim() === '') return null;
+  if (!media || media.type === 'unknown' || !url || url.trim() === '') return null;
 
   const containerStyle = {
     position: 'relative',
@@ -218,11 +197,12 @@ const MediaDisplay = ({ url, className }) => {
     height: '100%'
   };
 
+  // YouTube - utilise embedUrl du parser
   if (media.type === 'youtube') {
     return (
       <div className={className} style={containerStyle}>
         <iframe 
-          src={`https://www.youtube.com/embed/${media.id}?autoplay=0&mute=1`}
+          src={media.embedUrl || `https://www.youtube.com/embed/${media.videoId}?autoplay=0&mute=1`}
           frameBorder="0" 
           allow="encrypted-media" 
           style={{ ...contentStyle }}
@@ -232,25 +212,27 @@ const MediaDisplay = ({ url, className }) => {
     );
   }
   
-  if (media.type === 'vimeo') {
+  // Google Drive - utilise embedUrl du parser
+  if (media.type === 'drive') {
     return (
       <div className={className} style={containerStyle}>
         <iframe 
-          src={`https://player.vimeo.com/video/${media.id}?autoplay=0&muted=1`}
+          src={media.embedUrl}
           frameBorder="0" 
           allow="autoplay" 
           style={{ ...contentStyle }}
-          title="Vimeo video"
+          title="Google Drive media"
         />
       </div>
     );
   }
   
+  // Vidéo directe
   if (media.type === 'video') {
     return (
       <div className={className} style={containerStyle}>
         <video 
-          src={media.url} 
+          src={media.directUrl} 
           muted
           playsInline 
           style={{ ...contentStyle, objectFit: 'cover' }}
@@ -259,12 +241,14 @@ const MediaDisplay = ({ url, className }) => {
     );
   }
   
+  // Image ou lien inconnu - affiche directUrl ou thumbnailUrl
   return (
     <div className={className} style={containerStyle}>
       <img 
-        src={media.url} 
+        src={media.thumbnailUrl || media.directUrl} 
         alt="Media" 
         style={{ ...contentStyle, objectFit: 'cover' }}
+        onError={(e) => { e.target.style.display = 'none'; }}
       />
     </div>
   );
