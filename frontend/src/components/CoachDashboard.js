@@ -5311,6 +5311,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
         )}
 
         {/* === CAMPAIGNS TAB === */}
+        {/* [CAMPAGNE_START] - Section critique: Ne pas modifier sans tests approfondis du badge ⏳ Auto */}
         {tab === "campaigns" && (
           <div className="card-gradient rounded-xl p-4 sm:p-6">
             {/* Header responsive */}
