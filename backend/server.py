@@ -903,8 +903,15 @@ async def archive_course(course_id: str):
 
 @api_router.delete("/courses/{course_id}")
 async def delete_course(course_id: str):
+    """Supprime un cours ET toutes les réservations liées."""
+    # 1. Supprimer le cours
     await db.courses.delete_one({"id": course_id})
-    return {"success": True}
+    
+    # 2. Supprimer toutes les réservations liées à ce cours
+    deleted_reservations = await db.reservations.delete_many({"courseId": course_id})
+    logger.info(f"[COURSES] Cours {course_id} supprimé + {deleted_reservations.deleted_count} réservation(s)")
+    
+    return {"success": True, "deletedReservations": deleted_reservations.deleted_count}
 
 # --- Offers ---
 @api_router.get("/offers", response_model=List[Offer])
