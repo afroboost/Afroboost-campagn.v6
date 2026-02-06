@@ -1,5 +1,42 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 6 Février 2026 - FORMULAIRE CTA COACH & REFACTORING ✅
+
+### MISSION ACCOMPLIE
+
+#### 1. Formulaire CTA dans CoachDashboard
+| Champ | Type | Description | Statut |
+|-------|------|-------------|--------|
+| **Type de bouton** | Select | Aucun, Réserver, Offre, Personnalisé | ✅ |
+| **Texte du bouton** | Input | Texte personnalisé (si non-aucun) | ✅ |
+| **Lien du bouton** | Input URL | URL externe (offre/personnalisé) | ✅ |
+| **Aperçu visuel** | Badge | Prévisualisation du bouton avec couleur | ✅ |
+
+#### 2. Refactoring Backend
+```
+/app/backend/
+├── server.py            # Allégé de ~30 lignes
+└── scheduler_engine.py  # NOUVEAU - Fonctions utilitaires
+    ├── parse_campaign_date()
+    ├── get_current_times()
+    ├── should_process_campaign_date()
+    └── format_campaign_result()
+```
+
+#### 3. MediaParser.js amélioré
+- ✅ Support des dossiers Google Drive partagés
+- ✅ Détection automatique fichier vs dossier
+- ✅ URLs: `/drive/folders/` et `/folderview?id=`
+
+#### Test validé (CTA OFFRE)
+```
+cta_type: offre
+cta_text: VOIR LA BOUTIQUE
+cta_link: https://afroboosteur.com/shop
+```
+
+---
+
 ## Mise à jour du 6 Février 2026 - BOUTONS CTA & MÉDIAS INTERACTIFS ✅
 
 ### MISSION ACCOMPLIE - Messages programmés avec média + CTA
