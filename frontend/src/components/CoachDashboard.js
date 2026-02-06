@@ -23,6 +23,7 @@ import { QRScannerModal } from "./QRScanner";
 import ArticleManager from "./ArticleManager"; // Import Article Manager
 import ReservationTab from "./coach/ReservationTab"; // Import Reservation Tab
 import CampaignManager from "./coach/CampaignManager"; // Import Campaign Manager
+import { parseMediaUrl, getMediaThumbnail } from "../services/MediaParser"; // Media Parser
 
 // === API BACKEND URL (UNIQUE) ===
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
