@@ -1,5 +1,36 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 6 Février 2026 - ZERO-FLASH & PRÉCISION HORAIRE ✅
+
+### MISSION ACCOMPLIE - Tests 100% réussis (Backend: 17/17, Frontend: 6/6)
+
+#### Fonctionnalités Implémentées
+
+| Fonctionnalité | Fichier | Statut |
+|----------------|---------|--------|
+| **Zero-Flash: pendingGroupJoin** | ChatWidget.js (ligne 301) | ✅ |
+| **Zero-Flash: getInitialStep** | ChatWidget.js (ligne 316) | ✅ |
+| **Zero-Flash: getInitialOpen** | ChatWidget.js (ligne 381) | ✅ |
+| **Date française Europe/Paris** | BookingPanel.js (ligne 16) | ✅ |
+| **Fallback "Lieu à confirmer"** | BookingPanel.js (ligne 48) | ✅ |
+| **overflow-anchor: none** | ChatWidget.js (lignes 2996, 3089) | ✅ |
+| **safe-area-inset-bottom** | ChatWidget.js (ligne 3219) | ✅ |
+| **Bouton ✕ min 44px mobile** | CampaignManager.js (ligne 1026) | ✅ |
+| **Modale max-height 80vh** | CampaignManager.js (ligne 1015) | ✅ |
+
+#### Zero-Flash - Comportement
+1. `pendingGroupJoin` détecte `?group=ID` **AVANT** le premier render
+2. Si profil + groupId → `getInitialStep()` retourne `'chat'` (pas de formulaire)
+3. Si profil + groupId → `getInitialOpen()` retourne `true` (chat ouvert)
+4. **Résultat**: L'utilisateur connecté arrive directement sur le chat du groupe
+
+#### Formatage des dates françaises
+- Utilise `Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris' })`
+- Format: "Mercredi 12 février à 18:30"
+- Fuseau horaire: Europe/Paris (Genève/Paris)
+
+---
+
 ## Mise à jour du 6 Février 2026 - ADHÉSION AUTO, HISTORIQUE & FIX MOBILE ✅
 
 ### MISSION ACCOMPLIE - Tests 100% réussis (Backend: 21/21, Frontend: 5/5)
