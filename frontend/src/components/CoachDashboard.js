@@ -6802,6 +6802,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
             </div>
           </div>
         )}
+        {/* [CAMPAGNE_END] - Fin de la section Campagnes (~1490 lignes) */}
 
         {/* ========== ONGLET ARTICLES - Gestion des articles ========== */}
         {tab === "articles" && (
