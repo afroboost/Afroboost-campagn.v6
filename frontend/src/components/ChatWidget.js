@@ -1353,11 +1353,45 @@ export const ChatWidget = () => {
       // === SYNCHRONISATION TEMPS RÉEL : Suppression de cours ===
       socket.on('course_deleted', (data) => {
         console.log('[SOCKET.IO] 🗑️ Cours supprimé:', data.courseId);
-        // Retirer le cours de la liste locale
+        
+        // 1. Retirer le cours de la liste locale
         setAvailableCourses(prev => prev.filter(course => course.id !== data.courseId));
-        // Notification optionnelle
+        
+        // 2. HARD DELETE: Vider le cache local pour forcer un rafraîchissement
+        if (data.hardDelete) {
+          // Supprimer les caches liés aux cours du sessionStorage
+          try {
+            const keysToRemove = [];
+            for (let i = 0; i < sessionStorage.length; i++) {
+              const key = sessionStorage.key(i);
+              if (key && (key.includes('courses') || key.includes('reservations') || key.includes('calendar'))) {
+                keysToRemove.push(key);
+              }
+            }
+            keysToRemove.forEach(key => sessionStorage.removeItem(key));
+            console.log('[CACHE] 🧹 Cache cours/réservations vidé');
+          } catch (e) {
+            console.warn('[CACHE] Erreur nettoyage:', e);
+          }
+        }
+        
+        // 3. Notification pour l'utilisateur
         if (data.deletedReservations > 0) {
           console.log(`[SOCKET.IO] 📅 ${data.deletedReservations} réservation(s) annulée(s)`);
+        }
+      });
+      
+      // === SYNCHRONISATION TEMPS RÉEL : Purge des cours archivés ===
+      socket.on('courses_purged', (data) => {
+        console.log('[SOCKET.IO] 🧹 Purge cours archivés:', data.count, 'cours supprimés');
+        // Retirer tous les cours purgés
+        setAvailableCourses(prev => prev.filter(course => !data.purgedIds.includes(course.id)));
+        // Vider tout le cache
+        try {
+          sessionStorage.clear();
+          console.log('[CACHE] 🧹 Cache entièrement vidé après purge');
+        } catch (e) {
+          console.warn('[CACHE] Erreur:', e);
         }
       });
       
