@@ -3270,109 +3270,120 @@ export const ChatWidget = () => {
                   </div>
                 )}
                 
-                {/* Input message - Mobile optimized with safe-area */}
+                {/* Input message - Mobile optimized with safe-area + z-index élevé */}
                 <div 
                   style={{
                     padding: '12px',
                     paddingBottom: 'max(12px, env(safe-area-inset-bottom, 12px))',
                     borderTop: '1px solid rgba(255,255,255,0.1)',
                     display: 'flex',
+                    alignItems: 'center', /* Alignement vertical centré */
                     gap: '8px',
                     flexShrink: 0,
-                    position: 'relative',
-                    zIndex: 100,
-                    background: 'rgba(0,0,0,0.95)'
+                    position: 'sticky', /* Sticky pour rester visible */
+                    bottom: 0,
+                    zIndex: 9999, /* Z-index très élevé pour passer devant tout */
+                    background: 'rgba(0,0,0,0.98)' /* Fond opaque */
                   }}
+                  data-testid="chat-input-bar"
                 >
-                  {/* === SÉLECTEUR D'EMOJIS (Composant externe) === */}
-                  <EmojiPicker 
-                    isOpen={showEmojiPicker}
-                    onClose={() => setShowEmojiPicker(false)}
-                    onSelect={insertEmoji}
-                    position="bottom"
-                  />
-                  
-                  {/* Bouton Emoji */}
-                  <button
-                    type="button"
-                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      background: showEmojiPicker ? '#9333ea' : 'rgba(255,255,255,0.1)',
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      fontSize: '18px'
-                    }}
-                    data-testid="emoji-btn"
-                  >
-                    😊
-                  </button>
-                  
-                  {/* Icône Calendrier (Réservation) - UNIQUEMENT visible pour abonnés avec code promo */}
-                  {afroboostProfile?.code && (
+                  {/* === GAUCHE: Emoji + Réservations === */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                    {/* === SÉLECTEUR D'EMOJIS (Composant externe) === */}
+                    <EmojiPicker 
+                      isOpen={showEmojiPicker}
+                      onClose={() => setShowEmojiPicker(false)}
+                      onSelect={insertEmoji}
+                      position="bottom"
+                    />
+                    
+                    {/* Bouton Emoji */}
                     <button
                       type="button"
-                      onClick={() => {
-                        if (!showReservationPanel) {
-                          loadAvailableCourses();
-                        }
-                        setShowReservationPanel(!showReservationPanel);
-                        setSelectedCourse(null);
-                      }}
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                       style={{
                         width: '40px',
                         height: '40px',
                         borderRadius: '50%',
-                        background: showReservationPanel ? '#9333ea' : 'rgba(147, 51, 234, 0.3)',
-                        border: '1px solid rgba(147, 51, 234, 0.5)',
+                        background: showEmojiPicker ? '#9333ea' : 'rgba(255,255,255,0.1)',
+                        border: 'none',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        flexShrink: 0
+                        flexShrink: 0,
+                        fontSize: '18px'
                       }}
-                      title="Réserver un cours (Abonné)"
-                      data-testid="calendar-btn"
+                      data-testid="emoji-btn"
                     >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={showReservationPanel ? '#fff' : '#a855f7'} strokeWidth="2">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                      </svg>
+                      😊
                     </button>
-                  )}
+                    
+                    {/* Icône Calendrier (Réservation) - UNIQUEMENT visible pour abonnés avec code promo */}
+                    {afroboostProfile?.code && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!showReservationPanel) {
+                            loadAvailableCourses();
+                          }
+                          setShowReservationPanel(!showReservationPanel);
+                          setSelectedCourse(null);
+                        }}
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          background: showReservationPanel ? '#9333ea' : 'rgba(147, 51, 234, 0.3)',
+                          border: '1px solid rgba(147, 51, 234, 0.5)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}
+                        title="Réserver un cours (Abonné)"
+                        data-testid="calendar-btn"
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={showReservationPanel ? '#fff' : '#a855f7'} strokeWidth="2">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                          <line x1="16" y1="2" x2="16" y2="6"></line>
+                          <line x1="8" y1="2" x2="8" y2="6"></line>
+                          <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                   
+                  {/* === MILIEU: Input texte (flex-grow: 1) === */}
                   <input
                     type="text"
                     value={inputMessage}
                     onChange={handleInputChangeWithTyping}
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
-                        emitTyping(false); // Arrêter typing avant d'envoyer
+                        emitTyping(false);
                         handleSendMessage();
                       }
                     }}
                     onBlur={handleInputBlur}
                     placeholder="Écrivez votre message..."
-                    className="flex-1 rounded-full"
                     style={{
+                      flex: 1,
+                      minWidth: 0, /* Permet au flex de réduire */
                       background: 'rgba(255,255,255,0.1)',
                       border: '1px solid rgba(255,255,255,0.2)',
+                      borderRadius: '24px',
                       color: '#fff',
                       outline: 'none',
-                      fontSize: '16px', /* FIX ZOOM SAFARI iOS - min 16px */
-                      padding: '10px 16px', /* Ajuster padding pour compenser */
+                      fontSize: '16px', /* FIX ZOOM SAFARI iOS */
+                      padding: '10px 16px',
                       lineHeight: '1.2'
                     }}
                     data-testid="chat-input"
                   />
+                  
+                  {/* === DROITE: Bouton Envoyer (toujours à l'extrême droite) === */}
                   <button
                     type="button"
                     onClick={(e) => {
@@ -3382,7 +3393,7 @@ export const ChatWidget = () => {
                     }}
                     disabled={isLoading || !inputMessage.trim()}
                     style={{
-                      width: '44px', /* Min 44px pour accessibilité mobile */
+                      width: '44px',
                       height: '44px',
                       borderRadius: '50%',
                       background: '#25D366',
@@ -3392,7 +3403,8 @@ export const ChatWidget = () => {
                       alignItems: 'center',
                       justifyContent: 'center',
                       opacity: isLoading || !inputMessage.trim() ? 0.5 : 1,
-                      flexShrink: 0
+                      flexShrink: 0,
+                      marginLeft: 'auto' /* Force à droite */
                     }}
                     data-testid="chat-send-btn"
                   >
