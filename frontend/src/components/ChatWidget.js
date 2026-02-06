@@ -1303,7 +1303,7 @@ export const ChatWidget = () => {
       setInputMessage('');
       // Recharger les messages
       await loadCoachSessionMessages(selectedCoachSession);
-      playNotificationSound('message');
+      playSoundIfEnabled('coach');
     } catch (err) {
       console.error('Error sending coach response:', err);
       alert('Erreur lors de l\'envoi du message');
