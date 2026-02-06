@@ -1,5 +1,46 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 6 Février 2026 - HARD DELETE & PURGE ✅
+
+### Implémentations HARD DELETE
+
+| Endpoint | Action | Résultat |
+|----------|--------|----------|
+| `DELETE /api/courses/{id}` | Suppression totale cours + réservations | ✅ |
+| `DELETE /api/courses/purge/archived` | Purge tous les cours archivés | ✅ |
+| `GET /api/courses` | Exclut les cours archivés | ✅ |
+
+#### Réponse HARD DELETE
+```json
+{
+  "success": true,
+  "hardDelete": true,
+  "deleted": { "course": 1, "reservations": 1, "sessions": 0 },
+  "total": 2
+}
+```
+
+#### Événement Socket.IO enrichi
+```javascript
+socket.on('course_deleted', (data) => {
+  // data.hardDelete = true → Vider le cache sessionStorage
+  setAvailableCourses(prev => prev.filter(c => c.id !== data.courseId));
+  if (data.hardDelete) {
+    // Nettoie les caches cours/reservations/calendar
+    sessionStorage keys supprimés
+  }
+});
+```
+
+#### Test validé
+```
+[HARD DELETE] Cours 58d87826... - Supprimé: cours=1, réservations=1, sessions=0
+[SOCKET.IO] Événement course_deleted émis
+Après suppression: 0 cours, 0 réservation(s) en DB
+```
+
+---
+
 ## Mise à jour du 6 Février 2026 - SYNCHRONISATION TEMPS RÉEL ✅
 
 ### Améliorations apportées
