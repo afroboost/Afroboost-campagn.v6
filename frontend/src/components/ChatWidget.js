@@ -1293,6 +1293,38 @@ export const ChatWidget = () => {
         }
       });
       
+      // === RECONNEXION: Récupérer les messages manqués ===
+      socket.on('reconnect', async (attemptNumber) => {
+        console.log(`[SOCKET.IO] 🔄 Reconnexion réussie (tentative ${attemptNumber})`);
+        // Rejoindre à nouveau la session
+        socket.emit('join_session', {
+          session_id: sessionData.id,
+          participant_id: participantId
+        });
+        // Récupérer les messages manqués pendant la déconnexion
+        try {
+          const response = await fetch(`${API}/chat/sessions/${sessionData.id}/messages`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.messages && data.messages.length > 0) {
+              console.log(`[SOCKET.IO] 📥 ${data.messages.length} messages récupérés après reconnexion`);
+              setMessages(prev => {
+                // Fusionner sans doublons
+                const newMsgs = data.messages.filter(m => !prev.some(p => p.id === m.id));
+                if (newMsgs.length > 0) {
+                  return [...prev, ...newMsgs].sort((a, b) => 
+                    new Date(a.created_at || 0) - new Date(b.created_at || 0)
+                  );
+                }
+                return prev;
+              });
+            }
+          }
+        } catch (err) {
+          console.warn('[SOCKET.IO] ⚠️ Erreur récupération messages:', err);
+        }
+      });
+      
       // Écouter les nouveaux messages en temps réel
       socket.on('message_received', (messageData) => {
         console.log('[SOCKET.IO] 📩 Message reçu:', messageData);
