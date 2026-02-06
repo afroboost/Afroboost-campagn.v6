@@ -1,5 +1,42 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 6 Février 2026 - UX MOBILE & SKELETON LOADING ✅
+
+### MISSION ACCOMPLIE - Tests 100% réussis (Backend: 14/14, Frontend: 7/7)
+
+#### Fonctionnalités Implémentées
+
+| Fonctionnalité | Fichier | Ligne | Statut |
+|----------------|---------|-------|--------|
+| **Fix Zoom Safari iOS** | ChatWidget.js | 3368 | ✅ font-size: 16px |
+| **Bouton Envoyer 44px** | ChatWidget.js | 3383-84 | ✅ Accessibilité mobile |
+| **MessageSkeleton.js** | chat/MessageSkeleton.js | Nouveau | ✅ Animation pulse |
+| **Cache Hybride** | ChatWidget.js | 301-326 | ✅ sessionStorage |
+| **Skeleton Loading** | ChatWidget.js | 3153 | ✅ isLoadingHistory |
+| **Fallback "Lieu à confirmer"** | BookingPanel.js | 176, 224 | ✅ gris/italique |
+
+#### MessageSkeleton - Animation élégante
+```jsx
+// 4 bulles de tailles variées avec animation pulse
+<SkeletonBubble width="65%" isRight={false} delay={0} />
+<SkeletonBubble width="45%" isRight={true} delay={100} />
+<SkeletonBubble width="80%" isRight={false} delay={200} />
+<SkeletonBubble width="55%" isRight={true} delay={300} />
+```
+
+#### Cache Hybride - Chargement instantané
+- **Clé** : `afroboost_last_msgs`
+- **Stockage** : sessionStorage (20 derniers messages)
+- **Initialisation** : `useState(() => getCachedMessages())` → 0ms d'attente
+- **Update** : Messages sauvegardés après chaque changement
+
+#### Fix Zoom Safari iOS
+- Input chat : `font-size: 16px` minimum
+- Padding ajusté : `10px 16px`
+- Bouton Envoyer : `44x44px` pour accessibilité
+
+---
+
 ## Mise à jour du 6 Février 2026 - ZERO-FLASH & PRÉCISION HORAIRE ✅
 
 ### MISSION ACCOMPLIE - Tests 100% réussis (Backend: 17/17, Frontend: 6/6)
