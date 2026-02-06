@@ -4472,23 +4472,17 @@ async def sync_messages(session_id: str, since: Optional[str] = None, limit: int
     }
     
     # Si "since" est fourni, filtrer les messages STRICTEMENT après cette date
-    # On utilise une comparaison de chaînes ISO 8601 qui fonctionne car le format est cohérent
     if since:
-        # Normaliser le timestamp pour s'assurer qu'il est en UTC
         try:
-            # Parser et reconvertir pour garantir le format
             if 'Z' in since:
                 since = since.replace('Z', '+00:00')
             parsed = datetime.fromisoformat(since)
-            # S'assurer qu'on a un timezone
             if parsed.tzinfo is None:
                 parsed = parsed.replace(tzinfo=timezone.utc)
-            # Reconvertir en UTC si nécessaire
             utc_since = parsed.astimezone(timezone.utc).isoformat()
             query["created_at"] = {"$gt": utc_since}
-            logger.debug(f"[SYNC] Filtrage depuis: {utc_since}")
         except Exception as e:
-            logger.warning(f"[SYNC] Erreur parsing 'since': {e}, utilisation directe")
+            logger.warning(f"[SYNC] Erreur parsing 'since': {e}")
             query["created_at"] = {"$gt": since}
     
     messages = await db.chat_messages.find(
