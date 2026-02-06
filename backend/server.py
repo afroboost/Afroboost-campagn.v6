@@ -4467,6 +4467,89 @@ async def get_session_messages(session_id: str, include_deleted: bool = False):
     messages = await db.chat_messages.find(query, {"_id": 0}).sort("created_at", 1).to_list(500)
     return messages
 
+
+# ==================== ENDPOINT SYNC "RAMASSER" ====================
+@api_router.get("/messages/sync")
+async def sync_messages(session_id: str, since: Optional[str] = None, limit: int = 100):
+    """
+    RAMASSER: Récupère les messages depuis la DB.
+    Architecture "POSER-RAMASSER" - Le mobile appelle cet endpoint au réveil.
+    
+    Args:
+        session_id: ID de la session à synchroniser
+        since: Date ISO depuis laquelle récupérer (optionnel)
+        limit: Nombre max de messages
+    
+    Returns:
+        Liste des messages triés par date
+    """
+    query = {
+        "session_id": session_id,
+        "is_deleted": {"$ne": True}
+    }
+    
+    # Si "since" est fourni, ne récupérer que les messages après cette date
+    if since:
+        query["created_at"] = {"$gt": since}
+    
+    messages = await db.chat_messages.find(
+        query, 
+        {"_id": 0}
+    ).sort("created_at", 1).to_list(limit)
+    
+    logger.info(f"[SYNC] 📱 Ramassé {len(messages)} message(s) pour session {session_id[:8]}...")
+    
+    return {
+        "success": True,
+        "session_id": session_id,
+        "count": len(messages),
+        "messages": messages,
+        "synced_at": datetime.now(timezone.utc).isoformat()
+    }
+
+
+@api_router.get("/messages/sync/all")
+async def sync_all_messages(participant_id: str, since: Optional[str] = None, limit: int = 200):
+    """
+    RAMASSER TOUT: Récupère tous les messages du participant (toutes sessions).
+    Pour synchronisation complète au réveil du mobile.
+    """
+    # Trouver toutes les sessions du participant
+    sessions = await db.chat_sessions.find(
+        {"$or": [
+            {"participant_ids": participant_id},
+            {"mode": "community"}  # Inclure la session communautaire
+        ]},
+        {"_id": 0, "id": 1}
+    ).to_list(100)
+    
+    session_ids = [s["id"] for s in sessions]
+    
+    query = {
+        "session_id": {"$in": session_ids},
+        "is_deleted": {"$ne": True}
+    }
+    
+    if since:
+        query["created_at"] = {"$gt": since}
+    
+    messages = await db.chat_messages.find(
+        query,
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(limit)
+    
+    logger.info(f"[SYNC-ALL] 📱 Ramassé {len(messages)} message(s) pour {participant_id[:8]}...")
+    
+    return {
+        "success": True,
+        "participant_id": participant_id,
+        "sessions_count": len(session_ids),
+        "messages_count": len(messages),
+        "messages": messages,
+        "synced_at": datetime.now(timezone.utc).isoformat()
+    }
+
+
 @api_router.post("/chat/messages")
 async def create_chat_message(message: EnhancedChatMessageCreate):
     """
