@@ -1008,47 +1008,93 @@ const CampaignManager = ({
               data-testid="recipient-search-input"
             />
             
-            {/* Dropdown */}
+            {/* Dropdown - Mobile optimized with max-height 80vh */}
             {showConversationDropdown && (
-              <div className="absolute z-50 w-full mt-1 max-h-64 overflow-y-auto rounded-lg bg-black/95 border border-green-500/30 shadow-xl"
-                onMouseLeave={() => setTimeout(() => setShowConversationDropdown(false), 300)}>
-                {/* Groupes */}
-                {activeConversations.filter(c => c.type === 'group' && (conversationSearch === '' || (c.name || '').toLowerCase().includes(conversationSearch.toLowerCase())) && !selectedRecipients.find(r => r.id === c.conversation_id)).length > 0 && (
-                  <div className="p-2 border-b border-green-500/20">
-                    <p className="text-xs text-purple-400 font-semibold mb-1 px-2">👥 GROUPES</p>
-                    {activeConversations.filter(c => c.type === 'group' && (conversationSearch === '' || (c.name || '').toLowerCase().includes(conversationSearch.toLowerCase())) && !selectedRecipients.find(r => r.id === c.conversation_id)).map(conv => (
-                      <button key={conv.conversation_id} type="button"
-                        onClick={() => {
-                          setSelectedRecipients(prev => [...prev, {id: conv.conversation_id, name: conv.name || 'Groupe', type: 'group'}]);
-                          setConversationSearch('');
-                          showCampaignToast(`✅ "${conv.name || 'Groupe'}" ajouté au panier`, 'success');
-                        }}
-                        className="w-full text-left px-3 py-2 rounded hover:bg-purple-600/30 text-white text-sm flex items-center gap-2">
-                        <span>👥</span><span>{conv.name || 'Groupe'}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {/* Utilisateurs */}
-                {activeConversations.filter(c => c.type === 'user' && (conversationSearch === '' || (c.name || '').toLowerCase().includes(conversationSearch.toLowerCase())) && !selectedRecipients.find(r => r.id === c.conversation_id)).length > 0 && (
-                  <div className="p-2">
-                    <p className="text-xs text-blue-400 font-semibold mb-1 px-2">👤 UTILISATEURS</p>
-                    {activeConversations.filter(c => c.type === 'user' && (conversationSearch === '' || (c.name || '').toLowerCase().includes(conversationSearch.toLowerCase())) && !selectedRecipients.find(r => r.id === c.conversation_id)).slice(0, 15).map(conv => (
-                      <button key={conv.conversation_id} type="button"
-                        onClick={() => {
-                          setSelectedRecipients(prev => [...prev, {id: conv.conversation_id, name: conv.name || 'Utilisateur', type: 'user'}]);
-                          setConversationSearch('');
-                          showCampaignToast(`✅ "${conv.name || 'Utilisateur'}" ajouté au panier`, 'success');
-                        }}
-                        className="w-full text-left px-3 py-2 rounded hover:bg-blue-600/30 text-white text-sm flex items-center gap-2">
-                        <span>👤</span><span className="truncate">{conv.name || 'Utilisateur'}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {activeConversations.filter(c => (conversationSearch === '' || (c.name || '').toLowerCase().includes(conversationSearch.toLowerCase())) && !selectedRecipients.find(r => r.id === c.conversation_id)).length === 0 && (
-                  <p className="text-center py-4 text-gray-500 text-sm">{selectedRecipients.length > 0 ? 'Tous les résultats sont déjà dans le panier' : `Aucun résultat pour "${conversationSearch}"`}</p>
-                )}
+              <div 
+                className="absolute z-50 w-full mt-1 rounded-lg bg-black/95 border border-green-500/30 shadow-xl flex flex-col"
+                style={{ maxHeight: '80vh' }}
+              >
+                {/* === HEADER MOBILE avec bouton Fermer (icône filaire) === */}
+                <div className="flex items-center justify-between p-3 border-b border-green-500/20 sticky top-0 bg-black/95 z-10">
+                  <span className="text-sm text-green-400 font-medium">
+                    📍 Sélectionner des destinataires
+                  </span>
+                  <button 
+                    type="button"
+                    onClick={() => setShowConversationDropdown(false)}
+                    className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                    title="Fermer"
+                    data-testid="close-recipient-dropdown"
+                  >
+                    {/* Icône X filaire */}
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+                
+                {/* === CONTENU SCROLLABLE === */}
+                <div className="overflow-y-auto flex-1" style={{ maxHeight: 'calc(80vh - 120px)' }}>
+                  {/* Groupes */}
+                  {activeConversations.filter(c => c.type === 'group' && (conversationSearch === '' || (c.name || '').toLowerCase().includes(conversationSearch.toLowerCase())) && !selectedRecipients.find(r => r.id === c.conversation_id)).length > 0 && (
+                    <div className="p-2 border-b border-green-500/20">
+                      <p className="text-xs text-purple-400 font-semibold mb-1 px-2">👥 GROUPES</p>
+                      {activeConversations.filter(c => c.type === 'group' && (conversationSearch === '' || (c.name || '').toLowerCase().includes(conversationSearch.toLowerCase())) && !selectedRecipients.find(r => r.id === c.conversation_id)).map(conv => (
+                        <button key={conv.conversation_id} type="button"
+                          onClick={() => {
+                            setSelectedRecipients(prev => [...prev, {id: conv.conversation_id, name: conv.name || 'Groupe', type: 'group'}]);
+                            setConversationSearch('');
+                            showCampaignToast(`✅ "${conv.name || 'Groupe'}" ajouté au panier`, 'success');
+                          }}
+                          className="w-full text-left px-3 py-2 rounded hover:bg-purple-600/30 text-white text-sm flex items-center gap-2">
+                          <span>👥</span><span>{conv.name || 'Groupe'}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {/* Utilisateurs */}
+                  {activeConversations.filter(c => c.type === 'user' && (conversationSearch === '' || (c.name || '').toLowerCase().includes(conversationSearch.toLowerCase())) && !selectedRecipients.find(r => r.id === c.conversation_id)).length > 0 && (
+                    <div className="p-2">
+                      <p className="text-xs text-blue-400 font-semibold mb-1 px-2">👤 UTILISATEURS</p>
+                      {activeConversations.filter(c => c.type === 'user' && (conversationSearch === '' || (c.name || '').toLowerCase().includes(conversationSearch.toLowerCase())) && !selectedRecipients.find(r => r.id === c.conversation_id)).slice(0, 15).map(conv => (
+                        <button key={conv.conversation_id} type="button"
+                          onClick={() => {
+                            setSelectedRecipients(prev => [...prev, {id: conv.conversation_id, name: conv.name || 'Utilisateur', type: 'user'}]);
+                            setConversationSearch('');
+                            showCampaignToast(`✅ "${conv.name || 'Utilisateur'}" ajouté au panier`, 'success');
+                          }}
+                          className="w-full text-left px-3 py-2 rounded hover:bg-blue-600/30 text-white text-sm flex items-center gap-2">
+                          <span>👤</span><span className="truncate">{conv.name || 'Utilisateur'}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {activeConversations.filter(c => (conversationSearch === '' || (c.name || '').toLowerCase().includes(conversationSearch.toLowerCase())) && !selectedRecipients.find(r => r.id === c.conversation_id)).length === 0 && (
+                    <p className="text-center py-4 text-gray-500 text-sm">{selectedRecipients.length > 0 ? 'Tous les résultats sont déjà dans le panier' : `Aucun résultat pour "${conversationSearch}"`}</p>
+                  )}
+                </div>
+                
+                {/* === FOOTER MOBILE avec bouton Valider (icône filaire) === */}
+                <div className="p-3 border-t border-green-500/20 sticky bottom-0 bg-black/95 z-10">
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setShowConversationDropdown(false);
+                      if (selectedRecipients.length > 0) {
+                        showCampaignToast(`✅ ${selectedRecipients.length} destinataire(s) sélectionné(s)`, 'success');
+                      }
+                    }}
+                    className="w-full py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                    data-testid="validate-recipients-btn"
+                  >
+                    {/* Icône Check filaire */}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Valider la sélection ({selectedRecipients.length})
+                  </button>
+                </div>
               </div>
             )}
           </div>
