@@ -75,12 +75,14 @@ const SkeletonBubble = ({ width, isRight, delay = 0, hasMedia = false, hasCta = 
 );
 
 // Composant principal avec plusieurs bulles
-const MessageSkeleton = ({ count = 4 }) => {
+const MessageSkeleton = ({ count = 4, includeMedia = false }) => {
   // Configuration des bulles pour un aspect naturel
+  // Inclut une bulle avec média+CTA pour éviter le "saut" au chargement
   const bubbles = [
     { width: '65%', isRight: false, delay: 0 },
     { width: '45%', isRight: true, delay: 100 },
-    { width: '80%', isRight: false, delay: 200 },
+    // Bulle avec média et CTA (simule un message enrichi)
+    { width: '280px', isRight: false, delay: 200, hasMedia: includeMedia, hasCta: includeMedia },
     { width: '55%', isRight: true, delay: 300 },
   ].slice(0, count);
 
