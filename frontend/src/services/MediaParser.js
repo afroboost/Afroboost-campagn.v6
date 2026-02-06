@@ -70,7 +70,32 @@ export const parseMediaUrl = (url) => {
   }
 
   // === GOOGLE DRIVE ===
+  // D'abord vérifier si c'est un dossier
+  for (const pattern of GOOGLE_DRIVE_FOLDER_PATTERNS) {
+    const match = trimmedUrl.match(pattern);
+    if (match && match[1]) {
+      const folderId = match[1];
+      return {
+        type: 'drive_folder',
+        platform: 'google_drive',
+        folderId,
+        // Les dossiers ne peuvent pas être embedés directement
+        directUrl: `https://drive.google.com/drive/folders/${folderId}`,
+        thumbnailUrl: null, // Pas de miniature pour les dossiers
+        // Lien pour ouvrir le dossier
+        previewUrl: `https://drive.google.com/drive/folders/${folderId}`,
+        embedUrl: null,
+        isFolder: true
+      };
+    }
+  }
+  
+  // Ensuite vérifier les fichiers
   for (const pattern of GOOGLE_DRIVE_PATTERNS) {
+    // Skip les patterns de dossiers (déjà traités)
+    if (GOOGLE_DRIVE_FOLDER_PATTERNS.some(fp => fp.source === pattern.source)) {
+      continue;
+    }
     const match = trimmedUrl.match(pattern);
     if (match && match[1]) {
       const fileId = match[1];
@@ -85,7 +110,8 @@ export const parseMediaUrl = (url) => {
         // Lien de prévisualisation dans Drive
         previewUrl: `https://drive.google.com/file/d/${fileId}/preview`,
         // Lien embed pour iframe
-        embedUrl: `https://drive.google.com/file/d/${fileId}/preview`
+        embedUrl: `https://drive.google.com/file/d/${fileId}/preview`,
+        isFolder: false
       };
     }
   }
