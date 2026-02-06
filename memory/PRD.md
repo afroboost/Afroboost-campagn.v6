@@ -1,5 +1,37 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 6 Février 2026 - RAMASSER RÉSILIENT ✅
+
+### Améliorations du système de synchronisation
+
+| Critère | Implémentation |
+|---------|----------------|
+| Retry automatique | ✅ 3 tentatives espacées de 2s |
+| Gestion hors-ligne | ✅ `navigator.onLine` + listener `online` |
+| Indicateur visuel | ✅ "Synchronisation..." avec pulse jaune |
+| Persistance lastSync | ✅ Stocké dans localStorage par session |
+| Timeout request | ✅ 10 secondes avec AbortSignal |
+
+#### Listeners actifs
+```javascript
+// ChatWidget.js
+document.addEventListener('visibilitychange', handleVisibilityChange);
+window.addEventListener('focus', handleFocus);
+window.addEventListener('online', handleOnline);
+```
+
+#### Flow de récupération
+```
+1. Vérifier navigator.onLine
+2. Si hors-ligne → attendre 'online' event
+3. Appeler /api/messages/sync avec "since"
+4. Retry jusqu'à 3x si échec
+5. Fallback vers ancien endpoint
+6. Fusionner sans doublons
+```
+
+---
+
 ## Mise à jour du 6 Février 2026 - ARCHITECTURE "POSER-RAMASSER" ✅
 
 ### MISSION ZÉRO PERTE DE MESSAGE
