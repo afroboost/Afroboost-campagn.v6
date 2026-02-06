@@ -1,5 +1,34 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 6 Février 2026 - FIX RÉGRESSIONS ✅
+
+### Corrections apportées
+
+| Problème | Solution | Statut |
+|----------|----------|--------|
+| **Suppression cours** | DELETE cascade réservations | ✅ |
+| **Socket.IO** | Fonctionnel (test réussi) | ✅ |
+| **Photos profil** | Montage `/api/uploads/profiles` OK | ✅ |
+| **Scheduler** | Test régression 12:27 réussi | ✅ |
+
+#### Fix suppression cours (server.py ligne 904)
+```python
+@api_router.delete("/courses/{course_id}")
+async def delete_course(course_id: str):
+    await db.courses.delete_one({"id": course_id})
+    # NOUVEAU: Supprime aussi les réservations liées
+    deleted = await db.reservations.delete_many({"courseId": course_id})
+    return {"success": True, "deletedReservations": deleted.deleted_count}
+```
+
+#### Test de régression validé
+```
+[DEBUG] ✅ ENVOI! '🔧 TEST RÉGRESSION' | 12:27 Paris
+[SCHEDULER-GROUP] ✅ Message inséré + Socket.IO 200 OK
+```
+
+---
+
 ## Mise à jour du 6 Février 2026 - REFACTORING MOTEUR SCHEDULER ✅
 
 ### MISSION ACCOMPLIE - Critères de réussite validés
