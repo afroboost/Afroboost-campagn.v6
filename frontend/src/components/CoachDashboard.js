@@ -21,6 +21,7 @@ import { LandingSectionSelector } from "./SearchBar";
 import { playNotificationSound, linkifyText } from "../services/notificationService";
 import { QRScannerModal } from "./QRScanner";
 import ArticleManager from "./ArticleManager"; // Import Article Manager
+import ReservationTab from "./coach/ReservationTab"; // Import Reservation Tab
 
 // === API BACKEND URL (UNIQUE) ===
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
