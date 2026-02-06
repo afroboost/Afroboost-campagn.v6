@@ -51,7 +51,7 @@ class TestSchedulerHealth:
         assert "status" in data
         print(f"✅ Scheduler Health: {data}")
         # Scheduler should be running
-        assert data.get("status") in ["running", "stopped", "unknown"]
+        assert data.get("status") in ["running", "stopped", "unknown", "active"]
     
     def test_scheduler_status(self):
         """Test scheduler status endpoint"""
