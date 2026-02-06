@@ -1618,10 +1618,11 @@ export const ChatWidget = () => {
       }
     };
     
-    // Listener visibilité (changement d'onglet ou retour de veille)
+    // Listener visibilité (changement d'onglet ou retour de veille) - PRIORITÉ HAUTE
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log('[VISIBILITY] 👀 App visible');
+        console.log('[VISIBILITY] 👀 App visible - Sync immédiate');
+        // Sync immédiate sans délai pour visibilitychange (utilisateur actif)
         fetchLatestMessages(0, 'visibility');
       }
     };
@@ -1634,18 +1635,36 @@ export const ChatWidget = () => {
     
     // Listener online (retour réseau) - AVEC DÉLAI 800ms
     const handleOnline = () => {
-      console.log('[ONLINE] 📶 Réseau rétabli - Attente 800ms pour stabilisation...');
-      // Délai pour laisser la connexion se stabiliser
+      console.log('[ONLINE] 📶 Réseau rétabli - Attente stabilisation...');
       setTimeout(() => {
-        console.log('[ONLINE] 📶 Lancement sync après stabilisation');
+        console.log('[ONLINE] 📶 Sync après stabilisation');
         fetchLatestMessages(0, 'online');
       }, ONLINE_DELAY);
+    };
+    
+    // Listener changement de connexion (4G <-> Wi-Fi) via Network Information API
+    let connectionChangeTimeout = null;
+    const handleConnectionChange = () => {
+      // Éviter les appels multiples rapides
+      if (connectionChangeTimeout) clearTimeout(connectionChangeTimeout);
+      connectionChangeTimeout = setTimeout(() => {
+        if (navigator.onLine) {
+          console.log('[CONNECTION] 🔄 Type réseau changé - Sync...');
+          fetchLatestMessages(0, 'connection_change');
+        }
+      }, 1000); // 1s de délai pour stabiliser
     };
     
     // Ajouter les listeners
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
     window.addEventListener('online', handleOnline);
+    
+    // Network Information API (si disponible)
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (connection) {
+      connection.addEventListener('change', handleConnectionChange);
+    }
     
     // Récupération initiale au montage
     fetchLatestMessages(0, 'mount');
@@ -1655,6 +1674,10 @@ export const ChatWidget = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('online', handleOnline);
+      if (connection) {
+        connection.removeEventListener('change', handleConnectionChange);
+      }
+      if (connectionChangeTimeout) clearTimeout(connectionChangeTimeout);
     };
   }, [sessionData?.id, step]);
 
