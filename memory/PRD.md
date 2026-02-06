@@ -1,5 +1,30 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 6 Février 2026 - REFACTORISATION SOUNDMANAGER ✅
+
+### MISSION ACCOMPLIE - Tests 100% réussis (Backend: 30/30, Frontend: 3/3)
+
+#### Extraction SoundManager.js ✅
+- **Nouveau fichier** : `/app/frontend/src/services/SoundManager.js` (156 lignes)
+- **Fonctions extraites** :
+  - `isInSilenceHours()` - Vérifie si heure entre 22h et 8h
+  - `getSilenceHoursLabel()` - Retourne "22h-08h" dynamiquement
+  - `playSoundIfAllowed(type, soundEnabled, silenceAutoEnabled)` - Logique centralisée
+  - `SOUND_TYPES` - Constantes des types de sons
+- **Résultat** : ChatWidget.js de 3827 → 3819 lignes
+
+#### Optimisation MemoizedMessageBubble ✅
+- **Comparaison simplifiée** : Uniquement `msg.id`, `senderPhotoUrl`, `profilePhotoUrl`
+- **Performance** : Skip re-render si props identiques (return true)
+- **Résultat** : Chat fluide même avec 50+ messages
+
+#### useCallback pour playSoundIfEnabled ✅
+- **Dépendances** : `[soundEnabled, silenceAutoEnabled]`
+- **Délégation** : Appelle `playSoundIfAllowed()` du SoundManager
+- **Effet** : Pas de recréation inutile de la fonction
+
+---
+
 ## Mise à jour du 6 Février 2026 - MODE SILENCE & OPTIMISATION RENDUS ✅
 
 ### MISSION ACCOMPLIE - Tests 100% réussis (Backend: 27/27, Frontend: 9/9)
