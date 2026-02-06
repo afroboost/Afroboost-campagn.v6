@@ -1036,41 +1036,38 @@ export const ChatWidget = () => {
     }
   }, []);
 
-  // === ADHÉSION AUTOMATIQUE VIA LIEN ?group=ID ===
-  // Si l'URL contient ?group=ID et que l'utilisateur est déjà connecté (afroboost_profile),
-  // rejoindre automatiquement le groupe sans afficher de formulaire
+  // === ADHÉSION AUTOMATIQUE VIA LIEN ?group=ID (ZERO-FLASH) ===
+  // Utilise pendingGroupJoin détecté AVANT le premier render
+  // L'adhésion se fait silencieusement, le formulaire n'est JAMAIS affiché
   useEffect(() => {
-    const checkAutoJoinGroup = async () => {
+    const executeAutoJoin = async () => {
+      // Utiliser pendingGroupJoin détecté au montage
+      if (!pendingGroupJoin) return;
+      
       try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const groupId = urlParams.get('group');
-        
-        // Si pas de paramètre group dans l'URL, ne rien faire
-        if (!groupId) return;
-        
         // Vérifier si l'utilisateur est déjà connecté
         const storedProfile = getStoredProfile();
         if (!storedProfile || !storedProfile.email) {
-          console.log('[AUTO-JOIN] ⚠️ Utilisateur non connecté, formulaire requis');
+          console.log('[ZERO-FLASH] ⚠️ Utilisateur non connecté, formulaire requis');
+          setPendingGroupJoin(null); // Reset
           return;
         }
         
-        console.log('[AUTO-JOIN] 🚀 Tentative d\'adhésion automatique au groupe:', groupId);
+        console.log('[ZERO-FLASH] 🚀 Adhésion instantanée au groupe:', pendingGroupJoin);
         
         // Appeler l'API pour rejoindre le groupe silencieusement
         const response = await axios.post(`${API}/groups/join`, {
-          group_id: groupId,
+          group_id: pendingGroupJoin,
           email: storedProfile.email,
           name: storedProfile.name,
           user_id: participantId || storedProfile.id
         });
         
         if (response.data.success) {
-          console.log('[AUTO-JOIN] ✅ Groupe rejoint avec succès:', response.data);
+          console.log('[ZERO-FLASH] ✅ Groupe rejoint:', response.data.group_name || pendingGroupJoin);
           
-          // Ouvrir automatiquement l'onglet du groupe
+          // Charger l'historique du groupe
           if (response.data.conversation_id) {
-            // Charger l'historique du groupe
             try {
               const historyRes = await axios.get(`${API}/chat/sessions/${response.data.conversation_id}/messages`);
               if (historyRes.data && historyRes.data.length > 0) {
@@ -1083,26 +1080,24 @@ export const ChatWidget = () => {
                 setMessages(restoredMessages);
               }
             } catch (histErr) {
-              console.warn('[AUTO-JOIN] Historique non chargé:', histErr.message);
+              console.warn('[ZERO-FLASH] Historique non chargé:', histErr.message);
             }
           }
-          
-          // Basculer vers le mode chat
-          setStep('chat');
-          setIsOpen(true);
-          
-          // Nettoyer l'URL (enlever ?group=ID)
-          const cleanUrl = window.location.pathname;
-          window.history.replaceState({}, '', cleanUrl);
         }
+        
+        // Nettoyer l'URL (enlever ?group=ID) - fait une seule fois
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, '', cleanUrl);
+        setPendingGroupJoin(null); // Reset après traitement
+        
       } catch (err) {
-        console.error('[AUTO-JOIN] ❌ Erreur adhésion automatique:', err.response?.data || err.message);
-        // En cas d'erreur, ne pas bloquer l'utilisateur - il peut toujours utiliser le formulaire
+        console.error('[ZERO-FLASH] ❌ Erreur adhésion:', err.response?.data?.detail || err.message);
+        setPendingGroupJoin(null); // Reset même en cas d'erreur
       }
     };
     
-    checkAutoJoinGroup();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    executeAutoJoin();
+  }, [pendingGroupJoin, participantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // === PERSISTANCE HISTORIQUE - Charger l'historique au montage si connecté ===
   useEffect(() => {
