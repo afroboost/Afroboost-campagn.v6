@@ -1237,8 +1237,8 @@ const CampaignManager = ({
               {(newCampaign.mediaUrl.includes('/v/') || newCampaign.mediaUrl.includes('/api/share/')) && (
                 <span className="ml-2 text-green-400 text-xs">✅ Lien interne</span>
               )}
-              {newCampaign.mediaCta && (
-                <span className="ml-2 text-purple-400 text-xs">+ CTA: {newCampaign.mediaCta.text}</span>
+              {newCampaign.ctaType && newCampaign.ctaType !== 'none' && (
+                <span className="ml-2 text-purple-400 text-xs">+ CTA: {newCampaign.ctaText || newCampaign.ctaType}</span>
               )}
             </p>
             <div className="flex justify-center">
@@ -1266,6 +1266,81 @@ const CampaignManager = ({
             </div>
           </div>
         )}
+        
+        {/* === SECTION CTA (Bouton d'action) === */}
+        <div className="mb-4 p-4 rounded-lg border border-purple-500/30 bg-purple-900/10">
+          <label className="block mb-3 text-white text-sm font-medium">🔘 Bouton d'action (CTA)</label>
+          
+          {/* Type de CTA */}
+          <div className="mb-3">
+            <select 
+              value={newCampaign.ctaType || 'none'}
+              onChange={e => setNewCampaign({...newCampaign, ctaType: e.target.value, ctaText: '', ctaLink: ''})}
+              className="w-full px-3 py-2 rounded-lg bg-gray-800/80 border border-gray-600 text-white text-sm focus:border-purple-500 focus:outline-none"
+              data-testid="cta-type-select"
+            >
+              <option value="none">Aucun bouton</option>
+              <option value="reserver">🗓️ Réserver (ouvre les cours)</option>
+              <option value="offre">🎁 Offre (lien externe)</option>
+              <option value="personnalise">✨ Personnalisé</option>
+            </select>
+          </div>
+          
+          {/* Texte du bouton (pour personnalisé ou modification) */}
+          {newCampaign.ctaType && newCampaign.ctaType !== 'none' && (
+            <div className="mb-3">
+              <label className="block mb-1 text-gray-400 text-xs">Texte du bouton</label>
+              <input 
+                type="text"
+                value={newCampaign.ctaText || ''}
+                onChange={e => setNewCampaign({...newCampaign, ctaText: e.target.value})}
+                placeholder={newCampaign.ctaType === 'reserver' ? 'RÉSERVER MA PLACE' : newCampaign.ctaType === 'offre' ? 'VOIR L\'OFFRE' : 'EN SAVOIR PLUS'}
+                className="w-full px-3 py-2 rounded-lg bg-gray-800/80 border border-gray-600 text-white text-sm focus:border-purple-500 focus:outline-none"
+                data-testid="cta-text-input"
+              />
+            </div>
+          )}
+          
+          {/* URL du bouton (pour offre et personnalisé) */}
+          {(newCampaign.ctaType === 'offre' || newCampaign.ctaType === 'personnalise') && (
+            <div className="mb-2">
+              <label className="block mb-1 text-gray-400 text-xs">Lien du bouton</label>
+              <input 
+                type="url"
+                value={newCampaign.ctaLink || ''}
+                onChange={e => setNewCampaign({...newCampaign, ctaLink: e.target.value})}
+                placeholder="https://..."
+                className="w-full px-3 py-2 rounded-lg bg-gray-800/80 border border-gray-600 text-white text-sm focus:border-purple-500 focus:outline-none"
+                data-testid="cta-link-input"
+              />
+            </div>
+          )}
+          
+          {/* Aperçu du bouton */}
+          {newCampaign.ctaType && newCampaign.ctaType !== 'none' && (
+            <div className="mt-3 flex justify-center">
+              <div 
+                style={{
+                  padding: '10px 24px',
+                  borderRadius: '25px',
+                  background: newCampaign.ctaType === 'reserver' ? '#9333ea' : newCampaign.ctaType === 'offre' ? '#d91cd2' : '#6366f1',
+                  color: '#fff',
+                  fontWeight: '600',
+                  fontSize: '13px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 15px rgba(147, 51, 234, 0.3)'
+                }}
+              >
+                {newCampaign.ctaType === 'reserver' && '🗓️'}
+                {newCampaign.ctaType === 'offre' && '🎁'}
+                {newCampaign.ctaType === 'personnalise' && '✨'}
+                {newCampaign.ctaText || (newCampaign.ctaType === 'reserver' ? 'RÉSERVER' : newCampaign.ctaType === 'offre' ? 'VOIR L\'OFFRE' : 'EN SAVOIR PLUS')}
+              </div>
+            </div>
+          )}
+        </div>
         
         {/* === PARAMÈTRES AVANCÉS (ACCORDÉON) === */}
         <div className="mb-4">
