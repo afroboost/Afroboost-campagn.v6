@@ -7457,9 +7457,11 @@ def scheduler_job():
     scheduler_db = mongo_client_sync[os.environ.get('DB_NAME', 'test_database')]
     
     try:
-        now = datetime.now(timezone.utc)
-        now_str = now.strftime('%H:%M:%S')
-        SCHEDULER_LAST_HEARTBEAT = now.isoformat()
+        now_utc = datetime.now(timezone.utc)
+        now_paris = datetime.now(PARIS_TZ)
+        now_str_utc = now_utc.strftime('%H:%M:%S')
+        now_str_paris = now_paris.strftime('%H:%M:%S')
+        SCHEDULER_LAST_HEARTBEAT = now_utc.isoformat()
         
         # Chercher les campagnes programmées (inclut pending_quota pour retry automatique)
         campaigns = list(scheduler_db.campaigns.find(
@@ -7467,7 +7469,9 @@ def scheduler_job():
             {"_id": 0}
         ))
         
-        logger.info(f"[SCHEDULER] 📋 {len(campaigns)} campagne(s) à vérifier ({now_str} UTC)")
+        # LOG DEBUG : Afficher les deux heures pour diagnostic
+        print(f"[SCHEDULER] ⏰ Scan: {now_str_paris} Paris / {now_str_utc} UTC | {len(campaigns)} campagne(s)")
+        logger.info(f"[SCHEDULER] 📋 {len(campaigns)} campagne(s) à vérifier ({now_str_paris} Paris)")
         
         for campaign in campaigns:
             try:
