@@ -63,7 +63,7 @@ class TestBackendAPIs:
     def test_smart_entry_endpoint(self):
         """Test smart-entry endpoint for chat initialization"""
         response = requests.post(f"{BASE_URL}/api/chat/smart-entry", json={
-            "firstName": "TestUser",
+            "name": "TestUser",
             "email": "test@example.com",
             "whatsapp": "+41791234567"
         })
