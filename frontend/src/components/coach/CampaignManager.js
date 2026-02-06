@@ -7,8 +7,9 @@
  * ⚠️ SECTION CRITIQUE: Ne pas modifier la logique du badge ⏳ Auto
  */
 
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { isWhatsAppConfigured } from '../../services/whatsappService';
+import { parseMediaUrl } from '../../services/MediaParser';
 
 const CampaignManager = ({
   // === ÉTATS PRINCIPAUX ===
@@ -18,6 +19,8 @@ const CampaignManager = ({
   editingCampaignId,
   schedulerHealth,
   
+  // === MÉDIAS DISPONIBLES ===
+  mediaLinks = [], // Liste des médias enregistrés
   // === ÉTATS ENVOI DIRECT ===
   directSendMode,
   setDirectSendMode,
