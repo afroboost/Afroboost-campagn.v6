@@ -1,5 +1,39 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 6 Février 2026 - FIX CRASH & MEDIA PARSER ✅
+
+### MISSION ACCOMPLIE
+
+#### Problème Résolu : SyntaxError parseMediaUrl
+- **Cause** : Doublon de déclaration - `parseMediaUrl` importé de `MediaParser.js` ET redéclaré localement
+- **Solution** : Suppression de la fonction locale, utilisation de l'import
+
+| Fichier | Modification | Statut |
+|---------|--------------|--------|
+| `CoachDashboard.js` ligne 175-196 | Suppression fonction locale | ✅ |
+| `MediaDisplay` composant | Adapté au nouveau format | ✅ |
+
+#### MediaParser.js - Service implémenté
+```javascript
+// Supporte YouTube, Google Drive, images et vidéos directes
+export const parseMediaUrl = (url) => {
+  // YouTube → { type: 'youtube', embedUrl, thumbnailUrl, videoId }
+  // Drive → { type: 'drive', embedUrl, thumbnailUrl, directUrl }
+  // Image → { type: 'image', directUrl, thumbnailUrl }
+}
+```
+
+#### Validation Scheduler (Test 2 min)
+| Critère | Résultat |
+|---------|----------|
+| Campagne détectée | ✅ `[DEBUG] ⏳ Attente` |
+| Envoi à l'heure exacte | ✅ `[DEBUG] ✅ ENVOI!` |
+| Message inséré DB | ✅ |
+| Socket.IO émis | ✅ `200 OK` |
+| Statut → completed | ✅ |
+
+---
+
 ## Mise à jour du 6 Février 2026 - FIX SCHEDULER FUSEAU HORAIRE ✅
 
 ### MISSION CRITIQUE RÉSOLUE - Tests 100% réussis (14/14)
