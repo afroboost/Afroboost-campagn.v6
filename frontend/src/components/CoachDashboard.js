@@ -5312,37 +5312,130 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
         )}
 
         {/* === CAMPAIGNS TAB === */}
-        {/* [CAMPAGNE_START] - Section critique: Ne pas modifier sans tests approfondis du badge ⏳ Auto */}
+        {/* [CAMPAGNE_START] - Section extraite vers CampaignManager.js */}
         {tab === "campaigns" && (
-          <div className="card-gradient rounded-xl p-4 sm:p-6">
-            {/* Header responsive */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
-              <h2 className="font-semibold text-white text-lg sm:text-xl">📢 Gestionnaire de Campagnes</h2>
-              
-              {/* === BADGE DE SANTÉ DU SCHEDULER === */}
-              {(() => {
-                const isActive = schedulerHealth.status === "active" && schedulerHealth.last_run;
-                const lastRunDate = schedulerHealth.last_run ? new Date(schedulerHealth.last_run) : null;
-                const now = new Date();
-                const diffSeconds = lastRunDate ? Math.floor((now - lastRunDate) / 1000) : 999;
-                const isRecent = diffSeconds < 60;
-                const isHealthy = isActive && isRecent;
-                
-                return (
-                  <div 
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
-                      isHealthy 
-                        ? 'bg-green-500/20 border border-green-500/50 text-green-400' 
-                        : 'bg-red-500/20 border border-red-500/50 text-red-400'
-                    }`}
-                    title={lastRunDate ? `Dernier scan: ${lastRunDate.toLocaleTimeString()}` : 'Statut inconnu'}
-                  >
-                    <span className={`w-2 h-2 rounded-full ${isHealthy ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
-                    {isHealthy ? '● Automate : Actif' : '● Automate : Arrêté'}
-                  </div>
-                );
-              })()}
-            </div>
+          <CampaignManager
+            // === ÉTATS PRINCIPAUX ===
+            campaigns={campaigns}
+            newCampaign={newCampaign}
+            setNewCampaign={setNewCampaign}
+            editingCampaignId={editingCampaignId}
+            schedulerHealth={schedulerHealth}
+            
+            // === ÉTATS ENVOI DIRECT ===
+            directSendMode={directSendMode}
+            setDirectSendMode={setDirectSendMode}
+            externalChannelsExpanded={externalChannelsExpanded}
+            setExternalChannelsExpanded={setExternalChannelsExpanded}
+            currentWhatsAppIndex={currentWhatsAppIndex}
+            instagramProfile={instagramProfile}
+            setInstagramProfile={setInstagramProfile}
+            messageCopied={messageCopied}
+            
+            // === CONTACT STATS ===
+            contactStats={contactStats}
+            allContacts={allContacts}
+            filteredContacts={filteredContacts}
+            selectedContactsForCampaign={selectedContactsForCampaign}
+            contactSearchQuery={contactSearchQuery}
+            setContactSearchQuery={setContactSearchQuery}
+            
+            // === DESTINATAIRES (PANIER) ===
+            selectedRecipients={selectedRecipients}
+            setSelectedRecipients={setSelectedRecipients}
+            activeConversations={activeConversations}
+            setActiveConversations={setActiveConversations}
+            showConversationDropdown={showConversationDropdown}
+            setShowConversationDropdown={setShowConversationDropdown}
+            conversationSearch={conversationSearch}
+            setConversationSearch={setConversationSearch}
+            
+            // === HISTORIQUE FILTRES ===
+            campaignHistoryFilter={campaignHistoryFilter}
+            setCampaignHistoryFilter={setCampaignHistoryFilter}
+            campaignLogs={campaignLogs}
+            
+            // === EMAIL RESEND ===
+            emailSendingProgress={emailSendingProgress}
+            emailSendingResults={emailSendingResults}
+            setEmailSendingResults={setEmailSendingResults}
+            testEmailAddress={testEmailAddress}
+            setTestEmailAddress={setTestEmailAddress}
+            testEmailStatus={testEmailStatus}
+            
+            // === WHATSAPP ===
+            whatsAppConfig={whatsAppConfig}
+            setWhatsAppConfig={setWhatsAppConfig}
+            showWhatsAppConfig={showWhatsAppConfig}
+            setShowWhatsAppConfig={setShowWhatsAppConfig}
+            whatsAppSendingProgress={whatsAppSendingProgress}
+            whatsAppSendingResults={whatsAppSendingResults}
+            setWhatsAppSendingResults={setWhatsAppSendingResults}
+            testWhatsAppNumber={testWhatsAppNumber}
+            setTestWhatsAppNumber={setTestWhatsAppNumber}
+            testWhatsAppStatus={testWhatsAppStatus}
+            
+            // === ENVOI GROUPÉ ===
+            bulkSendingInProgress={bulkSendingInProgress}
+            bulkSendingProgress={bulkSendingProgress}
+            bulkSendingResults={bulkSendingResults}
+            setBulkSendingResults={setBulkSendingResults}
+            
+            // === IA WHATSAPP ===
+            aiConfig={aiConfig}
+            setAiConfig={setAiConfig}
+            showAIConfig={showAIConfig}
+            setShowAIConfig={setShowAIConfig}
+            aiLogs={aiLogs}
+            aiTestMessage={aiTestMessage}
+            setAiTestMessage={setAiTestMessage}
+            aiTestResponse={aiTestResponse}
+            aiTestLoading={aiTestLoading}
+            
+            // === PREVIEW MÉDIA ===
+            resolvedThumbnail={resolvedThumbnail}
+            
+            // === HANDLERS ===
+            handleTestEmail={handleTestEmail}
+            handleSendEmailCampaign={handleSendEmailCampaign}
+            handleTestWhatsApp={handleTestWhatsApp}
+            handleSendWhatsAppCampaign={handleSendWhatsAppCampaign}
+            handleBulkSendCampaign={handleBulkSendCampaign}
+            handleSaveWhatsAppConfig={handleSaveWhatsAppConfig}
+            handleSaveAIConfig={handleSaveAIConfig}
+            handleTestAI={handleTestAI}
+            handleClearAILogs={handleClearAILogs}
+            handleEditCampaign={handleEditCampaign}
+            
+            // === FONCTIONS CAMPAGNES ===
+            createCampaign={createCampaign}
+            cancelEditCampaign={cancelEditCampaign}
+            launchCampaignWithSend={launchCampaignWithSend}
+            deleteCampaign={deleteCampaign}
+            addScheduleSlot={addScheduleSlot}
+            removeScheduleSlot={removeScheduleSlot}
+            updateScheduleSlot={updateScheduleSlot}
+            
+            // === FONCTIONS CONTACTS ===
+            toggleContactForCampaign={toggleContactForCampaign}
+            toggleAllContacts={toggleAllContacts}
+            getContactsForDirectSend={getContactsForDirectSend}
+            getCurrentWhatsAppContact={getCurrentWhatsAppContact}
+            nextWhatsAppContact={nextWhatsAppContact}
+            prevWhatsAppContact={prevWhatsAppContact}
+            
+            // === FONCTIONS LIENS ===
+            formatPhoneForWhatsApp={formatPhoneForWhatsApp}
+            generateWhatsAppLink={generateWhatsAppLink}
+            generateGroupedEmailLink={generateGroupedEmailLink}
+            generateEmailLink={generateEmailLink}
+            copyMessageForInstagram={copyMessageForInstagram}
+            markResultSent={markResultSent}
+            
+            // === UTILS ===
+            showCampaignToast={showCampaignToast}
+            API={API}
+          />
             
             {/* === SECTION CANAUX EXTERNES (masquée par défaut - pour plus tard) === */}
             <div style={{ display: externalChannelsExpanded ? 'block' : 'none' }}>
