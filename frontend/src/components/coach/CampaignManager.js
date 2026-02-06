@@ -1022,12 +1022,13 @@ const CampaignManager = ({
                   <button 
                     type="button"
                     onClick={() => setShowConversationDropdown(false)}
-                    className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                    className="rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors flex items-center justify-center"
+                    style={{ minWidth: '44px', minHeight: '44px' }} /* Min 44px pour accessibilité mobile */
                     title="Fermer"
                     data-testid="close-recipient-dropdown"
                   >
-                    {/* Icône X filaire */}
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    {/* Icône X filaire - plus grand pour mobile */}
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                       <line x1="18" y1="6" x2="6" y2="18"></line>
                       <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
