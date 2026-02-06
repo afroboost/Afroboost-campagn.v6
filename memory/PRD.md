@@ -1,5 +1,40 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 6 Février 2026 - DÉBLOCAGE ENVOI & ÉLIGIBILITÉ ✅
+
+### Scheduler fonctionnel
+```
+[SCHEDULER] ⏰ 15:10:43 Paris | 1 campagne(s)
+[DEBUG] ✅ ENVOI! 'TEST IMMÉDIAT'
+[POSER] ✅ Message stocké en DB
+[SCHEDULER] 🟢 completed (✓1/✗0)
+```
+
+### Vérification éligibilité intégrée (Frontend)
+```javascript
+// ChatWidget.js - Nouveau flow
+handleReservationClick() {
+  1. checkReservationEligibility() → POST /check-reservation-eligibility
+  2. Si canReserve: false → Affiche erreur "Code invalide"
+  3. Si canReserve: true → Ouvre le BookingPanel
+}
+```
+
+### États ajoutés
+- `reservationEligibility` : Résultat de la vérification
+- `handleReservationClick` : Vérifie avant d'ouvrir
+
+### Tests validés
+```
+✅ Campagne "maintenant" → Envoyée en < 60s
+✅ Message visible dans /api/messages/sync
+✅ Frontend compile sans erreur
+```
+
+### server.py : 7449 lignes ✅
+
+---
+
 ## Mise à jour du 6 Février 2026 - CODE = RÉSERVATION ✅
 
 ### Système "Code = Pass Unique"
