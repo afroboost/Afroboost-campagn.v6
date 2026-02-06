@@ -1302,19 +1302,44 @@ const CampaignManager = ({
           )}
           
           {/* URL du bouton (pour offre et personnalisé) */}
-          {(newCampaign.ctaType === 'offre' || newCampaign.ctaType === 'personnalise') && (
-            <div className="mb-2">
-              <label className="block mb-1 text-gray-400 text-xs">Lien du bouton</label>
-              <input 
-                type="url"
-                value={newCampaign.ctaLink || ''}
-                onChange={e => setNewCampaign({...newCampaign, ctaLink: e.target.value})}
-                placeholder="https://..."
-                className="w-full px-3 py-2 rounded-lg bg-gray-800/80 border border-gray-600 text-white text-sm focus:border-purple-500 focus:outline-none"
-                data-testid="cta-link-input"
-              />
-            </div>
-          )}
+          {(newCampaign.ctaType === 'offre' || newCampaign.ctaType === 'personnalise') && (() => {
+            // Validation de l'URL
+            const urlValue = newCampaign.ctaLink || '';
+            const isValidUrl = !urlValue || urlValue.startsWith('http://') || urlValue.startsWith('https://') || urlValue.startsWith('#');
+            const isEmpty = urlValue.trim() === '';
+            const showError = !isEmpty && !isValidUrl;
+            
+            return (
+              <div className="mb-2">
+                <label className="block mb-1 text-gray-400 text-xs">
+                  Lien du bouton 
+                  {showError && <span className="text-red-400 ml-2">⚠️ URL invalide</span>}
+                </label>
+                <input 
+                  type="url"
+                  value={urlValue}
+                  onChange={e => setNewCampaign({...newCampaign, ctaLink: e.target.value})}
+                  placeholder="https://..."
+                  className={`w-full px-3 py-2 rounded-lg bg-gray-800/80 text-white text-sm focus:outline-none transition-colors ${
+                    showError 
+                      ? 'border-2 border-red-500 focus:border-red-400' 
+                      : 'border border-gray-600 focus:border-purple-500'
+                  }`}
+                  data-testid="cta-link-input"
+                />
+                {showError && (
+                  <p className="text-red-400 text-xs mt-1">
+                    L'URL doit commencer par https:// ou http://
+                  </p>
+                )}
+                {isEmpty && (newCampaign.ctaType === 'offre' || newCampaign.ctaType === 'personnalise') && (
+                  <p className="text-yellow-400 text-xs mt-1">
+                    ⚠️ Lien requis pour ce type de bouton
+                  </p>
+                )}
+              </div>
+            );
+          })()}
           
           {/* Aperçu du bouton */}
           {newCampaign.ctaType && newCampaign.ctaType !== 'none' && (
