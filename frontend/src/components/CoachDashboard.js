@@ -1117,6 +1117,7 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
     title: '',
     description: '',
     custom_thumbnail: '',
+    cta_type: 'PERSONNALISE', // Type de CTA: RESERVER | OFFRE | PERSONNALISE
     cta_text: '',
     cta_link: ''
   });
