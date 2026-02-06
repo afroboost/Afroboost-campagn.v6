@@ -36,10 +36,11 @@ class TestIteration57BackendAPIs:
         print(f"✅ TEST 2 PASSED: Courses endpoint returns {len(data)} courses")
     
     def test_promo_code_basxx_validates(self):
-        """TEST 3: Promo code 'basxx' validates correctly"""
+        """TEST 3: Promo code 'basxx' validates correctly (requires specific email)"""
+        # basxx is reserved for bassicustomshoes@gmail.com
         response = requests.post(f"{BASE_URL}/api/discount-codes/validate", json={
             "code": "basxx",
-            "email": "test@example.com"
+            "email": "bassicustomshoes@gmail.com"
         })
         assert response.status_code == 200
         data = response.json()
