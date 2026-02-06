@@ -297,10 +297,36 @@ export const ChatWidget = () => {
   // === VÉRIFICATION PERSISTANCE AU MONTAGE (AVANT tout render) ===
   // Déterminer le step initial IMMÉDIATEMENT basé sur localStorage
   // AVEC FALLBACK ROBUSTE pour données corrompues
+  // === ZERO-FLASH: Vérifie aussi ?group=ID pour adhésion instantanée ===
+  const [pendingGroupJoin, setPendingGroupJoin] = useState(() => {
+    // Détecter le paramètre ?group=ID AVANT le premier render
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const groupId = urlParams.get('group');
+      if (groupId) {
+        console.log('[ZERO-FLASH] 🚀 Paramètre group détecté:', groupId);
+        return groupId;
+      }
+    } catch (e) {
+      console.warn('[ZERO-FLASH] Erreur lecture URL:', e.message);
+    }
+    return null;
+  });
+  
   const getInitialStep = () => {
     try {
       // PRIORITÉ 1: Vérifier si c'est un abonné identifié (afroboost_profile)
       const profile = getStoredProfile();
+      
+      // ZERO-FLASH: Si profil existe ET ?group=ID → direct au chat (pas de formulaire)
+      const urlParams = new URLSearchParams(window.location.search);
+      const groupId = urlParams.get('group');
+      
+      if (profile && groupId) {
+        console.log('[ZERO-FLASH] ✅ Abonné reconnu + lien groupe → DIRECT chat');
+        return 'chat'; // Adhésion instantanée, formulaire JAMAIS affiché
+      }
+      
       if (profile) {
         console.log('[PERSISTENCE] ✅ Abonné reconnu:', profile.name, '- Code:', profile.code);
         return 'chat'; // Abonné → DIRECT au chat en mode plein écran
@@ -342,10 +368,26 @@ export const ChatWidget = () => {
     return 'form'; // Nouvel utilisateur ou données corrompues → formulaire
   };
   
-  // === DÉTERMINER SI MODE PLEIN ÉCRAN INITIAL (Abonné = plein écran) ===
+  // === DÉTERMINER SI MODE PLEIN ÉCRAN INITIAL (Abonné = plein écran OU lien groupe) ===
   const getInitialFullscreen = () => {
     const profile = getStoredProfile();
-    return !!profile; // Abonné reconnu → plein écran activé
+    // Si profil + lien groupe → plein écran immédiat
+    const urlParams = new URLSearchParams(window.location.search);
+    const groupId = urlParams.get('group');
+    return !!profile || (!!profile && !!groupId);
+  };
+  
+  // === OUVRIR LE CHAT AUTOMATIQUEMENT SI LIEN GROUPE ===
+  const getInitialOpen = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const groupId = urlParams.get('group');
+    const profile = getStoredProfile();
+    // Si lien groupe + profil → ouvrir immédiatement
+    if (groupId && profile) {
+      console.log('[ZERO-FLASH] 🚀 Chat ouvert automatiquement');
+      return true;
+    }
+    return false;
   };
 
   const [isOpen, setIsOpen] = useState(false);
