@@ -3706,295 +3706,33 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
           ))}
         </div>
 
-        {/* Reservations Tab - Responsive: Table on PC, Cards on Mobile */}
+        {/* Reservations Tab - Utilise le composant extrait ReservationTab */}
         {tab === "reservations" && (
-          <div className="card-gradient rounded-xl p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-              <div>
-                <h2 className="font-semibold text-white text-lg sm:text-xl">{t('reservationsList')}</h2>
-                <p className="text-white/50 text-xs mt-1">
-                  {reservationPagination.total > 0 
-                    ? `Affichage ${((reservationPagination.page - 1) * reservationPagination.limit) + 1}-${Math.min(reservationPagination.page * reservationPagination.limit, reservationPagination.total)} sur ${reservationPagination.total} réservations`
-                    : 'Aucune réservation'}
-                </p>
-              </div>
-              <div className="flex gap-2 flex-wrap">
-                <button onClick={() => setShowScanner(true)} className="btn-primary px-3 py-2 rounded-lg flex items-center gap-2 text-xs sm:text-sm" data-testid="scan-ticket-btn">
-                  📷 Scanner
-                </button>
-                <button onClick={exportCSV} className="csv-btn text-xs sm:text-sm" data-testid="export-csv">{t('downloadCSV')}</button>
-              </div>
-            </div>
-            
-            {/* Barre de recherche réservations */}
-            <div className="mb-4">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="🔍 Rechercher par nom, email, WhatsApp, date, code..."
-                  value={reservationsSearch}
-                  onChange={(e) => setReservationsSearch(e.target.value)}
-                  className="w-full px-4 py-2.5 pl-10 rounded-lg text-sm"
-                  style={{ background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.3)', color: '#fff' }}
-                  data-testid="reservations-search-input"
-                />
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50">🔍</span>
-                {reservationsSearch && (
-                  <button
-                    onClick={() => setReservationsSearch('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
-                  >✕</button>
-                )}
-              </div>
-              {reservationsSearch && (
-                <p className="text-xs text-purple-400 mt-1">
-                  {filteredReservations.length} résultat(s)
-                </p>
-              )}
-            </div>
-            
-            {/* Pagination Controls */}
-            {reservationPagination.pages > 1 && (
-              <div className="flex justify-center items-center gap-2 mb-4">
-                <button 
-                  onClick={() => loadReservations(reservationPagination.page - 1)}
-                  disabled={reservationPagination.page <= 1 || loadingReservations}
-                  className="px-3 py-1 rounded bg-purple-600/50 text-white text-sm disabled:opacity-30 hover:bg-purple-600"
-                >
-                  ← Précédent
-                </button>
-                <span className="text-white text-sm px-3">
-                  Page {reservationPagination.page} / {reservationPagination.pages}
-                </span>
-                <button 
-                  onClick={() => loadReservations(reservationPagination.page + 1)}
-                  disabled={reservationPagination.page >= reservationPagination.pages || loadingReservations}
-                  className="px-3 py-1 rounded bg-purple-600/50 text-white text-sm disabled:opacity-30 hover:bg-purple-600"
-                >
-                  Suivant →
-                </button>
-              </div>
-            )}
-            
-            {loadingReservations && (
-              <div className="text-center py-4 text-purple-400">⏳ Chargement...</div>
-            )}
-            
-            {/* === MOBILE VIEW: Cards === */}
-            <div className="block md:hidden space-y-3 max-h-[600px] overflow-y-auto scrollbar-thin pr-2">
-              {filteredReservations.map(r => {
-                const dt = new Date(r.datetime);
-                const isProduct = r.selectedVariants || r.trackingNumber || r.shippingStatus !== 'pending';
-                return (
-                  <div key={r.id} className={`p-4 rounded-lg glass ${r.validated ? 'border border-green-500/30' : 'border border-purple-500/20'}`}>
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <span className="text-pink-400 font-bold text-sm">{r.reservationCode || '-'}</span>
-                        <h3 className="text-white font-semibold">{r.userName}</h3>
-                        <p className="text-white/60 text-xs">{r.userEmail}</p>
-                        {r.userWhatsapp && <p className="text-white/60 text-xs">📱 {r.userWhatsapp}</p>}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {r.validated ? (
-                          <span className="px-2 py-1 rounded text-xs bg-green-600 text-white">✅</span>
-                        ) : (
-                          <span className="px-2 py-1 rounded text-xs bg-yellow-600 text-white">⏳</span>
-                        )}
-                        <button 
-                          onClick={() => deleteReservation(r.id)}
-                          className="p-2 rounded-lg hover:bg-red-500/20 transition-all"
-                          title={t('deleteReservation')}
-                          data-testid={`delete-reservation-${r.id}`}
-                        >
-                          <span style={{ color: '#ef4444', fontSize: '16px' }}>🗑️</span>
-                        </button>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs text-white/80">
-                      <div><span className="opacity-50">Cours:</span> {r.courseName}</div>
-                      <div><span className="opacity-50">Date:</span> {dt.toLocaleDateString('fr-CH')}</div>
-                      <div><span className="opacity-50">Offre:</span> {r.offerName}</div>
-                      <div><span className="opacity-50">Total:</span> <span className="text-white font-bold">CHF {r.totalPrice || r.price}</span></div>
-                    </div>
-                    {isProduct && (
-                      <div className="mt-3 pt-3 border-t border-white/10 flex gap-2">
-                        <input 
-                          type="text" 
-                          placeholder="N° suivi" 
-                          defaultValue={r.trackingNumber || ''}
-                          onBlur={(e) => updateTracking(r.id, e.target.value, r.shippingStatus || 'pending')}
-                          className="px-2 py-1 rounded text-xs neon-input flex-1"
-                        />
-                        <select 
-                          defaultValue={r.shippingStatus || 'pending'}
-                          onChange={(e) => updateTracking(r.id, r.trackingNumber, e.target.value)}
-                          className="px-2 py-1 rounded text-xs neon-input"
-                        >
-                          <option value="pending">📦</option>
-                          <option value="shipped">🚚</option>
-                          <option value="delivered">✅</option>
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-              {reservations.length === 0 && !reservationsSearch && <p className="text-center py-8 text-white/50">{t('noReservations')}</p>}
-              {filteredReservations.length === 0 && reservationsSearch && <p className="text-center py-8 text-white/50">Aucune réservation correspondante</p>}
-            </div>
-            
-            {/* === DESKTOP VIEW: Table === */}
-            <div className="hidden md:block overflow-x-auto overflow-y-auto rounded-lg relative" style={{ maxHeight: '600px' }}>
-              <table className="coach-table">
-                <thead className="sticky top-0 bg-black z-10">
-                  <tr>
-                    <th className="bg-black">{t('code')}</th>
-                    <th className="bg-black">Origine</th>
-                    <th className="bg-black">{t('name')}</th>
-                    <th className="bg-black">{t('email')}</th>
-                    <th className="bg-black">WhatsApp</th>
-                    <th className="bg-black">{t('courses')}</th>
-                    <th className="bg-black">{t('date')}</th>
-                    <th className="bg-black">{t('time')}</th>
-                    <th className="bg-black">{t('offer')}</th>
-                    <th className="bg-black">Spécifications</th>
-                    <th className="bg-black">{t('qty')}</th>
-                    <th className="bg-black">{t('total')}</th>
-                    <th className="bg-black">Statut</th>
-                    <th className="bg-black">📦</th>
-                    <th className="bg-black">🗑️</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredReservations.map(r => {
-                    const dt = new Date(r.datetime);
-                    const isProduct = r.selectedVariants || r.trackingNumber || r.shippingStatus !== 'pending';
-                    const isSubscriber = r.promoCode || r.source === 'chat_widget' || r.type === 'abonné';
-                    return (
-                      <tr key={r.id} className={r.validated ? 'bg-green-900/20' : ''}>
-                        <td style={{ fontWeight: 'bold', color: '#d91cd2' }}>{r.reservationCode || '-'}</td>
-                        {/* Colonne Origine */}
-                        <td>
-                          {isSubscriber ? (
-                            <span className="px-2 py-1 rounded text-xs bg-purple-600/40 text-purple-300 whitespace-nowrap" title={r.promoCode ? `Code: ${r.promoCode}` : ''}>
-                              💎 ABONNÉ {r.promoCode && <span className="opacity-70">({r.promoCode})</span>}
-                            </span>
-                          ) : (
-                            <span className="px-2 py-1 rounded text-xs bg-amber-600/40 text-amber-300 whitespace-nowrap">
-                              💰 ACHAT
-                            </span>
-                          )}
-                        </td>
-                        <td>{r.userName || 'N/A'}</td>
-                        <td>{r.userEmail || '-'}</td>
-                        <td>
-                          {r.userWhatsapp ? (
-                            <a 
-                              href={`https://wa.me/${r.userWhatsapp.replace(/[+\s]/g, '')}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-green-400 hover:text-green-300 underline"
-                              title="Contacter sur WhatsApp"
-                            >
-                              {r.userWhatsapp} 📲
-                            </a>
-                          ) : '-'}
-                        </td>
-                        <td>{r.courseName || '-'}</td><td>{dt.toLocaleDateString('fr-CH')}</td>
-                        <td>{dt.toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' })}</td>
-                        <td>{r.offerName || '-'}</td>
-                        {/* Colonne Spécifications */}
-                        <td>
-                          {(r.selectedVariants || r.metadata) ? (
-                            <div className="text-xs">
-                              {/* Variantes produit */}
-                              {r.selectedVariants?.size && <span className="block text-blue-400">📏 {r.selectedVariants.size}</span>}
-                              {r.selectedVariants?.color && <span className="block text-pink-400">🎨 {r.selectedVariants.color}</span>}
-                              {r.selectedVariants?.model && <span className="block text-green-400">📦 {r.selectedVariants.model}</span>}
-                              {/* Métadonnées Stripe */}
-                              {r.metadata?.size && !r.selectedVariants?.size && <span className="block text-blue-400">📏 {r.metadata.size}</span>}
-                              {r.metadata?.color && !r.selectedVariants?.color && <span className="block text-pink-400">🎨 {r.metadata.color}</span>}
-                              {r.metadata?.variant && <span className="block text-purple-400">🏷️ {r.metadata.variant}</span>}
-                            </div>
-                          ) : (
-                            <span className="text-xs opacity-30">-</span>
-                          )}
-                        </td>
-                        <td>{r.quantity || 1}</td>
-                        <td style={{ fontWeight: 'bold' }}>
-                          CHF {r.totalPrice || r.price}
-                          {r.tva > 0 && <span className="text-xs opacity-50 block">TVA {r.tva}%</span>}
-                        </td>
-                        <td>
-                          {r.validated ? (
-                            <span className="px-2 py-1 rounded text-xs bg-green-600 text-white">✅ Validé</span>
-                          ) : (
-                            <span className="px-2 py-1 rounded text-xs bg-yellow-600 text-white">⏳ En attente</span>
-                          )}
-                        </td>
-                        {/* Shipping column for products */}
-                        <td>
-                          {isProduct ? (
-                            <div className="flex flex-col gap-1">
-                              <div className="flex gap-1">
-                                <input 
-                                  type="text" 
-                                  placeholder="N° suivi" 
-                                  defaultValue={r.trackingNumber || ''}
-                                  onBlur={(e) => updateTracking(r.id, e.target.value, r.shippingStatus || 'pending')}
-                                  className="px-2 py-1 rounded text-xs neon-input w-20"
-                                />
-                                {r.trackingNumber && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      // URL de tracking La Poste Suisse ou autre
-                                      const trackingUrl = r.trackingNumber.startsWith('99') 
-                                        ? `https://www.post.ch/swisspost-tracking?formattedParcelCodes=${r.trackingNumber}`
-                                        : `https://parcelsapp.com/fr/tracking/${r.trackingNumber}`;
-                                      window.open(trackingUrl, '_blank');
-                                    }}
-                                    className="px-2 py-1 rounded text-xs bg-blue-600 hover:bg-blue-700"
-                                    title="Ouvrir le suivi"
-                                  >
-                                    🔗
-                                  </button>
-                                )}
-                              </div>
-                              <select 
-                                defaultValue={r.shippingStatus || 'pending'}
-                                onChange={(e) => updateTracking(r.id, r.trackingNumber, e.target.value)}
-                                className="px-2 py-1 rounded text-xs neon-input"
-                              >
-                                <option value="pending">📦 En attente</option>
-                                <option value="shipped">🚚 Expédié</option>
-                                <option value="delivered">✅ Livré</option>
-                              </select>
-                            </div>
-                          ) : (
-                            <span className="text-xs opacity-30">-</span>
-                          )}
-                        </td>
-                        {/* Delete button */}
-                        <td>
-                          <button 
-                            onClick={() => deleteReservation(r.id)}
-                            className="p-2 rounded-lg hover:bg-red-500/20 transition-all"
-                            title={t('deleteReservation')}
-                            data-testid={`delete-reservation-${r.id}`}
-                          >
-                            <span style={{ color: '#ef4444' }}>🗑️</span>
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {reservations.length === 0 && !reservationsSearch && <tr><td colSpan="15" className="text-center py-8" style={{ opacity: 0.5 }}>{t('noReservations')}</td></tr>}
-                  {filteredReservations.length === 0 && reservationsSearch && <tr><td colSpan="15" className="text-center py-8" style={{ opacity: 0.5 }}>Aucune réservation correspondante</td></tr>}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <ReservationTab
+            reservations={filteredReservations}
+            pagination={reservationPagination}
+            search={reservationsSearch}
+            loading={loadingReservations}
+            handlers={{
+              onSearchChange: setReservationsSearch,
+              onClearSearch: () => setReservationsSearch(''),
+              onScanClick: () => setShowScanner(true),
+              onExportCSV: exportCSV,
+              onPageChange: (page) => loadReservations(page, reservationPagination.limit),
+              onValidateReservation: validateReservation,
+              onDeleteReservation: deleteReservation,
+              formatDateTime: (date) => {
+                if (!date) return '-';
+                try {
+                  return new Intl.DateTimeFormat('fr-FR', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                  }).format(new Date(date));
+                } catch { return date; }
+              }
+            }}
+            t={t}
+          />
         )}
 
         {/* Concept Tab */}
