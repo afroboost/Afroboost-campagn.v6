@@ -3812,6 +3812,108 @@ async def get_active_conversations_for_messaging():
             "error": str(e)
         }
 
+# --- Rejoindre un groupe automatiquement (adhésion via lien) ---
+class GroupJoinRequest(BaseModel):
+    group_id: str
+    email: str
+    name: str = ""
+    user_id: str = None
+
+@api_router.post("/groups/join")
+async def join_group_automatically(request: GroupJoinRequest):
+    """
+    Permet à un utilisateur déjà connecté de rejoindre un groupe via un lien ?group=ID.
+    Utilisé pour l'adhésion automatique sans re-saisie d'email.
+    """
+    try:
+        group_id = request.group_id
+        email = request.email
+        name = request.name or email.split('@')[0]
+        user_id = request.user_id
+        
+        logger.info(f"[GROUP-JOIN] 🚀 Tentative adhésion: {email} -> groupe {group_id}")
+        
+        # Vérifier si le groupe existe
+        # Chercher dans les sessions avec ce ID ou ce mode
+        group_session = await db.chat_sessions.find_one(
+            {"$or": [
+                {"id": group_id},
+                {"mode": group_id},
+                {"title": {"$regex": group_id, "$options": "i"}}
+            ]},
+            {"_id": 0}
+        )
+        
+        # Si le groupe n'existe pas, créer un groupe standard
+        if not group_session:
+            # Vérifier si c'est un mode standard (community, vip, promo)
+            if group_id in ["community", "vip", "promo"]:
+                mode_titles = {
+                    "community": "Communauté Générale",
+                    "vip": "Groupe VIP",
+                    "promo": "Offres Spéciales"
+                }
+                group_session = {
+                    "id": f"group_{group_id}_{uuid.uuid4().hex[:8]}",
+                    "mode": group_id,
+                    "title": mode_titles.get(group_id, f"Groupe {group_id}"),
+                    "participant_ids": [],
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                await db.chat_sessions.insert_one(group_session)
+                logger.info(f"[GROUP-JOIN] ✅ Nouveau groupe créé: {group_session['id']}")
+            else:
+                raise HTTPException(status_code=404, detail=f"Groupe {group_id} non trouvé")
+        
+        # Récupérer ou créer l'utilisateur
+        participant_id = user_id
+        if not participant_id:
+            # Chercher l'utilisateur par email
+            existing_user = await db.users.find_one({"email": email}, {"_id": 0})
+            if existing_user:
+                participant_id = existing_user.get("id")
+            else:
+                # Créer un nouvel utilisateur
+                participant_id = str(uuid.uuid4())
+                new_user = {
+                    "id": participant_id,
+                    "name": name,
+                    "email": email,
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                await db.users.insert_one(new_user)
+                logger.info(f"[GROUP-JOIN] ✅ Nouvel utilisateur créé: {name} ({email})")
+        
+        # Ajouter l'utilisateur au groupe s'il n'y est pas déjà
+        session_id = group_session.get("id")
+        current_participants = group_session.get("participant_ids", [])
+        
+        if participant_id not in current_participants:
+            await db.chat_sessions.update_one(
+                {"id": session_id},
+                {
+                    "$addToSet": {"participant_ids": participant_id},
+                    "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}
+                }
+            )
+            logger.info(f"[GROUP-JOIN] ✅ {name} ajouté au groupe {session_id}")
+        else:
+            logger.info(f"[GROUP-JOIN] ℹ️ {name} déjà membre du groupe {session_id}")
+        
+        return {
+            "success": True,
+            "message": f"Bienvenue dans le groupe {group_session.get('title', group_id)} !",
+            "conversation_id": session_id,
+            "group_name": group_session.get("title", ""),
+            "participant_id": participant_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[GROUP-JOIN] ❌ Erreur: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # --- Chat Sessions ---
 @api_router.get("/chat/sessions")
 async def get_chat_sessions(include_deleted: bool = False):
