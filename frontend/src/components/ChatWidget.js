@@ -3081,10 +3081,12 @@ export const ChatWidget = () => {
                   </div>
                 )}
 
+                {/* Messages Container - SMOOTH SCROLL: overflow-anchor none pour stabilité mobile */}
                 <div 
                   style={{
                     flex: 1,
                     overflowY: 'auto',
+                    overflowAnchor: 'none', /* Fix sauts visuels mobile clavier */
                     padding: '16px',
                     display: 'flex',
                     flexDirection: 'column',
