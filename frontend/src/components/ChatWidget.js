@@ -6,7 +6,6 @@ import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import { 
-  playNotificationSound, 
   parseMessageContent, 
   notifyPrivateMessage,
   stopTitleFlash 
@@ -17,6 +16,12 @@ import {
   registerServiceWorker,
   isSubscribed 
 } from '../services/pushNotificationService';
+import { 
+  isInSilenceHours, 
+  getSilenceHoursLabel,
+  playSoundIfAllowed,
+  SOUND_TYPES 
+} from '../services/SoundManager';
 import EmojiPicker from './EmojiPicker';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
