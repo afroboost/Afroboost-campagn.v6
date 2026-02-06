@@ -819,6 +819,65 @@ export const ChatWidget = () => {
   const [reservationLoading, setReservationLoading] = useState(false); // Chargement réservation
   const [reservationError, setReservationError] = useState(''); // Erreur réservation
 
+  // === HANDLER CONFIRMATION RÉSERVATION (extrait pour BookingPanel) ===
+  const handleConfirmReservation = useCallback(async () => {
+    if (!selectedCourse || !afroboostProfile) return;
+    
+    // Reset error state
+    setReservationError('');
+    setReservationLoading(true);
+    
+    // Utiliser les données du profil abonné (afroboostProfile)
+    const reservationData = {
+      userName: afroboostProfile?.name?.trim() || leadData?.firstName?.trim() || 'Abonné',
+      userEmail: (afroboostProfile?.email || leadData?.email || '').trim(),
+      userWhatsapp: (afroboostProfile?.whatsapp || leadData?.whatsapp || '').trim(),
+      userId: participantId || `guest-${Date.now()}`, // ID utilisateur requis
+      courseId: selectedCourse.id,
+      courseName: selectedCourse.name,
+      courseTime: selectedCourse.time,
+      datetime: new Date().toISOString(),
+      promoCode: (afroboostProfile?.code || '').trim().toUpperCase(),
+      source: 'chat_widget_abonne',
+      type: 'abonné',
+      offerId: selectedCourse.id,
+      offerName: selectedCourse.name,
+      price: selectedCourse.price || 0,
+      totalPrice: selectedCourse.price || 0
+    };
+    
+    // LOG pour debug
+    console.log('[RESERVATION] 📤 Envoi des données:', JSON.stringify(reservationData, null, 2));
+    
+    try {
+      const res = await axios.post(`${API}/reservations`, reservationData);
+      console.log('[RESERVATION] ✅ Réponse serveur:', res.data);
+      
+      if (res.data) {
+        // Succès : fermer le panneau et afficher message
+        setShowReservationPanel(false);
+        setSelectedCourse(null);
+        setReservationError('');
+        
+        // Message de confirmation dans le chat
+        const confirmMsg = {
+          type: 'ai',
+          text: `✅ Réservation confirmée !\n📅 ${selectedCourse.name}\n🕐 ${selectedCourse.time}\n💎 Code: ${afroboostProfile?.code || 'N/A'}\n👤 ${reservationData.userName}`,
+          sender: 'Coach Bassi'
+        };
+        setMessages(prev => [...prev, confirmMsg]);
+      }
+    } catch (err) {
+      console.error('[RESERVATION] ❌ Erreur:', err.response?.data || err.message);
+      // Afficher l'erreur dans l'UI (pas alert)
+      const errorMsg = err.response?.data?.detail || err.response?.data?.message || 'Erreur serveur, réessayez.';
+      setReservationError(errorMsg);
+    } finally {
+      // TOUJOURS réactiver le bouton
+      setReservationLoading(false);
+    }
+  }, [selectedCourse, afroboostProfile, leadData, participantId, setMessages]);
+
   // Email du coach autorisé
   const COACH_EMAIL = 'contact.artboost@gmail.com';
   
