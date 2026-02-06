@@ -7183,11 +7183,35 @@ def scheduler_send_whatsapp_sync(to_phone, message, media_url=None):
     if not clean_to.startswith("+"):
         clean_to = "+41" + clean_to.lstrip("0") if clean_to.startswith("0") else "+" + clean_to
     clean_from = from_number if from_number.startswith("+") else "+" + from_number
+    
+    # Envoi via API Twilio WhatsApp
+    try:
+        data = {
+            "From": f"whatsapp:{clean_from}",
+            "To": f"whatsapp:{clean_to}",
+            "Body": message
+        }
+        if media_url:
+            data["MediaUrl"] = media_url
+        
+        response = requests.post(
+            f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json",
+            data=data,
+            auth=(account_sid, auth_token),
+            timeout=30
+        )
+        
+        result = response.json()
+        if response.status_code in [200, 201]:
+            return True, None, result.get("sid")
+        else:
+            return False, result.get("message", "Unknown error"), None
+    except Exception as e:
+        return False, str(e), None
 
-def scheduler_send_internal_message_sync(scheduler_db, conversation_id, message_text, conversation_name="", media_url=None, cta_type=None, cta_text=None, cta_link=None):
-    """
-    Envoi synchrone de message INTERNE dans une conversation (utilisateur ou groupe).
-    Fonctionne de la même manière quelle que soit la cible car les deux possèdent un conversation_id.
+
+# NOTE: Les fonctions scheduler_send_internal_message_sync et scheduler_send_group_message_sync
+# sont importées depuis scheduler_engine.py (voir imports en haut du fichier)
     
     Args:
         scheduler_db: Connexion MongoDB synchrone
