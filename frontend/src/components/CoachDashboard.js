@@ -5597,14 +5597,59 @@ const CoachDashboard = ({ t, lang, onBack, onLogout, coachUser }) => {
                     />
                   </div>
 
+                  {/* CTA Type - Sélecteur */}
+                  <div className="md:col-span-2">
+                    <label className="text-white/70 text-sm mb-1 block">Type de bouton d'action (CTA)</label>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { type: 'RESERVER', label: '📅 Réserver', color: '#9333ea' },
+                        { type: 'OFFRE', label: '🛒 Offre', color: '#d91cd2' },
+                        { type: 'PERSONNALISE', label: '🔗 Personnalisé', color: '#6366f1' }
+                      ].map(opt => (
+                        <button
+                          key={opt.type}
+                          type="button"
+                          onClick={() => {
+                            setNewMediaLink(prev => ({ 
+                              ...prev, 
+                              cta_type: opt.type,
+                              cta_text: opt.type === 'RESERVER' ? 'RÉSERVER MA PLACE' :
+                                       opt.type === 'OFFRE' ? 'VOIR L\'OFFRE' :
+                                       prev.cta_text
+                            }));
+                          }}
+                          className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                          style={{
+                            background: newMediaLink.cta_type === opt.type ? opt.color : 'rgba(255,255,255,0.1)',
+                            border: `1px solid ${newMediaLink.cta_type === opt.type ? opt.color : 'rgba(255,255,255,0.2)'}`,
+                            color: '#fff',
+                            opacity: newMediaLink.cta_type === opt.type ? 1 : 0.7
+                          }}
+                          data-testid={`cta-type-${opt.type.toLowerCase()}`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-white/40 text-xs mt-2">
+                      {newMediaLink.cta_type === 'RESERVER' && '→ Le bouton ouvrira la page de réservation'}
+                      {newMediaLink.cta_type === 'OFFRE' && '→ Lien vers une page de paiement ou boutique'}
+                      {newMediaLink.cta_type === 'PERSONNALISE' && '→ Texte et URL libres'}
+                    </p>
+                  </div>
+
                   {/* CTA Text */}
                   <div>
-                    <label className="text-white/70 text-sm mb-1 block">Texte du bouton CTA</label>
+                    <label className="text-white/70 text-sm mb-1 block">Texte du bouton</label>
                     <input
                       type="text"
                       value={newMediaLink.cta_text}
                       onChange={(e) => setNewMediaLink(prev => ({ ...prev, cta_text: e.target.value }))}
-                      placeholder="Ex: Réserver ma place"
+                      placeholder={
+                        newMediaLink.cta_type === 'RESERVER' ? 'RÉSERVER MA PLACE' :
+                        newMediaLink.cta_type === 'OFFRE' ? 'VOIR L\'OFFRE' :
+                        'En savoir plus'
+                      }
                       className="w-full px-4 py-3 rounded-lg"
                       style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
                       data-testid="media-cta-text-input"
