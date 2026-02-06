@@ -1578,24 +1578,46 @@ const CampaignManager = ({
           </div>
         )}
         
-        <button type="submit" 
-          className={`px-6 py-3 rounded-lg w-full md:w-auto font-medium transition-all ${
-            editingCampaignId 
-              ? 'bg-green-600 hover:bg-green-700' 
-              : (selectedRecipients.length === 0 || !newCampaign.message.trim()) 
-                ? 'bg-gray-600 cursor-not-allowed opacity-60' 
-                : 'btn-primary'
-          }`}
-          disabled={(selectedRecipients.length === 0 && !newCampaign.channels.whatsapp && !newCampaign.channels.email && !newCampaign.channels.group) || !newCampaign.message.trim()}
-          data-testid="create-campaign-btn">
-          {!newCampaign.message.trim() 
-            ? '⚠️ Écrivez un message' 
-            : selectedRecipients.length === 0 && !newCampaign.channels.whatsapp && !newCampaign.channels.email && !newCampaign.channels.group 
-              ? '⚠️ Ajoutez des destinataires' 
-              : editingCampaignId 
-                ? '💾 Enregistrer' 
-                : `🚀 Créer (${selectedRecipients.length} dest.)`}
-        </button>
+        {/* Bouton de soumission avec validation CTA */}
+        {(() => {
+          // Validation CTA URL
+          const ctaNeedsUrl = newCampaign.ctaType === 'offre' || newCampaign.ctaType === 'personnalise';
+          const ctaUrlValue = newCampaign.ctaLink || '';
+          const ctaUrlValid = !ctaNeedsUrl || ctaUrlValue.trim() === '' || 
+            ctaUrlValue.startsWith('http://') || ctaUrlValue.startsWith('https://') || ctaUrlValue.startsWith('#');
+          const ctaUrlMissing = ctaNeedsUrl && ctaUrlValue.trim() === '';
+          
+          // Conditions de désactivation
+          const noRecipients = selectedRecipients.length === 0 && !newCampaign.channels.whatsapp && !newCampaign.channels.email && !newCampaign.channels.group;
+          const noMessage = !newCampaign.message.trim();
+          const invalidCtaUrl = ctaNeedsUrl && !ctaUrlValid;
+          const isDisabled = noRecipients || noMessage || invalidCtaUrl || ctaUrlMissing;
+          
+          return (
+            <button type="submit" 
+              className={`px-6 py-3 rounded-lg w-full md:w-auto font-medium transition-all ${
+                editingCampaignId 
+                  ? 'bg-green-600 hover:bg-green-700' 
+                  : isDisabled
+                    ? 'bg-gray-600 cursor-not-allowed opacity-60' 
+                    : 'btn-primary'
+              }`}
+              disabled={isDisabled}
+              data-testid="create-campaign-btn">
+              {noMessage 
+                ? '⚠️ Écrivez un message' 
+                : noRecipients
+                  ? '⚠️ Ajoutez des destinataires'
+                  : invalidCtaUrl
+                    ? '⚠️ URL du bouton invalide'
+                    : ctaUrlMissing
+                      ? '⚠️ Lien CTA requis'
+                      : editingCampaignId 
+                        ? '💾 Enregistrer' 
+                        : `🚀 Créer (${selectedRecipients.length} dest.)`}
+            </button>
+          );
+        })()}
       </form>
       
       {/* Campaign History */}
