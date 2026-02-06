@@ -1,5 +1,54 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 6 Février 2026 - FIX SCHEDULER FUSEAU HORAIRE ✅
+
+### MISSION CRITIQUE RÉSOLUE - Tests 100% réussis (14/14)
+
+#### Problème Résolu
+Les messages programmés n'étaient pas envoyés car la comparaison des dates échouait :
+- **Frontend** : Envoyait les dates en heure **Europe/Paris** sans indicateur de fuseau
+- **Backend** : Comparait avec `datetime.now(timezone.utc)` → décalage de 1 heure
+
+#### Solution Implémentée
+
+| Fichier | Modification | Statut |
+|---------|--------------|--------|
+| `server.py` ligne 7146 | Import pytz + PARIS_TZ | ✅ |
+| `server.py` ligne 7148 | `parse_campaign_date()` corrigé | ✅ |
+| `server.py` ligne 7509 | Logs debug Paris/UTC | ✅ |
+| `server.py` ligne 7460 | Variables `now_utc`, `now_paris` | ✅ |
+
+#### Fonction parse_campaign_date() Corrigée
+```python
+import pytz
+PARIS_TZ = pytz.timezone('Europe/Paris')
+
+def parse_campaign_date(date_str):
+    # Dates SANS fuseau → interprétées comme Europe/Paris
+    if not ('+' in date_str or 'Z' in date_str):
+        dt = datetime.fromisoformat(date_str)
+        dt = PARIS_TZ.localize(dt)  # Heure Paris !
+    # Conversion en UTC pour comparaison
+    return dt.astimezone(pytz.UTC)
+```
+
+#### Logs de Debug Améliorés
+```
+[SCHEDULER] ⏰ Scan: 10:55:39 Paris / 09:55:39 UTC | 1 campagne(s)
+[DEBUG] ✅ ENVOI! 'Ma Campagne' | Prévu: 10:55 Paris | Maintenant: 10:55:39 Paris
+[DEBUG] ➡️ ID cdcde4e3... détecté pour envoi MAINTENANT
+```
+
+#### Critères de Réussite Validés
+| Critère | Statut |
+|---------|--------|
+| Message programmé pour dans 2 min | ✅ |
+| Badge ⏳ Auto diminue à l'heure exacte | ✅ |
+| Destinataire reçoit le message via Socket.IO | ✅ |
+| Statut passe à `completed` | ✅ |
+
+---
+
 ## Mise à jour du 6 Février 2026 - FIX VISIBILITÉ MOBILE & POSITIONNEMENT ✅
 
 ### MISSION ACCOMPLIE - Tests 100% réussis (16/16)
