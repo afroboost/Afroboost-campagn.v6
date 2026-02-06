@@ -7533,7 +7533,7 @@ def scheduler_job():
                     # Marquer comme terminée si aucun contact
                     scheduler_db.campaigns.update_one(
                         {"id": campaign_id},
-                        {"$set": {"status": "completed", "updatedAt": now.isoformat()},
+                        {"$set": {"status": "completed", "updatedAt": now_utc.isoformat()},
                          "$addToSet": {"sentDates": {"$each": dates_to_process}}}
                     )
                     continue
@@ -7567,7 +7567,7 @@ def scheduler_job():
                                 "channel": "internal",
                                 "status": "failed",
                                 "error": "Aucun destinataire défini",
-                                "sentAt": now.isoformat()
+                                "sentAt": now_utc.isoformat()
                             })
                             fail_count += 1
                         else:
@@ -7593,7 +7593,7 @@ def scheduler_job():
                                         "status": "sent" if success else "failed",
                                         "error": error if not success else None,
                                         "sessionId": session_id,
-                                        "sentAt": now.isoformat()
+                                        "sentAt": now_utc.isoformat()
                                     }
                                     results.append(result_entry)
                                     
@@ -7614,7 +7614,7 @@ def scheduler_job():
                                         "channel": "internal",
                                         "status": "failed",
                                         "error": str(inner_e),
-                                        "sentAt": now.isoformat()
+                                        "sentAt": now_utc.isoformat()
                                     })
                                     print(f"[SCHEDULER] ❌ Exception Interne [{idx+1}]: {inner_e}")
                                     # Continue avec le suivant au lieu de tout arrêter
@@ -7629,7 +7629,7 @@ def scheduler_job():
                             "channel": "internal",
                             "status": "failed",
                             "error": str(e),
-                            "sentAt": now.isoformat()
+                            "sentAt": now_utc.isoformat()
                         })
                     
                     # Si UNIQUEMENT le canal internal est activé, on skip les autres canaux
@@ -7651,8 +7651,8 @@ def scheduler_job():
                                 "status": new_status,
                                 "results": results,
                                 "sentDates": new_sent_dates,
-                                "updatedAt": now.isoformat(),
-                                "lastProcessedAt": now.isoformat()
+                                "updatedAt": now_utc.isoformat(),
+                                "lastProcessedAt": now_utc.isoformat()
                             }}
                         )
                         
@@ -7685,7 +7685,7 @@ def scheduler_job():
                                 "channel": "email",
                                 "status": "sent" if success else "failed",
                                 "error": error if not success else None,
-                                "sentAt": now.isoformat()
+                                "sentAt": now_utc.isoformat()
                             }
                             results.append(result_entry)
                             
@@ -7727,7 +7727,7 @@ def scheduler_job():
                                 "status": "sent" if success else "failed",
                                 "error": error if not success else None,
                                 "sid": sid,
-                                "sentAt": now.isoformat()
+                                "sentAt": now_utc.isoformat()
                             }
                             results.append(result_entry)
                             
@@ -7765,7 +7765,7 @@ def scheduler_job():
                             "status": "sent" if success else "failed",
                             "error": error if not success else None,
                             "sessionId": session_id,
-                            "sentAt": now.isoformat()
+                            "sentAt": now_utc.isoformat()
                         }
                         results.append(result_entry)
                         
@@ -7805,8 +7805,8 @@ def scheduler_job():
                             "status": new_status,
                             "results": results,
                             "sentDates": new_sent_dates,
-                            "updatedAt": now.isoformat(),
-                            "lastQuotaError": now.isoformat()  # Timestamp du dernier échec quota
+                            "updatedAt": now_utc.isoformat(),
+                            "lastQuotaError": now_utc.isoformat()  # Timestamp du dernier échec quota
                         }}
                     )
                     
@@ -7830,8 +7830,8 @@ def scheduler_job():
                             "status": new_status,
                             "results": results,
                             "sentDates": new_sent_dates,
-                            "updatedAt": now.isoformat(),
-                            "lastProcessedAt": now.isoformat()
+                            "updatedAt": now_utc.isoformat(),
+                            "lastProcessedAt": now_utc.isoformat()
                         }}
                     )
                     
