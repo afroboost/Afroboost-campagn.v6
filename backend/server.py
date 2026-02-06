@@ -551,6 +551,10 @@ class Campaign(BaseModel):
     targetConversationName: Optional[str] = None  # Nom de la conversation pour affichage
     scheduledAt: Optional[str] = None  # ISO date or null for immediate
     status: str = "draft"  # "draft", "scheduled", "sending", "completed"
+    # Champs CTA pour boutons d'action
+    ctaType: Optional[str] = None  # "reserver", "offre", "personnalise"
+    ctaText: Optional[str] = None  # Texte du bouton
+    ctaLink: Optional[str] = None  # URL du bouton
     results: List[dict] = []
     createdAt: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updatedAt: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
@@ -568,6 +572,10 @@ class CampaignCreate(BaseModel):
     targetConversationId: Optional[str] = None  # ID de la conversation interne (legacy - premier du panier)
     targetConversationName: Optional[str] = None  # Nom de la conversation pour affichage
     scheduledAt: Optional[str] = None
+    # Champs CTA pour boutons d'action
+    ctaType: Optional[str] = None
+    ctaText: Optional[str] = None
+    ctaLink: Optional[str] = None
 
 class Concept(BaseModel):
     model_config = ConfigDict(extra="ignore")
