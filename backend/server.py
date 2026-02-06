@@ -7072,20 +7072,33 @@ async def scheduler_emit_group_message(request: Request):
     """
     Endpoint interne pour permettre au scheduler d'émettre des messages via Socket.IO.
     Appelé uniquement par le thread scheduler pour contourner les limitations asyncio.
+    
+    AMÉLIORATION: Émet en BROADCAST vers toutes les sessions communautaires
+    pour garantir la réception sur tous les mobiles.
     """
     try:
         body = await request.json()
         session_id = body.get("session_id")
         message_data = body.get("message")
+        broadcast = body.get("broadcast", True)  # Par défaut, broadcast activé
         
-        if not session_id or not message_data:
-            return {"success": False, "error": "session_id et message requis"}
+        if not message_data:
+            return {"success": False, "error": "message requis"}
         
-        # Émettre via Socket.IO
-        await emit_new_message(session_id, message_data)
-        logger.info(f"[SCHEDULER-EMIT] ✅ Message émis dans session {session_id}")
+        # Ajouter le session_id au message pour le frontend
+        message_data["session_id"] = session_id
         
-        return {"success": True, "session_id": session_id}
+        if broadcast:
+            # BROADCAST: Émettre à TOUS les clients connectés (pas de room spécifique)
+            await sio.emit('message_received', message_data)
+            logger.info(f"[SOCKET_PUSH] 📢 BROADCAST campagne vers TOUS les clients - Session source: {session_id}")
+        else:
+            # Émettre uniquement vers la room spécifique
+            await emit_new_message(session_id, message_data)
+        
+        logger.info(f"[SCHEDULER-EMIT] ✅ Message émis (broadcast={broadcast})")
+        
+        return {"success": True, "session_id": session_id, "broadcast": broadcast}
     except Exception as e:
         logger.error(f"[SCHEDULER-EMIT] ❌ Erreur: {e}")
         return {"success": False, "error": str(e)}
