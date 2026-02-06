@@ -977,7 +977,7 @@ export const ChatWidget = () => {
         
         // Notification sonore si message d'un autre
         if (messageData.senderId !== participantId) {
-          playNotificationSound(messageData.type === 'coach' ? 'coach' : 'message');
+          playSoundIfEnabled(messageData.type === 'coach' ? 'coach' : 'message');
         }
       });
       
