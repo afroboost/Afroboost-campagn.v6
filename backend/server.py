@@ -59,24 +59,20 @@ TWILIO_FROM_NUMBER = os.environ.get('TWILIO_FROM_NUMBER', '')
 # Un Account SID Twilio valide fait EXACTEMENT 34 caractères (AC + 32)
 if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER:
     if len(TWILIO_ACCOUNT_SID) != 34 or not TWILIO_ACCOUNT_SID.startswith('AC'):
-        print(f"[WHATSAPP-PROD] 🚨 ALERTE CRITIQUE: Account SID invalide ({len(TWILIO_ACCOUNT_SID)} chars, attendu: 34)")
-        print(f"[WHATSAPP-PROD] 🚨 SID actuel: {TWILIO_ACCOUNT_SID}")
+        print(f"[TWILIO] 🚨 Account SID invalide")
     else:
-        print(f"[WHATSAPP-PROD] ✅ Configuration Twilio VALIDE chargée depuis .env")
-        print(f"[WHATSAPP-PROD] 📱 Numéro de production VERROUILLÉ: {TWILIO_FROM_NUMBER}")
-        print(f"[WHATSAPP-PROD] 🔑 Account SID: {TWILIO_ACCOUNT_SID[:8]}...{TWILIO_ACCOUNT_SID[-4:]} (34 chars)")
+        print(f"[TWILIO] ✅ Config OK | FROM: {TWILIO_FROM_NUMBER}")
 else:
-    print(f"[WHATSAPP-PROD] ⚠️ Configuration Twilio incomplète dans .env - utilisation de la config en base")
+    print(f"[TWILIO] ⚠️ Config incomplète - fallback DB")
 
-# SÉCURITÉ: Ne JAMAIS utiliser le numéro Sandbox automatiquement
 TWILIO_SANDBOX_NUMBER = "+14155238886"
 if TWILIO_FROM_NUMBER == TWILIO_SANDBOX_NUMBER:
-    print(f"[WHATSAPP-PROD] 🚨 ALERTE: Numéro Sandbox détecté! Vérifiez votre configuration.")
+    print(f"[TWILIO] 🚨 Numéro Sandbox détecté!")
 
-# MongoDB connection - with fallback for production environments
+# MongoDB connection
 mongo_url = os.environ.get('MONGO_URL')
 if not mongo_url:
-    raise RuntimeError("MONGO_URL environment variable is required")
+    raise RuntimeError("MONGO_URL required")
 
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ.get('DB_NAME', 'afroboost_db')]
