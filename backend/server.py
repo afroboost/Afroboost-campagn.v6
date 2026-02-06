@@ -7341,41 +7341,26 @@ async def startup_scheduler():
                         "$set": {"status": "failed", "updatedAt": datetime.now(timezone.utc).isoformat()},
                         "$push": {"results": {
                                 "contactId": "system",
-                                "contactName": "Système",
                                 "channel": "system",
                                 "status": "failed",
-                                "error": "Timeout : Serveur redémarré après 30 min d'inactivité",
+                                "error": "Timeout zombie",
                                 "sentAt": datetime.now(timezone.utc).isoformat()
                             }
                         }
                     }
                 )
-                
-                # Enregistrer l'erreur dans campaign_errors
-                await db.campaign_errors.insert_one({
-                    "campaign_id": zombie_id,
-                    "campaign_name": zombie_name,
-                    "error_type": "zombie_timeout",
-                    "error_message": "Timeout : Serveur redémarré après 30 min d'inactivité",
-                    "error_code": "ZOMBIE_JOB_TIMEOUT",
-                    "channel": "system",
-                    "created_at": datetime.now(timezone.utc).isoformat()
-                })
-                
-                logger.info(f"[ZOMBIE-CLEANUP] ✅ Campagne '{zombie_name}' ({zombie_id}) remise en échec")
-            
-            print(f"[SYSTEM] 🧟 {len(zombie_campaigns)} campagne(s) zombie nettoyée(s)")
+            logger.info(f"[ZOMBIE] ✅ {len(zombie_campaigns)} nettoyées")
         else:
             logger.info("[ZOMBIE-CLEANUP] ✅ Aucune campagne zombie détectée")
             
     except Exception as e:
-        logger.error(f"[ZOMBIE-CLEANUP] ❌ Erreur nettoyage: {e}")
+        logger.error(f"[ZOMBIE] ❌ {e}")
     
-    # Ajouter le job s'il n'existe pas déjà (persiste dans MongoDB)
+    # Ajouter le job APScheduler
     try:
         existing_job = apscheduler.get_job('campaign_scheduler_job')
         if existing_job:
-            logger.info("[SCHEDULER] Job existant trouvé dans MongoDB - réutilisation")
+            logger.info("[SCHEDULER] Job existant réutilisé")
         else:
             apscheduler.add_job(
                 scheduler_job,
