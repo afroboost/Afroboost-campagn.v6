@@ -7610,6 +7610,11 @@ def scheduler_job():
                         else:
                             print(f"[SCHEDULER-INTERNAL] 🎯 Envoi vers {len(target_ids)} destinataire(s)")
                             
+                            # Récupérer les données CTA de la campagne
+                            cta_type = campaign.get("ctaType")
+                            cta_text = campaign.get("ctaText")
+                            cta_link = campaign.get("ctaLink")
+                            
                             # Boucle sur tous les targetIds
                             for idx, tid in enumerate(target_ids):
                                 try:
@@ -7620,7 +7625,11 @@ def scheduler_job():
                                         scheduler_db=scheduler_db,
                                         conversation_id=tid,
                                         message_text=message,
-                                        conversation_name=conv_name
+                                        conversation_name=conv_name,
+                                        media_url=media_url if media_url else None,
+                                        cta_type=cta_type,
+                                        cta_text=cta_text,
+                                        cta_link=cta_link
                                     )
                                     
                                     result_entry = {
