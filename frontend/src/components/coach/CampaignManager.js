@@ -1117,26 +1117,114 @@ const CampaignManager = ({
           <p className="text-xs text-purple-400 mt-1">Variables disponibles: {'{prénom}'} - sera remplacé par le nom du contact</p>
         </div>
         
-        {/* Media */}
-        <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block mb-2 text-white text-sm">URL du visuel (image/vidéo)</label>
-            <input type="url" value={newCampaign.mediaUrl} onChange={e => setNewCampaign({...newCampaign, mediaUrl: e.target.value})}
-              className="w-full px-4 py-3 rounded-lg neon-input" placeholder="https://..." />
-          </div>
-          <div>
-            <label className="block mb-2 text-white text-sm">Format</label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
-                <input type="radio" name="mediaFormat" checked={newCampaign.mediaFormat === "9:16"}
-                  onChange={() => setNewCampaign({...newCampaign, mediaFormat: "9:16"})} />
-                9:16 (Stories)
-              </label>
-              <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
-                <input type="radio" name="mediaFormat" checked={newCampaign.mediaFormat === "16:9"}
-                  onChange={() => setNewCampaign({...newCampaign, mediaFormat: "16:9"})} />
-                16:9 (Post)
-              </label>
+        {/* === MÉDIA & CTA === */}
+        <div className="mb-4 p-4 rounded-xl glass border border-purple-500/30">
+          <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+            📎 Joindre un média
+            <span className="text-xs text-purple-400 font-normal">(optionnel)</span>
+          </h4>
+          
+          {/* Sélecteur de média existant */}
+          {mediaLinks && mediaLinks.length > 0 && (
+            <div className="mb-4">
+              <label className="block mb-2 text-white/70 text-sm">Vos médias enregistrés</label>
+              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 rounded-lg bg-black/30">
+                {mediaLinks.map(media => {
+                  const isSelected = newCampaign.mediaUrl === media.video_url || 
+                                    (media.thumbnail && newCampaign.mediaUrl === media.thumbnail);
+                  return (
+                    <button
+                      key={media.id}
+                      type="button"
+                      onClick={() => {
+                        setNewCampaign(prev => ({
+                          ...prev,
+                          mediaUrl: media.video_url || media.thumbnail,
+                          mediaTitle: media.title,
+                          mediaCta: media.cta_type ? {
+                            type: media.cta_type,
+                            text: media.cta_text,
+                            url: media.cta_link
+                          } : null
+                        }));
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
+                      style={{
+                        background: isSelected ? 'rgba(147, 51, 234, 0.4)' : 'rgba(255,255,255,0.1)',
+                        border: isSelected ? '2px solid #9333ea' : '1px solid rgba(255,255,255,0.2)'
+                      }}
+                      data-testid={`select-media-${media.slug}`}
+                    >
+                      {media.thumbnail && (
+                        <img 
+                          src={media.thumbnail} 
+                          alt="" 
+                          className="w-10 h-10 rounded object-cover"
+                          onError={(e) => e.target.style.display = 'none'}
+                        />
+                      )}
+                      <span className="text-white text-xs truncate max-w-[100px]">{media.title}</span>
+                      {media.cta_type && (
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-purple-500/30 text-purple-300">
+                          {media.cta_type === 'RESERVER' ? '📅' : media.cta_type === 'OFFRE' ? '🛒' : '🔗'}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          
+          {/* URL personnalisée */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <label className="block mb-2 text-white/70 text-sm">Ou coller une URL (YouTube, Drive, Image)</label>
+              <input 
+                type="url" 
+                value={newCampaign.mediaUrl} 
+                onChange={e => {
+                  const url = e.target.value;
+                  setNewCampaign(prev => ({...prev, mediaUrl: url}));
+                }}
+                className="w-full px-4 py-3 rounded-lg neon-input" 
+                placeholder="https://youtube.com/... ou https://drive.google.com/..." 
+              />
+              {/* Badge type de média détecté */}
+              {newCampaign.mediaUrl && (() => {
+                const parsed = parseMediaUrl(newCampaign.mediaUrl);
+                return (
+                  <div className="mt-2 flex items-center gap-2 text-xs">
+                    <span className={`px-2 py-0.5 rounded-full ${
+                      parsed.type === 'youtube' ? 'bg-red-500/30 text-red-400' :
+                      parsed.type === 'drive' ? 'bg-blue-500/30 text-blue-400' :
+                      parsed.type === 'image' ? 'bg-green-500/30 text-green-400' :
+                      'bg-gray-500/30 text-gray-400'
+                    }`}>
+                      {parsed.type === 'youtube' ? '🎬 YouTube' :
+                       parsed.type === 'drive' ? '📁 Drive' :
+                       parsed.type === 'image' ? '🖼️ Image' :
+                       '🔗 Lien'}
+                    </span>
+                  </div>
+                );
+              })()}
+            </div>
+            
+            <div>
+              <label className="block mb-2 text-white/70 text-sm">Format</label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
+                  <input type="radio" name="mediaFormat" checked={newCampaign.mediaFormat === "9:16"}
+                    onChange={() => setNewCampaign({...newCampaign, mediaFormat: "9:16"})} />
+                  9:16 (Stories)
+                </label>
+                <label className="flex items-center gap-2 text-white text-sm cursor-pointer">
+                  <input type="radio" name="mediaFormat" checked={newCampaign.mediaFormat === "16:9"}
+                    onChange={() => setNewCampaign({...newCampaign, mediaFormat: "16:9"})} />
+                  16:9 (Post)
+                </label>
+              </div>
             </div>
           </div>
         </div>
@@ -1147,7 +1235,10 @@ const CampaignManager = ({
             <p className="text-white text-sm mb-2">
               Aperçu ({newCampaign.mediaFormat}):
               {(newCampaign.mediaUrl.includes('/v/') || newCampaign.mediaUrl.includes('/api/share/')) && (
-                <span className="ml-2 text-green-400 text-xs">✅ Lien média interne détecté</span>
+                <span className="ml-2 text-green-400 text-xs">✅ Lien interne</span>
+              )}
+              {newCampaign.mediaCta && (
+                <span className="ml-2 text-purple-400 text-xs">+ CTA: {newCampaign.mediaCta.text}</span>
               )}
             </p>
             <div className="flex justify-center">
