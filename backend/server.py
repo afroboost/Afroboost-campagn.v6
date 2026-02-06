@@ -7470,19 +7470,31 @@ def scheduler_send_group_message_sync(scheduler_db, target_group_id, message_tex
         
         # Note: L'émission Socket.IO sera faite via l'API HTTP
         # Car le scheduler tourne dans un thread séparé sans accès au event loop asyncio
+        socket_message = {
+            "id": coach_message["id"],
+            "type": "coach",
+            "text": processed_message,
+            "sender": "💪 Coach Bassi",
+            "senderId": "coach",
+            "sender_type": "coach",
+            "created_at": coach_message["created_at"]
+        }
+        
+        # Ajouter les champs média et CTA à l'émission Socket.IO
+        if media_url:
+            socket_message["media_url"] = media_url
+        if cta_type:
+            socket_message["cta_type"] = cta_type
+        if cta_text:
+            socket_message["cta_text"] = cta_text
+        if cta_link:
+            socket_message["cta_link"] = cta_link
+        
         response = requests.post(
             "http://localhost:8001/api/scheduler/emit-group-message",
             json={
                 "session_id": session_id,
-                "message": {
-                    "id": coach_message["id"],
-                    "type": "coach",
-                    "text": processed_message,
-                    "sender": "💪 Coach Bassi",
-                    "senderId": "coach",
-                    "sender_type": "coach",
-                    "created_at": coach_message["created_at"]
-                }
+                "message": socket_message
             },
             timeout=10
         )
