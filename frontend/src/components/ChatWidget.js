@@ -390,7 +390,7 @@ export const ChatWidget = () => {
     return false;
   };
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(getInitialOpen); // ZERO-FLASH: Ouvrir si lien groupe
   const [step, setStep] = useState(getInitialStep); // Initialisation DYNAMIQUE
   const [leadData, setLeadData] = useState(() => {
     // Charger les données du localStorage IMMÉDIATEMENT
