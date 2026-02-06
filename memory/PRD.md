@@ -1,5 +1,46 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 6 Février 2026 - ARCHITECTURE "POSER-RAMASSER" ✅
+
+### MISSION ZÉRO PERTE DE MESSAGE
+
+| Critère | Résultat |
+|---------|----------|
+| Refactoring server.py | ✅ **7487 lignes** (-399 lignes) |
+| scheduler_engine.py complet | ✅ **591 lignes** (toute la logique scheduler) |
+| Endpoint `/api/messages/sync` | ✅ RAMASSER depuis DB |
+| Frontend auto-sync | ✅ `onFocus`, `visibilitychange`, `reconnect` |
+
+#### Architecture "POSER-RAMASSER"
+```
+SCHEDULER (POSER)                    FRONTEND (RAMASSER)
+┌─────────────────┐                  ┌─────────────────┐
+│ Heure atteinte  │                  │ App revient au  │
+│ ↓               │                  │ premier plan    │
+│ INSERT message  │──── DB ────────▶│ ↓               │
+│ dans chat_msgs  │  (vérité)       │ GET /messages/  │
+│ ↓               │                  │ sync            │
+│ Signal Socket   │──── Signal ────▶│ ↓               │
+│ (optionnel)     │                  │ Affiche message │
+└─────────────────┘                  └─────────────────┘
+```
+
+#### Nouveaux endpoints
+```
+GET /api/messages/sync?session_id=xxx&since=xxx
+GET /api/messages/sync/all?participant_id=xxx
+```
+
+#### Test validé
+```
+[SCHEDULER] ⏰ 13:43:38 Paris | 2 campagne(s)
+[DEBUG] ✅ ENVOI! 'TEST RAMASSER' | Prévu: 13:43
+[POSER] ✅ Message stocké en DB: 2ffb9182...
+GET /api/messages/sync → count: 10 messages ✅
+```
+
+---
+
 ## Mise à jour du 6 Février 2026 - MOTEUR UPLOAD PHOTO & HARD DELETE ✅
 
 ### MISSION ACCOMPLIE - Codage réel
