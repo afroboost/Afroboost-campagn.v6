@@ -3144,6 +3144,12 @@ export const ChatWidget = () => {
                     minHeight: 0
                   }}
                 >
+                  {/* === SKELETON LOADING: Animation pendant le chargement initial === */}
+                  {isLoadingHistory && messages.length === 0 && (
+                    <MessageSkeleton count={4} />
+                  )}
+                  
+                  {/* === MESSAGES: Affichés dès que disponibles (cache ou API) === */}
                   {messages.map((msg, idx) => (
                     <MemoizedMessageBubble 
                       key={msg.id || idx} 
