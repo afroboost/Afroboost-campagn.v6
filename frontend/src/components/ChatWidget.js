@@ -111,14 +111,15 @@ const formatMessageTime = (dateStr) => {
     yesterday.setDate(yesterday.getDate() - 1);
     const msgDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     
-    const timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    // Format heure locale (fr-CH = Suisse/Paris)
+    const timeStr = date.toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' });
     
     if (msgDate.getTime() === today.getTime()) {
-      return `Aujourd'hui ${timeStr}`;
+      return `Aujourd'hui, ${timeStr}`;
     } else if (msgDate.getTime() === yesterday.getTime()) {
-      return `Hier ${timeStr}`;
+      return `Hier, ${timeStr}`;
     } else {
-      return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) + ` ${timeStr}`;
+      return date.toLocaleDateString('fr-CH', { day: '2-digit', month: 'short' }) + `, ${timeStr}`;
     }
   } catch (e) {
     return '';
