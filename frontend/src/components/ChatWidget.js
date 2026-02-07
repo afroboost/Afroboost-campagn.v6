@@ -354,6 +354,22 @@ const MessageBubble = ({ msg, isUser, onParticipantClick, isCommunity, currentUs
           />
         </div>
         
+        {/* === MÉDIA INLINE DÉTECTÉ AUTOMATIQUEMENT === */}
+        {detectedMedia && detectedMedia.type === 'youtube' && (
+          <InlineYouTubePlayer videoId={detectedMedia.videoId} thumbnailUrl={detectedMedia.thumbnailUrl} />
+        )}
+        {detectedMedia && detectedMedia.type === 'drive' && (
+          <InlineDriveImage directUrl={detectedMedia.directUrl} previewUrl={detectedMedia.previewUrl} />
+        )}
+        {detectedMedia && detectedMedia.type === 'image' && (
+          <InlineImage src={detectedMedia.directUrl} />
+        )}
+        
+        {/* === BOUTON CTA SI PRÉSENT === */}
+        {(msg.cta_label && msg.cta_url) && (
+          <InlineCtaButton label={msg.cta_label} url={msg.cta_url} />
+        )}
+        
         {/* Horodatage sous la bulle - visible et clair */}
         {msg.created_at && (
           <div style={{
