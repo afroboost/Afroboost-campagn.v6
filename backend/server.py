@@ -70,8 +70,7 @@ logger = logging.getLogger(__name__)
 fastapi_app = FastAPI(title="Afroboost API")
 api_router = APIRouter(prefix="/api")
 
-# ==================== SOCKET.IO CONFIGURATION ====================
-# Configuration Socket.IO pour la messagerie instantanée
+# SOCKET.IO CONFIGURATION
 sio = socketio.AsyncServer(
     async_mode='asgi',
     cors_allowed_origins='*',
@@ -79,18 +78,14 @@ sio = socketio.AsyncServer(
     engineio_logger=False
 )
 
-# Dictionnaire pour tracker les connexions par session_id
 connected_clients = {}  # { session_id: [sid1, sid2, ...] }
 
 @sio.event
 async def connect(sid, environ):
-    """Connexion d'un client Socket.IO"""
     logger.info(f"[SOCKET.IO] Client connecté: {sid}")
 
 @sio.event
 async def disconnect(sid):
-    """Déconnexion d'un client Socket.IO"""
-    # Nettoyer les références
     for session_id, sids in list(connected_clients.items()):
         if sid in sids:
             sids.remove(sid)
@@ -630,39 +625,23 @@ class AppConfig(BaseModel):
     user_info_text: str = "Vos informations"
     button_text: str = "Réserver maintenant"
 
-# ==================== FEATURE FLAGS - Services Additionnels ====================
-# Business Model: Super Admin contrôle les feature flags globaux
-# Les Coachs doivent avoir l'abonnement correspondant pour accéder aux services
-
+# FEATURE FLAGS
 class FeatureFlags(BaseModel):
-    """
-    Configuration globale des services (contrôlée par Super Admin)
-    Par défaut, tous les services additionnels sont désactivés
-    """
     model_config = ConfigDict(extra="ignore")
     id: str = "feature_flags"
-    # Service Audio - Interrupteur général
     AUDIO_SERVICE_ENABLED: bool = False
-    # Futurs services (préparation)
     VIDEO_SERVICE_ENABLED: bool = False
     STREAMING_SERVICE_ENABLED: bool = False
-    # Timestamp de dernière modification
     updatedAt: Optional[str] = None
-    updatedBy: Optional[str] = None  # "super_admin" ou email
+    updatedBy: Optional[str] = None
 
 class FeatureFlagsUpdate(BaseModel):
-    """Mise à jour partielle des feature flags"""
     AUDIO_SERVICE_ENABLED: Optional[bool] = None
     VIDEO_SERVICE_ENABLED: Optional[bool] = None
     STREAMING_SERVICE_ENABLED: Optional[bool] = None
 
-# ==================== COACH SUBSCRIPTION - Droits d'accès aux services ====================
-# Business Model: Chaque coach a un profil d'abonnement qui définit ses droits
-
+# COACH SUBSCRIPTION
 class CoachSubscription(BaseModel):
-    """
-    Profil d'abonnement d'un coach - définit les services auxquels il a accès
-    Relation: coach_auth.email -> coach_subscription.coachEmail
     """
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
