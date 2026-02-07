@@ -1,5 +1,43 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 7 Février 2026 - HORODATAGE & ANTI-DOUBLONS ✅
+
+### Modifications effectuées
+
+| Fonctionnalité | Implémentation |
+|----------------|----------------|
+| Horodatage messages | ✅ `formatMessageTime()` → "Aujourd'hui 14:32", "Hier 09:15", "6 fév. 18:00" |
+| Anti-doublon Socket | ✅ Log "Doublon ignoré" + vérification par ID |
+| Anti-doublon RAMASSER | ✅ Déjà présent, confirmé fonctionnel |
+| Scheduler 30s | ✅ `SCHEDULER_INTERVAL = 30` |
+
+### Fonction formatMessageTime
+```javascript
+formatMessageTime(dateStr) {
+  → "Aujourd'hui 14:32"    // Si même jour
+  → "Hier 09:15"           // Si veille
+  → "6 fév. 18:00"         // Autres dates
+}
+```
+
+### Test Scheduler 30s
+```
+[SCHEDULER] ⏰ 12:12:58 Paris | 1 campagne(s)
+[SCHEDULER] 🎯 EXÉCUTION: TEST 30s
+[POSER] ✅ Message stocké en DB
+[SCHEDULER] 🟢 completed (✓1/✗0)
+```
+
+### Piliers préservés (non touchés)
+- ✅ `/api/login`
+- ✅ `/api/check-reservation-eligibility`
+- ✅ Timezone Europe/Paris
+- ✅ CSS global
+
+### server.py : 7449 lignes ✅
+
+---
+
 ## Mise à jour du 6 Février 2026 - DÉBLOCAGE ENVOI & ÉLIGIBILITÉ ✅
 
 ### Scheduler fonctionnel
