@@ -165,7 +165,7 @@ const InlineYouTubePlayer = ({ videoId, thumbnailUrl }) => {
         </button>
       ) : (
         <iframe
-          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
+          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&rel=0&playsinline=1`}
           style={{ width: '100%', aspectRatio: '16/9', border: 'none' }}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
