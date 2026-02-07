@@ -96,6 +96,36 @@ const GroupIcon = () => (
 );
 
 /**
+ * Formate l'horodatage d'un message (Aujourd'hui, Hier, ou Date + Heure)
+ */
+const formatMessageTime = (dateStr) => {
+  if (!dateStr) return '';
+  
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
+    
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const msgDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    const timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    
+    if (msgDate.getTime() === today.getTime()) {
+      return `Aujourd'hui ${timeStr}`;
+    } else if (msgDate.getTime() === yesterday.getTime()) {
+      return `Hier ${timeStr}`;
+    } else {
+      return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) + ` ${timeStr}`;
+    }
+  } catch (e) {
+    return '';
+  }
+};
+
+/**
  * Composant pour afficher un message avec liens cliquables et emojis
  * Affiche le nom de l'expéditeur au-dessus de chaque bulle
  * Couleurs: Violet (#8B5CF6) pour le Coach, Gris foncé pour les membres/IA
