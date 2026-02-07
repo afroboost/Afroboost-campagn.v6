@@ -4,7 +4,10 @@ Détecte et transforme les liens médias pour l'affichage dans le chat.
 """
 
 import re
+import logging
 from typing import Optional, Dict, Any
+
+logger = logging.getLogger(__name__)
 
 # === PATTERNS REGEX ===
 YOUTUBE_PATTERNS = [
@@ -38,7 +41,7 @@ def get_media_type(url: str) -> Dict[str, Any]:
                 "platform": "youtube",
                 "video_id": video_id,
                 "direct_url": f"https://www.youtube.com/watch?v={video_id}",
-                "embed_url": f"https://www.youtube.com/embed/{video_id}?rel=0&modestbranding=1",
+                "embed_url": f"https://www.youtube.com/embed/{video_id}?rel=0&modestbranding=1&mute=1&playsinline=1",
                 "thumbnail_url": f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
             }
     
@@ -55,6 +58,10 @@ def get_media_type(url: str) -> Dict[str, Any]:
                 "thumbnail_url": f"https://drive.google.com/thumbnail?id={file_id}&sz=w400",
                 "embed_url": f"https://drive.google.com/file/d/{file_id}/preview"
             }
+    
+    # Log si lien Drive mal formaté (contient drive.google mais pas reconnu)
+    if 'drive.google.com' in url.lower():
+        logger.warning(f"[MEDIA] Lien Drive non reconnu: {url[:100]}")
     
     # === IMAGE DIRECTE ===
     image_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']
