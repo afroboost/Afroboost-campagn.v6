@@ -178,6 +178,18 @@ const InlineYouTubePlayer = ({ videoId, thumbnailUrl }) => {
 
 const InlineDriveImage = ({ directUrl, previewUrl }) => {
   const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
+  
+  // Timeout de 3 secondes pour les images Drive
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading) {
+        setError(true);
+        setLoading(false);
+      }
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [loading]);
   
   if (error) {
     return (
@@ -201,7 +213,7 @@ const InlineDriveImage = ({ directUrl, previewUrl }) => {
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
           <polyline points="14 2 14 8 20 8"/>
         </svg>
-        <div style={{ fontSize: '12px' }}>Ouvrir dans Google Drive</div>
+        <div style={{ fontSize: '12px' }}>Voir l'image sur Drive</div>
       </a>
     );
   }
@@ -210,12 +222,13 @@ const InlineDriveImage = ({ directUrl, previewUrl }) => {
     <img
       src={directUrl}
       alt="Google Drive"
-      onError={() => setError(true)}
+      onLoad={() => setLoading(false)}
+      onError={() => { setError(true); setLoading(false); }}
       style={{
         marginTop: '8px',
         maxWidth: '100%',
         borderRadius: '12px',
-        display: 'block'
+        display: loading ? 'none' : 'block'
       }}
       data-testid="inline-drive-image"
     />
