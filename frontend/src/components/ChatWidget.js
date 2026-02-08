@@ -97,7 +97,11 @@ const GroupIcon = () => (
 );
 
 /**
- * Formate l'horodatage d'un message (Heure seule, Hier + Heure, ou Date + Heure)
+ * Formate l'horodatage d'un message
+ * - "À l'instant" si < 60 secondes
+ * - "14:05" pour aujourd'hui
+ * - "Hier, 09:15" pour hier
+ * - "08/02, 18:30" pour les autres jours
  */
 const formatMessageTime = (dateStr) => {
   if (!dateStr) return '';
@@ -107,6 +111,13 @@ const formatMessageTime = (dateStr) => {
     if (isNaN(date.getTime())) return '';
     
     const now = new Date();
+    const diffSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    // Message envoyé il y a moins de 60 secondes
+    if (diffSeconds < 60 && diffSeconds >= 0) {
+      return 'À l\'instant';
+    }
+    
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
@@ -116,7 +127,7 @@ const formatMessageTime = (dateStr) => {
     const timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', hour12: false });
     
     if (msgDate.getTime() === today.getTime()) {
-      return timeStr; // Juste "14:05" pour aujourd'hui
+      return timeStr;
     } else if (msgDate.getTime() === yesterday.getTime()) {
       return `Hier, ${timeStr}`;
     } else {
