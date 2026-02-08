@@ -1,5 +1,46 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 8 Février 2026 - FINALISATION DYNAMIQUE ✅
+
+### Protocole Anti-Casse VALIDÉ
+| Test | Résultat |
+|------|----------|
+| Connexion PROMO20SECRET | OK |
+| Eligibility réservation | OK |
+| 4 dates calendrier | 4 boutons trouvés |
+| Sync messages | OK - server_time_utc |
+| server.py | **7387 lignes** (inchangé) |
+
+### Timer Dynamique Timestamps
+```javascript
+// Rafraîchit les timestamps toutes les 60s
+const [, setTimestampTick] = useState(0);
+useEffect(() => {
+  const timer = setInterval(() => {
+    setTimestampTick(t => t + 1);
+  }, 60000);
+  return () => clearInterval(timer);
+}, []);
+```
+
+### Hard Logout
+```javascript
+window.location.replace('/'); // Empêche bouton Précédent
+```
+
+### Badge Aperçu amélioré
+- z-index: 9999
+- boxShadow: '0 2px 8px rgba(147, 51, 234, 0.4)'
+
+### Zones protégées (NON TOUCHÉES)
+- /api/check-reservation-eligibility
+- /api/courses
+- Sync messages (last_sync)
+- Scheduler Europe/Paris
+- Composants YouTube/Drive
+
+---
+
 ## Mise à jour du 8 Février 2026 - PERFECTIONNEMENT UI & SÉCURITÉ ✅
 
 ### Blindage Mode Vue Visiteur (Admin)
