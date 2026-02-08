@@ -899,6 +899,39 @@ export const ChatWidget = () => {
     }
   };
   
+  // === FONCTION DE DÉCONNEXION COMPLÈTE ===
+  const handleLogout = () => {
+    try {
+      // Nettoyer tout le localStorage lié à Afroboost
+      localStorage.removeItem(AFROBOOST_IDENTITY_KEY);
+      localStorage.removeItem(CHAT_CLIENT_KEY);
+      localStorage.removeItem(CHAT_SESSION_KEY);
+      localStorage.removeItem(AFROBOOST_PROFILE_KEY);
+      localStorage.removeItem('afroboost_sound_enabled');
+      localStorage.removeItem('afroboost_silence_auto');
+      localStorage.removeItem('chat_messages_cache');
+      
+      // Réinitialiser les états
+      setSessionData(null);
+      setParticipantId(null);
+      setMessages([]);
+      setAfroboostProfile(null);
+      setIsFullscreen(false);
+      setIsVisitorMode(false);
+      setShowUserMenu(false);
+      setShowMenu(false);
+      
+      console.log('[LOGOUT] 🚪 Déconnexion effectuée');
+      
+      // Rediriger vers l'écran d'accueil
+      setStep('welcome');
+      window.location.reload();
+    } catch (err) {
+      console.error('[LOGOUT] ❌ Erreur:', err);
+      window.location.reload();
+    }
+  };
+  
   // === OUVRIR UN DM (Message Privé) ===
   const openDirectMessage = async (memberId, memberName) => {
     if (!participantId) return;
