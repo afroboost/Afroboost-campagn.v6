@@ -554,8 +554,8 @@ const MessageBubble = ({ msg, isUser, onParticipantClick, isCommunity, currentUs
         {/* Horodatage sous la bulle - visible et clair */}
         {msg.created_at && (
           <div style={{
-            fontSize: '11px',
-            color: 'rgba(255,255,255,0.7)',
+            fontSize: '10px',
+            color: '#999',
             marginTop: '4px',
             textAlign: isUser ? 'right' : 'left',
             fontWeight: '400'
