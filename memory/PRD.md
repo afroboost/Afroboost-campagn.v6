@@ -1,5 +1,32 @@
 # Afroboost - Document de Référence Produit (PRD)
 
+## Mise à jour du 8 Février 2026 - OPTIMISATION RESSOURCES ✅
+
+### Timer optimisé
+- useEffect avec return clearInterval (cleanup correct)
+- Rafraîchissement timestamps toutes les 60s
+
+### Bouclier Total VALIDÉ
+| Composant | Status |
+|-----------|--------|
+| Code PROMO20SECRET | OK |
+| Eligibility | OK |
+| 4 dates calendrier | OK |
+| Europe/Paris scheduler | OK (1 occurrence) |
+| Anti-doublon ID | OK |
+| server.py | **7387 lignes** |
+| Emojis UI | **0** |
+
+### Badge Aperçu optimisé
+- z-index: 50 (menus dropdown à 100)
+- Ombre grise légère: rgba(0, 0, 0, 0.15)
+
+### Nettoyage emojis complet
+- Tous les emojis UI/logs supprimés
+- Interface 100% minimaliste
+
+---
+
 ## Mise à jour du 8 Février 2026 - FINALISATION DYNAMIQUE ✅
 
 ### Protocole Anti-Casse VALIDÉ
