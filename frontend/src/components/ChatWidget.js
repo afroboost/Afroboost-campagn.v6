@@ -120,7 +120,10 @@ const formatMessageTime = (dateStr) => {
     } else if (msgDate.getTime() === yesterday.getTime()) {
       return `Hier, ${timeStr}`;
     } else {
-      return date.toLocaleDateString('fr-CH', { day: '2-digit', month: 'short' }) + `, ${timeStr}`;
+      // Format "08/02, 18:30" pour les jours précédents
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      return `${day}/${month}, ${timeStr}`;
     }
   } catch (e) {
     return '';
