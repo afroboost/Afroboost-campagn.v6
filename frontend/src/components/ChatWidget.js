@@ -616,7 +616,7 @@ export const ChatWidget = () => {
         }
       }
     } catch (e) {
-      console.warn('[CACHE] ⚠️ Erreur lecture cache:', e.message);
+      console.warn('[CACHE] Erreur lecture cache:', e.message);
     }
     return [];
   };
