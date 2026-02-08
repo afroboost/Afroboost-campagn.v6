@@ -2358,6 +2358,15 @@ export const ChatWidget = () => {
     }
   }, [messages]);
 
+  // === TIMER DYNAMIQUE: Rafraîchit les timestamps toutes les 60s ===
+  const [, setTimestampTick] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimestampTick(t => t + 1);
+    }, 60000); // 60 secondes
+    return () => clearInterval(timer);
+  }, []);
+
   // === SMART ENTRY: Point d'entrée intelligent avec reconnaissance ===
   const handleSmartEntry = async (clientData, linkToken = null) => {
     try {
