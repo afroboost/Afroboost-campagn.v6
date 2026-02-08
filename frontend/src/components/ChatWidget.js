@@ -897,23 +897,18 @@ export const ChatWidget = () => {
     if (afroboostProfile?.code) {
       setIsFullscreen(true);
       setIsVisitorMode(false);
-      console.log('[MODE] 💎 Mode abonné réactivé');
+      console.log('[MODE] Mode abonné réactivé');
     }
   };
   
-  // === FONCTION DE DÉCONNEXION COMPLÈTE ===
+  // === FONCTION DE DÉCONNEXION STRICTE ===
   const handleLogout = () => {
     try {
-      // Nettoyer tout le localStorage lié à Afroboost
-      localStorage.removeItem(AFROBOOST_IDENTITY_KEY);
-      localStorage.removeItem(CHAT_CLIENT_KEY);
-      localStorage.removeItem(CHAT_SESSION_KEY);
-      localStorage.removeItem(AFROBOOST_PROFILE_KEY);
-      localStorage.removeItem('afroboost_sound_enabled');
-      localStorage.removeItem('afroboost_silence_auto');
-      localStorage.removeItem('chat_messages_cache');
+      // Nettoyer TOUT le stockage local et session
+      localStorage.clear();
+      sessionStorage.clear();
       
-      // Réinitialiser les états
+      // Réinitialiser tous les états
       setSessionData(null);
       setParticipantId(null);
       setMessages([]);
@@ -922,14 +917,17 @@ export const ChatWidget = () => {
       setIsVisitorMode(false);
       setShowUserMenu(false);
       setShowMenu(false);
-      
-      console.log('[LOGOUT] 🚪 Déconnexion effectuée');
-      
-      // Rediriger vers l'écran d'accueil
       setStep('welcome');
+      
+      console.log('[LOGOUT] Déconnexion effectuée');
+      
+      // Remplacer l'historique pour empêcher le retour arrière
+      window.history.replaceState(null, '', window.location.pathname);
       window.location.reload();
     } catch (err) {
-      console.error('[LOGOUT] ❌ Erreur:', err);
+      console.error('[LOGOUT] Erreur:', err);
+      localStorage.clear();
+      sessionStorage.clear();
       window.location.reload();
     }
   };
