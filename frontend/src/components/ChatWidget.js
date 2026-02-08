@@ -2948,36 +2948,6 @@ export const ChatWidget = () => {
           }}
           data-testid="chat-widget-window"
         >
-          {/* Badge Mode Aperçu (Admin seulement) */}
-          {isVisitorPreview && isCoachMode && (
-            <div
-              style={{
-                height: '2px',
-                background: 'linear-gradient(90deg, #9333ea, #ec4899)',
-                position: 'relative'
-              }}
-            >
-              <span
-                style={{
-                  position: 'absolute',
-                  top: '2px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  background: '#1a1a1a',
-                  padding: '2px 8px',
-                  borderRadius: '0 0 4px 4px',
-                  fontSize: '9px',
-                  color: '#9333ea',
-                  fontWeight: '500',
-                  letterSpacing: '0.5px',
-                  textTransform: 'uppercase'
-                }}
-                data-testid="visitor-preview-badge"
-              >
-                Aperçu
-              </span>
-            </div>
-          )}
           {/* Header */}
           <div 
             style={{
