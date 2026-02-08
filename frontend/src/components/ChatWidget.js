@@ -628,7 +628,7 @@ export const ChatWidget = () => {
       sessionStorage.setItem(MESSAGE_CACHE_KEY, JSON.stringify(toCache));
       console.log('[CACHE] 💾 Messages mis en cache:', toCache.length);
     } catch (e) {
-      console.warn('[CACHE] ⚠️ Erreur écriture cache:', e.message);
+      console.warn('[CACHE] Erreur écriture cache:', e.message);
     }
   };
 
