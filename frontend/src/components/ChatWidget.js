@@ -879,9 +879,9 @@ export const ChatWidget = () => {
       await navigator.clipboard.writeText(shareUrl);
       setLinkCopied(true);
       setTimeout(() => setLinkCopied(false), 2000);
-      console.log('[SHARE] ✅ Lien copié:', shareUrl);
+      console.log('[SHARE] Lien copié:', shareUrl);
     } catch (err) {
-      console.error('[SHARE] ❌ Erreur copie:', err);
+      console.error('[SHARE] Erreur copie:', err);
       // Fallback pour navigateurs sans clipboard API
       const textArea = document.createElement('textarea');
       textArea.value = window.location.origin;
