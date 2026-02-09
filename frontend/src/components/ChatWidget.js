@@ -839,6 +839,7 @@ export const ChatWidget = () => {
   const [linkCopied, setLinkCopied] = useState(false);
   const [isVisitorMode, setIsVisitorMode] = useState(false); // Mode visiteur (chat réduit mais profil conservé)
   const [isVisitorPreview, setIsVisitorPreview] = useState(false); // Admin: aperçu mode visiteur
+  const [showiOSPrompt, setShowiOSPrompt] = useState(false); // Message iOS pour PWA
   
   // === PRÉFÉRENCES SONORES (persistées dans localStorage via SoundManager) ===
   const [soundEnabled, setSoundEnabledState] = useState(() => {
