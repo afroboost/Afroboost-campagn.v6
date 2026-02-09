@@ -11,7 +11,8 @@ import {
   stopTitleFlash,
   showNewMessageNotification,
   requestNotificationPermission,
-  getNotificationPermissionStatus
+  getNotificationPermissionStatus,
+  unlockAudio
 } from '../services/notificationService';
 import { 
   isPushSupported, 
