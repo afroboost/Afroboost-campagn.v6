@@ -218,3 +218,14 @@ agent_communication:
       3. Demande permission au premier chargement post-login (3s delay)
       4. Verification isOpen && document.hasFocus() avant notification
       server.py inchange (7387 lignes comme requis)
+  
+  - agent: "testing"
+    message: |
+      Tests de non-régression backend TERMINÉS avec succès (13/13):
+      ✅ Backend Socket.IO fonctionne correctement pour messages temps réel
+      ✅ Tous les endpoints chat existants fonctionnent (aucune régression)
+      ✅ server.py vérifiée: exactement 7387 lignes (intégrité confirmée)
+      ✅ Tests CRUD complets: create participant/session, send/get messages
+      ✅ Health checks: /health et /api/health opérationnels
+      ✅ Endpoints métier: /api/courses, /api/users fonctionnels
+      Minor: Socket.IO WebSocket nécessite polling pour connexions externes
