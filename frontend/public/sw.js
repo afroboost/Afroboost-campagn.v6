@@ -1,58 +1,59 @@
 // Service Worker pour les notifications push Afroboost
-// Ce fichier doit être à la racine du domaine (public/)
+// Ce fichier doit etre a la racine du domaine (public/)
 
 const CACHE_NAME = 'afroboost-v1';
 
 // Installation du Service Worker
 self.addEventListener('install', (event) => {
-  console.log('[SW] Service Worker installé');
+  console.log('[SW] Service Worker installe');
   self.skipWaiting();
 });
 
 // Activation
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Service Worker activé');
+  console.log('[SW] Service Worker active');
   event.waitUntil(clients.claim());
 });
 
-// Réception des notifications push
+// Reception des notifications push
 self.addEventListener('push', (event) => {
-  console.log('[SW] Notification push reçue');
+  console.log('[SW] Notification push recue');
   
   let data = {
     title: 'Afroboost',
-    body: 'Vous avez un nouveau message',
+    body: 'Nouveau message de votre coach',
     icon: '/favicon.ico',
     badge: '/favicon.ico',
-    data: {}
+    data: { url: '/' }
   };
   
   if (event.data) {
     try {
-      data = { ...data, ...event.data.json() };
+      const payload = event.data.json();
+      data = {
+        title: payload.title || 'Afroboost',
+        body: payload.body || payload.message || 'Nouveau message de votre coach',
+        icon: payload.icon || '/favicon.ico',
+        badge: payload.badge || '/favicon.ico',
+        data: payload.data || { url: '/' }
+      };
     } catch (e) {
-      console.error('[SW] Erreur parsing push data:', e);
+      // Si pas JSON, utiliser le texte brut
+      const text = event.data.text();
+      if (text) {
+        data.body = text;
+      }
     }
   }
   
   const options = {
     body: data.body,
-    icon: data.icon || '/favicon.ico',
-    badge: data.badge || '/favicon.ico',
+    icon: data.icon,
+    badge: data.badge,
     vibrate: [200, 100, 200], // Vibration pattern pour mobile
-    tag: 'afroboost-notification', // Groupe les notifications
-    renotify: true, // Notifie même si déjà une notification du même tag
-    requireInteraction: false, // Se ferme automatiquement
-    actions: [
-      {
-        action: 'open',
-        title: 'Ouvrir'
-      },
-      {
-        action: 'close',
-        title: 'Fermer'
-      }
-    ],
+    tag: 'afroboost-notification',
+    renotify: true,
+    requireInteraction: false,
     data: data.data
   };
   
@@ -61,29 +62,26 @@ self.addEventListener('push', (event) => {
   );
 });
 
-// Clic sur la notification
+// Clic sur la notification - Ouvre/focus l'app
 self.addEventListener('notificationclick', (event) => {
   console.log('[SW] Clic sur notification');
   
   event.notification.close();
   
-  if (event.action === 'close') {
-    return;
-  }
+  const urlToOpen = event.notification.data?.url || '/';
   
-  // Ouvrir l'application ou focus sur la fenêtre existante
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((clientList) => {
-        // Si une fenêtre est déjà ouverte, la focus
+        // Si une fenetre est deja ouverte, la focus
         for (const client of clientList) {
           if (client.url.includes(self.location.origin) && 'focus' in client) {
             return client.focus();
           }
         }
-        // Sinon, ouvrir une nouvelle fenêtre
+        // Sinon, ouvrir une nouvelle fenetre
         if (clients.openWindow) {
-          return clients.openWindow('/');
+          return clients.openWindow(urlToOpen);
         }
       })
   );
@@ -91,12 +89,12 @@ self.addEventListener('notificationclick', (event) => {
 
 // Fermeture de la notification
 self.addEventListener('notificationclose', (event) => {
-  console.log('[SW] Notification fermée');
+  console.log('[SW] Notification fermee');
 });
 
-// Message du client (pour future use)
+// Message du client
 self.addEventListener('message', (event) => {
-  console.log('[SW] Message reçu:', event.data);
+  console.log('[SW] Message recu:', event.data);
   
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
