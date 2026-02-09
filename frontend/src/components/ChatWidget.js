@@ -2458,6 +2458,19 @@ export const ChatWidget = () => {
       // Debloquer l'audio pour iOS (necessite action utilisateur)
       unlockAudio();
       
+      // === MESSAGE iOS PWA ===
+      // Detecter iOS et afficher message pour ajout ecran d'accueil
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      const isStandalone = window.navigator.standalone === true;
+      const alreadyShown = localStorage.getItem('af_ios_prompt_shown');
+      
+      if (isIOS && !isStandalone && !alreadyShown) {
+        setShowiOSPrompt(true);
+        localStorage.setItem('af_ios_prompt_shown', 'true');
+        // Auto-fermeture apres 5 secondes
+        setTimeout(() => setShowiOSPrompt(false), 5000);
+      }
+      
       return { success: true, session, participant };
 
     } catch (err) {
