@@ -212,31 +212,29 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: |
-      Implementation V2 des notifications PWA et son discret:
+      Implementation V3 - Alertes mobiles infaillibles:
       
-      1. DEMANDE PERMISSION SUR CLIC CONNEXION (Anti-blocage mobile)
-         - Supprime la demande automatique apres 3s
-         - Demande liee a handleSmartEntry() = action utilisateur
-         - Compatible navigateurs mobiles (geste volontaire requis)
+      1. VIBRATION COUPLEE AU SON
+         - navigator.vibrate([200, 100, 200]) ajoute dans notificationService.js
+         - Se declenche meme si telephone en mode silencieux
+         - Verification compatibilite (if navigator.vibrate)
       
-      2. SON "SOFT POP" BASE64 (Qualite)
-         - Son encode en Base64 inline (pas de fichier externe = pas de 404)
-         - Se declenche UNIQUEMENT si document.visibilityState === 'hidden'
-         - Volume modere (50%) pour notification douce
+      2. SERVICE WORKER BLINDE (sw.js)
+         - Push event avec showNotification
+         - Titre: "Afroboost", Corps: "Nouveau message de votre coach"
+         - Vibrate pattern + focus fenetre au clic
+         - Gestion JSON et texte brut
       
-      3. SERVICE WORKER PWA (deja existant)
-         - /public/sw.js gere les push events en arriere-plan
-         - Vibration [200, 100, 200] pour mobile
-         - Focus fenetre au clic sur notification
-      
-      4. DEVERROUILLAGE AUDIO iOS
-         - unlockAudio() appele sur clic connexion
-         - Pre-charge le son Base64 pour lecture immediate
+      3. MESSAGE iOS PWA
+         - Detection iOS via userAgent
+         - Message discret: "Pour recevoir les alertes, ajoutez a l'ecran d'accueil"
+         - Design SVG minimaliste, fermeture auto 5s
+         - Affiche une seule fois (localStorage)
       
       CONTRAINTES RESPECTEES:
       - server.py inchange (7387 lignes)
-      - Design minimaliste (pas d'emojis dans l'interface)
-      - Son inline Base64 (zero fichier externe)
+      - Pas de modification login/reservation/medias
+      - Design minimaliste SVG (pas d'emojis)
   
   - agent: "testing"
     message: |
