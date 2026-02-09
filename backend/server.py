@@ -6097,39 +6097,29 @@ async def send_push_notification(participant_id: str, title: str, body: str, dat
         try:
             room_sids = list(sio.manager.rooms.get('/', {}).get(session_id, set()))
             if room_sids:
-                logger.info(f"[PUSH] Skip - {len(room_sids)} client(s) actif(s)")
+                logger.debug(f"[PUSH] Skip - socket actif")
                 return False
         except Exception:
             pass
-    # Récupérer la souscription
+    # Recuperer la souscription
     sub = await db.push_subscriptions.find_one({"participant_id": participant_id, "active": True}, {"_id": 0})
-    
     if not sub or not sub.get("subscription"):
-        logger.info(f"No push subscription for participant {participant_id}")
         return False
-    
     subscription_info = sub["subscription"]
     payload = json.dumps({"title": title, "body": body, "icon": "/logo192.png", "badge": "/logo192.png", "data": data or {}, "timestamp": datetime.now(timezone.utc).isoformat()})
     try:
-        webpush(
-            subscription_info=subscription_info,
-            data=payload,
-            vapid_private_key=VAPID_PRIVATE_KEY,
-            vapid_claims={"sub": f"mailto:{VAPID_CLAIMS_EMAIL}"}
-        )
-        logger.info(f"Push notification sent to {participant_id}")
+        webpush(subscription_info=subscription_info, data=payload, vapid_private_key=VAPID_PRIVATE_KEY, vapid_claims={"sub": f"mailto:{VAPID_CLAIMS_EMAIL}"})
+        logger.debug(f"[PUSH] Sent OK")
         return True
     except WebPushException as e:
-        logger.error(f"Push notification failed: {str(e)}")
-        # Si la souscription est invalide, la désactiver
         if e.response and e.response.status_code in [404, 410]:
-            await db.push_subscriptions.update_one(
-                {"participant_id": participant_id},
-                {"$set": {"active": False}}
-            )
+            await db.push_subscriptions.update_one({"participant_id": participant_id}, {"$set": {"active": False}})
+            logger.debug(f"[PUSH] Subscription desactivee (410/404)")
+        else:
+            logger.error(f"[PUSH] Echec critique: {str(e)}")
         return False
     except Exception as e:
-        logger.error(f"Push notification error: {str(e)}")
+        logger.error(f"[PUSH] Erreur: {str(e)}")
         return False
 
 async def send_backup_email(participant_id: str, message_preview: str):
