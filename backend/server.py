@@ -7383,3 +7383,5 @@ async def shutdown_db_client():
     client.close()
     mongo_client_sync.close()
     logger.info("[SYSTEM] Arrêté")
+
+# END
