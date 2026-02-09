@@ -2,7 +2,7 @@
 // Pour le systeme de chat Afroboost - Optimise pour iOS et Android
 
 /**
- * Sons de notification utilisant Web Audio API + son Base64 de qualite
+ * Sons de notification utilisant Audio HTML5 avec son Base64 de qualite
  * Optimise pour iOS (Safari) et Android
  * Son "soft" type Pop/Glass - se declenche uniquement si document.visibilityState === 'hidden'
  */
@@ -10,14 +10,131 @@
 // Contexte Audio global avec gestion iOS
 let audioContext = null;
 let isAudioUnlocked = false;
-let notificationAudio = null;
+let softPopAudio = null;
 
 // === SON BASE64 "POP" DOUX ET DISCRET ===
-// Son synthetique court (150ms) type "glass chime" - pas de fichier externe
-const SOFT_POP_SOUND = 'data:audio/wav;base64,UklGRl4FAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YToFAAAAAAD//wEAAQD+/wIA/f8DAP3/AgD+/wIA/f8CAP7/AQD//wAA//8BAP//AQD//wEA//8BAP//AAAAAAAAAAAA//8BAP//AQD//wEA//8AAAAAAAAAAAAAAAAAAP//AQD//wEA//8BAAAAAAAAAAAAAAD//wEAAAABAAAAAwACAAQAAwAGAAUACQAJAA0ADQASABMAGQAbACEAJAAqAC4ANgA7AEQASgBVAFwAaABwAH4AhwCWAKAAsAC7AM0A2ADsAPgADQEZAS8BOwFSAV4BdgGCAZoBpgG/AcsB4wHvAQcCEwIqAjYCTQJYAm4CeQKOApgCrAK1AsoCzwLhAucC9gL5AgYDCQMUAxcDIQMjAywDLgM1AzYDOwM9Az8DPQM/Az0DPgM8AzwDOgM5AzcDNQM0AzIDLwMtAysDKAMlAyMDHwMcAxkDFgMSAw8DCwMIAwQDAQP9AvkC9gLyAu4C6gLmAuEC3QLYAtMCzwLKAsUCwAK7ArYCsQKsAqcCoQKcApYCkAKLAoUCfwJ5AnMCbQJnAmECWwJVAk8CSQJDAL0AtwCxAKsApQCfAJkAkwCNAIcAgQB7AHUAbwBpAGMAXQBXAFEASwBFAD8AOQA0AC4AKAAjAB0AGAASAAwABwACAP3/+P/z/+7/6f/k/+D/2//W/9L/zv/J/8X/wf+9/7n/tf+y/67/q/+o/6T/of+e/5v/mP+W/5P/kf+O/4z/iv+I/4b/hP+D/4H/gP9//37/ff98/3v/ev96/3n/ef95/3n/ef95/3n/ev96/3v/fP99/37/gP+B/4P/hf+H/4r/jP+P/5L/lf+Y/5z/n/+j/6f/q/+v/7P/t/+8/8D/xf/K/8//1P/Z/97/4//p/+7/9P/5////BAEKARABFgEcASIBKAEuATQBOgFAAUYBSwFRAVcBXAFiAWcBbAFxAXYBewGAAYQBiAGMAZABlAGYAZsBngGhAaQBpgGoAaoBqwGsAa0BrgGuAa4BrgGuAa0BrAGrAakBpwGlAaMBoAGdAZoBmAGUAZEBjQGJAYUBgAF8AXcBcgFtAWgBYwFdAVgBUgFMAUYBQAE6ATQBLgEnASEBGgETAQ0BBgEAAfoA8wDsAOYA3wDYANEAywDEAL0AtgCwAKkAogCcAJUAjgCIAIEAfAB1AG8AaQBjAF0AVwBRAEsARgBAADoANQAwACoAJQAfABoAFQAQAAsABgACAP3/+f/0//D/6//n/+P/3v/b/9f/0v/P/8v/yP/E/8H/vv+7/7j/tv+z/7D/rv+s/6n/p/+m/6T/ov+g/5//nf+c/5v/mv+Z/5j/l/+X/5b/lv+W/5X/lf+V/5X/lf+W/5b/l/+X/5j/mf+a/5v/nP+d/5//oP+i/6T/pv+o/6r/rf+v/7L/tf+4/7v/vv/C/8X/yf/N/9D/1P/Y/9z/4P/k/+n/7f/x//X/+v/+/wIABwAMABAAFQAaAB8AJAAoAC0AMgA3ADwAQQBFAEoATwBTAFgAXQBhAGYAagBuAHIAdgB6AH4AggCFAIkAjACPAJIAlQCYAJoAnQCfAKEAowClAKYAqACpAKoAqwCsAKwArACsAKwArAGsAKsAqwCqAKkAqACmAKUAowCiAKAAngCbAJkAlgCUAJEAjgCLAIgAhQCCAH8AfAB4AHUAcQBuAGoAZgBjAF8AWwBXAFMATwBLAEcAQwA/ADsANgAyAC4AKgAmACEAHQAZABUAEAAMAAgABAAAAAEA
+// Son synthetique court (200ms) type "glass chime" - genere via Web Audio encode en WAV Base64
+// Ce son est doux et non intrusif - ideal pour les notifications mobiles
+const SOFT_POP_SOUND_BASE64 = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVoGAACBgYGBgYGBgYGBgYGBgYGBgYGBgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/wABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8AAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/fn18e3p5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhYF9eXVxbWllYV1ZVVFNSUVBPTk1MS0pJSEdGRURDQkFAPz49PDs6OTg3NjU0MzIxMC8uLSwrKikoJyYlJCMiISAfHh0cGxoZGBcWFRQTEhEQDw4NDAsKCQgHBgUEAwIBAP/+/fz7+vn49/b19PPy8fDv7u3s6+rp6Ofm5eTj4uHg397d3Nva2djX1tXU09LR0M/OzczLysnIx8bFxMPCwcC/vr28u7q5uLe2tbSzsrGwr66trKuqqainpqWko6KhoJ+enZybmpmYl5aVlJOSkZCPjo2Mi4qJiIeGhYSDgoGAgH9+fXx7enl4d3Z1dHNycXBvbm1sa2ppaGdmZWRjYmFgX15dXFtaWVhXVlVUU1JRUE9OTUxLSklIR0ZFRERDQkFAPz49PDs6OTg3NjU0MzIxMC8uLSwrKikoJyYlJCMiISAfHh0cGxoZGBcWFRQTEhEQDw4NDAsKCQgHBgUEAwIBAA==';
+
+/**
+ * Initialise l'objet Audio pour le son de notification
+ * Utilise un son Base64 inline pour eviter les erreurs 404
+ */
+const initSoftPopAudio = () => {
+  if (!softPopAudio) {
+    try {
+      softPopAudio = new Audio(SOFT_POP_SOUND_BASE64);
+      softPopAudio.volume = 0.5; // Volume modere (50%)
+      softPopAudio.preload = 'auto';
+    } catch (e) {
+      console.warn('[AUDIO] Impossible de creer Audio element:', e);
+    }
+  }
+  return softPopAudio;
+};
+
+/**
+ * Obtient le contexte audio, le creant si necessaire (pour sons synthetiques)
+ */
+const getAudioContext = () => {
+  if (!audioContext) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) {
+      audioContext = new AudioContext();
+    }
+  }
+  return audioContext;
+};
+
+/**
+ * Deverrouille l'audio sur iOS (necessite une interaction utilisateur)
+ * A appeler lors du premier clic/tap de l'utilisateur
+ */
+export const unlockAudio = () => {
+  if (isAudioUnlocked) return Promise.resolve();
+  
+  return new Promise((resolve) => {
+    // Initialiser le son Base64
+    const audio = initSoftPopAudio();
+    if (audio) {
+      audio.load();
     }
     
-    // Résumer le contexte audio si suspendu (politique navigateur iOS/Chrome)
+    const ctx = getAudioContext();
+    if (!ctx) {
+      isAudioUnlocked = true;
+      resolve();
+      return;
+    }
+    
+    // Creer un son silencieux pour debloquer l'audio sur iOS
+    const buffer = ctx.createBuffer(1, 1, 22050);
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    source.start(0);
+    
+    // Resumer le contexte si suspendu
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(() => {
+        isAudioUnlocked = true;
+        resolve();
+      });
+    } else {
+      isAudioUnlocked = true;
+      resolve();
+    }
+  });
+};
+
+/**
+ * Joue le son "soft pop" Base64 (son doux de qualite)
+ * Se declenche UNIQUEMENT si document.visibilityState === 'hidden'
+ */
+export const playSoftPopSound = async () => {
+  // CONDITION OBLIGATOIRE: Ne jouer que si l'app est en arriere-plan
+  if (document.visibilityState !== 'hidden') {
+    console.log('[SOUND] App visible - son ignore');
+    return false;
+  }
+  
+  try {
+    const audio = initSoftPopAudio();
+    if (audio) {
+      audio.currentTime = 0;
+      await audio.play();
+      console.log('[SOUND] Son Pop joue (arriere-plan)');
+      return true;
+    }
+  } catch (err) {
+    console.warn('[SOUND] Lecture son Base64 echouee:', err);
+  }
+  return false;
+};
+
+/**
+ * Joue un son de notification pour les messages entrants
+ * Utilise le son Base64 "soft pop" si l'app est en arriere-plan
+ * Sinon utilise Web Audio API pour un son synthetique discret
+ * @param {string} type - 'message' | 'coach' | 'user' | 'private'
+ */
+export const playNotificationSound = async (type = 'message') => {
+  // Si l'app est en arriere-plan, utiliser le son Base64 de qualite
+  if (document.visibilityState === 'hidden') {
+    const played = await playSoftPopSound();
+    if (played) return;
+  }
+  
+  // Fallback: son synthetique via Web Audio API (pour app au premier plan)
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) {
+      console.warn('Web Audio API not supported');
+      return;
+    }
+    
+    // Resumer le contexte audio si suspendu (politique navigateur iOS/Chrome)
     if (ctx.state === 'suspended') {
       await ctx.resume();
     }
@@ -38,27 +155,27 @@ const SOFT_POP_SOUND = 'data:audio/wav;base64,UklGRl4FAABXQVZFZm10IBAAAAABAAEARK
     
     const now = ctx.currentTime;
 
-    // Différents sons selon le type
+    // Differents sons selon le type
     switch (type) {
       case 'private':
-        // Son URGENT pour message privé (triple bip ascendant)
+        // Son URGENT pour message prive (triple bip ascendant)
         oscillator.frequency.setValueAtTime(440, now); // La4
         oscillator.frequency.setValueAtTime(554, now + 0.1); // Do#5
         oscillator.frequency.setValueAtTime(659, now + 0.2); // Mi5
-        gainNode.gain.setValueAtTime(0.4, now);
-        gainNode.gain.setValueAtTime(0.35, now + 0.1);
-        gainNode.gain.setValueAtTime(0.3, now + 0.2);
+        gainNode.gain.setValueAtTime(0.3, now);
+        gainNode.gain.setValueAtTime(0.25, now + 0.1);
+        gainNode.gain.setValueAtTime(0.2, now + 0.2);
         gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
         oscillator.start(now);
         oscillator.stop(now + 0.35);
         break;
         
       case 'coach':
-        // Son distinctif pour réponse coach (double bip harmonieux)
+        // Son distinctif pour reponse coach (double bip harmonieux)
         oscillator.frequency.setValueAtTime(523, now); // Do5
         oscillator.frequency.setValueAtTime(659, now + 0.12); // Mi5
-        gainNode.gain.setValueAtTime(0.35, now);
-        gainNode.gain.setValueAtTime(0.3, now + 0.1);
+        gainNode.gain.setValueAtTime(0.25, now);
+        gainNode.gain.setValueAtTime(0.2, now + 0.1);
         gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
         oscillator.start(now);
         oscillator.stop(now + 0.25);
@@ -67,16 +184,16 @@ const SOFT_POP_SOUND = 'data:audio/wav;base64,UklGRl4FAABXQVZFZm10IBAAAAABAAEARK
       case 'user':
         // Son aigu pour message utilisateur (notification subtile)
         oscillator.frequency.setValueAtTime(784, now); // Sol5
-        gainNode.gain.setValueAtTime(0.2, now);
+        gainNode.gain.setValueAtTime(0.15, now);
         gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
         oscillator.start(now);
         oscillator.stop(now + 0.15);
         break;
       
       default:
-        // Son standard (bip agréable)
-        oscillator.frequency.setValueAtTime(587, now); // Ré5
-        gainNode.gain.setValueAtTime(0.28, now);
+        // Son standard (bip agreable)
+        oscillator.frequency.setValueAtTime(587, now); // Re5
+        gainNode.gain.setValueAtTime(0.2, now);
         gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
         oscillator.start(now);
         oscillator.stop(now + 0.12);
@@ -91,6 +208,11 @@ const SOFT_POP_SOUND = 'data:audio/wav;base64,UklGRl4FAABXQVZFZm10IBAAAAABAAEARK
  * Joue un son de notification plus long et distinct (pour les notifications push)
  */
 export const playPushNotificationSound = async () => {
+  // Utiliser le son Base64 de qualite
+  const played = await playSoftPopSound();
+  if (played) return;
+  
+  // Fallback synthetique
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -101,7 +223,7 @@ export const playPushNotificationSound = async () => {
 
     const now = ctx.currentTime;
     
-    // Créer un son de notification plus élaboré
+    // Creer un son de notification plus elabore
     const notes = [523, 659, 784]; // Do, Mi, Sol (accord majeur)
     
     notes.forEach((freq, i) => {
@@ -114,7 +236,7 @@ export const playPushNotificationSound = async () => {
       gain.connect(ctx.destination);
       
       const startTime = now + i * 0.1;
-      gain.gain.setValueAtTime(0.2, startTime);
+      gain.gain.setValueAtTime(0.15, startTime);
       gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
       
       osc.start(startTime);
@@ -128,6 +250,7 @@ export const playPushNotificationSound = async () => {
 
 /**
  * Demande la permission pour les notifications browser
+ * IMPORTANT: Doit etre appele suite a une action utilisateur (clic)
  * @returns {Promise<'granted'|'denied'|'default'|'unsupported'>} Status de la permission
  */
 export const requestNotificationPermission = async () => {
@@ -157,7 +280,7 @@ export const requestNotificationPermission = async () => {
 };
 
 /**
- * Vérifie l'état actuel de la permission de notification
+ * Verifie l'etat actuel de la permission de notification
  * @returns {'granted'|'denied'|'default'|'unsupported'}
  */
 export const getNotificationPermissionStatus = () => {
@@ -168,14 +291,14 @@ export const getNotificationPermissionStatus = () => {
 };
 
 /**
- * Affiche une notification browser (si autorisée)
+ * Affiche une notification browser (si autorisee)
  * @param {string} title - Titre de la notification
  * @param {string} body - Corps du message
- * @param {object} options - Options supplémentaires
+ * @param {object} options - Options supplementaires
  * @returns {Promise<{notification: Notification|null, fallbackNeeded: boolean}>}
  */
 export const showBrowserNotification = async (title, body, options = {}) => {
-  // Vérifier le support et la permission
+  // Verifier le support et la permission
   if (!('Notification' in window)) {
     console.log('[NOTIFICATIONS] Browser not supported - fallback needed');
     return { notification: null, fallbackNeeded: true, reason: 'unsupported' };
@@ -193,14 +316,14 @@ export const showBrowserNotification = async (title, body, options = {}) => {
       badge: options.badge || '/favicon.ico',
       tag: options.tag || 'afroboost-chat',
       requireInteraction: options.requireInteraction || false,
-      silent: false, // Permet le son systeme
+      silent: false,
       ...options
     });
 
-    // Fermer automatiquement apres 8 secondes (plus long pour plus de visibilite)
+    // Fermer automatiquement apres 8 secondes
     setTimeout(() => notification.close(), 8000);
 
-    // Callback au clic - Focus la fenetre et executer le callback
+    // Callback au clic - Focus la fenetre
     notification.onclick = (event) => {
       event.preventDefault();
       window.focus();
@@ -245,7 +368,6 @@ export const showNewMessageNotification = async (senderName, messageText) => {
       tag: 'afroboost-new-message',
       requireInteraction: false,
       onClick: () => {
-        // Focus et scroll vers le chat quand l'utilisateur clique
         window.focus();
       }
     }
@@ -256,21 +378,20 @@ export const showNewMessageNotification = async (senderName, messageText) => {
 
 /**
  * Convertit une URL en lien cliquable
- * @param {string} text - Texte à analyser
+ * @param {string} text - Texte a analyser
  * @returns {string} - Texte avec liens HTML
  */
 export const linkifyText = (text) => {
   if (!text) return '';
   
-  // Si le texte contient déjà du HTML (emojis img), le préserver
-  // D'abord, extraire les balises img pour les protéger
+  // Si le texte contient deja du HTML (emojis img), le preserver
   const imgTags = [];
   let protectedText = text.replace(/<img[^>]+>/gi, (match) => {
     imgTags.push(match);
     return `__IMG_PLACEHOLDER_${imgTags.length - 1}__`;
   });
   
-  // Regex pour détecter les URLs
+  // Regex pour detecter les URLs
   const urlRegex = /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g;
   
   // Convertir les URLs en liens
@@ -287,7 +408,7 @@ export const linkifyText = (text) => {
 };
 
 /**
- * Mapping des emojis personnalisés vers leurs équivalents natifs (fallback)
+ * Mapping des emojis personnalises vers leurs equivalents natifs (fallback)
  */
 const EMOJI_FALLBACK_MAP = {
   'fire': '🔥',
@@ -306,8 +427,6 @@ const EMOJI_FALLBACK_MAP = {
 
 /**
  * Parse les tags [emoji:filename.svg] et les convertit en balises <img>
- * Compatible avec linkifyText (préserve les URLs)
- * Inclut un fallback vers l'emoji natif si l'image ne charge pas
  * @param {string} text - Texte avec potentiels tags emoji
  * @returns {string} - Texte avec balises img pour les emojis
  */
@@ -316,42 +435,35 @@ export const parseEmojis = (text) => {
   
   const API = process.env.REACT_APP_BACKEND_URL + '/api';
   
-  // Regex pour détecter [emoji:filename.svg] ou [emoji:filename]
+  // Regex pour detecter [emoji:filename.svg] ou [emoji:filename]
   const emojiRegex = /\[emoji:([^\]]+)\]/g;
   
   return text.replace(emojiRegex, (match, filename) => {
-    // Ajouter .svg si pas d'extension
     const file = filename.includes('.') ? filename : `${filename}.svg`;
     const emojiName = filename.replace('.svg', '');
-    
-    // Emoji natif en fallback
     const fallbackEmoji = EMOJI_FALLBACK_MAP[filename] || EMOJI_FALLBACK_MAP[file] || '😊';
     
-    // Balise img avec onerror pour afficher l'emoji natif en fallback
     return `<img src="${API}/emojis/${file}" alt="${emojiName}" class="chat-emoji" style="width:20px;height:20px;vertical-align:middle;display:inline-block;margin:0 2px;" onerror="this.outerHTML='${fallbackEmoji}'" />`;
   });
 };
 
 /**
- * Combine le parsing d'emojis et la création de liens
+ * Combine le parsing d'emojis et la creation de liens
  * @param {string} text - Texte brut
  * @returns {string} - Texte HTML avec emojis et liens
  */
 export const parseMessageContent = (text) => {
   if (!text) return '';
   
-  // D'abord parser les emojis
   let parsed = parseEmojis(text);
-  
-  // Puis ajouter les liens (linkifyText préserve les balises img)
   parsed = linkifyText(parsed);
   
   return parsed;
 };
 
 /**
- * Vérifie si le texte contient des URLs
- * @param {string} text - Texte à vérifier
+ * Verifie si le texte contient des URLs
+ * @param {string} text - Texte a verifier
  * @returns {boolean}
  */
 export const containsLinks = (text) => {
@@ -365,11 +477,11 @@ let titleInterval = null;
 let isFlashing = false;
 
 /**
- * Démarre le clignotement du titre de l'onglet pour attirer l'attention
- * @param {string} message - Message à afficher (ex: "💬 Nouveau message privé !")
+ * Demarre le clignotement du titre de l'onglet pour attirer l'attention
+ * @param {string} message - Message a afficher
  */
-export const startTitleFlash = (message = '💬 Nouveau message privé !') => {
-  if (isFlashing) return; // Déjà en cours
+export const startTitleFlash = (message = 'Nouveau message !') => {
+  if (isFlashing) return;
   
   originalTitle = document.title;
   isFlashing = true;
@@ -378,9 +490,8 @@ export const startTitleFlash = (message = '💬 Nouveau message privé !') => {
   titleInterval = setInterval(() => {
     document.title = showMessage ? message : originalTitle;
     showMessage = !showMessage;
-  }, 1000); // Alterne toutes les secondes
+  }, 1000);
   
-  // Écouter le focus de la fenêtre pour arrêter le clignotement
   const handleFocus = () => {
     stopTitleFlash();
     window.removeEventListener('focus', handleFocus);
@@ -389,7 +500,7 @@ export const startTitleFlash = (message = '💬 Nouveau message privé !') => {
 };
 
 /**
- * Arrête le clignotement du titre et restaure le titre original
+ * Arrete le clignotement du titre et restaure le titre original
  */
 export const stopTitleFlash = () => {
   if (titleInterval) {
@@ -401,7 +512,7 @@ export const stopTitleFlash = () => {
 };
 
 /**
- * Vérifie si la fenêtre/onglet a le focus
+ * Verifie si la fenetre/onglet a le focus
  * @returns {boolean}
  */
 export const isWindowFocused = () => {
@@ -409,30 +520,27 @@ export const isWindowFocused = () => {
 };
 
 /**
- * Notification complète pour MP: titre clignotant + badge (son géré par ChatWidget)
- * À appeler quand un message privé arrive
+ * Notification complete pour MP: titre clignotant + badge
  */
 export const notifyPrivateMessage = (senderName = 'Quelqu\'un') => {
-  // Note: Le son est géré par ChatWidget via playSoundIfEnabled() pour respecter les préférences
-  
-  // Clignoter le titre si la fenêtre n'a pas le focus
   if (!isWindowFocused()) {
-    startTitleFlash(`💬 ${senderName} vous a envoyé un message !`);
+    startTitleFlash(`${senderName} vous a envoye un message !`);
   }
   
-  // Notification navigateur si autorisée
   showBrowserNotification(
-    '💬 Nouveau message privé',
-    `${senderName} vous a envoyé un message`,
-    'private'
+    'Nouveau message prive',
+    `${senderName} vous a envoye un message`,
+    { tag: 'private' }
   );
 };
 
 export default {
   playNotificationSound,
   playPushNotificationSound,
+  playSoftPopSound,
   unlockAudio,
   requestNotificationPermission,
+  getNotificationPermissionStatus,
   showBrowserNotification,
   showNewMessageNotification,
   linkifyText,
