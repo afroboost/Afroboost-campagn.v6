@@ -1,73 +1,20 @@
 // /services/notificationService.js - Service de notifications sonores et visuelles
-// Pour le système de chat Afroboost - Optimisé pour iOS et Android
+// Pour le systeme de chat Afroboost - Optimise pour iOS et Android
 
 /**
- * Sons de notification utilisant Web Audio API
- * Optimisé pour iOS (Safari) et Android
+ * Sons de notification utilisant Web Audio API + son Base64 de qualite
+ * Optimise pour iOS (Safari) et Android
+ * Son "soft" type Pop/Glass - se declenche uniquement si document.visibilityState === 'hidden'
  */
 
 // Contexte Audio global avec gestion iOS
 let audioContext = null;
 let isAudioUnlocked = false;
+let notificationAudio = null;
 
-/**
- * Obtient le contexte audio, le créant si nécessaire
- */
-const getAudioContext = () => {
-  if (!audioContext) {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (AudioContext) {
-      audioContext = new AudioContext();
-    }
-  }
-  return audioContext;
-};
-
-/**
- * Déverrouille l'audio sur iOS (nécessite une interaction utilisateur)
- * À appeler lors du premier clic/tap de l'utilisateur
- */
-export const unlockAudio = () => {
-  if (isAudioUnlocked) return Promise.resolve();
-  
-  return new Promise((resolve) => {
-    const ctx = getAudioContext();
-    if (!ctx) {
-      resolve();
-      return;
-    }
-    
-    // Créer un son silencieux pour débloquer l'audio sur iOS
-    const buffer = ctx.createBuffer(1, 1, 22050);
-    const source = ctx.createBufferSource();
-    source.buffer = buffer;
-    source.connect(ctx.destination);
-    source.start(0);
-    
-    // Résumer le contexte si suspendu
-    if (ctx.state === 'suspended') {
-      ctx.resume().then(() => {
-        isAudioUnlocked = true;
-        resolve();
-      });
-    } else {
-      isAudioUnlocked = true;
-      resolve();
-    }
-  });
-};
-
-/**
- * Joue un son de notification pour les messages entrants
- * Optimisé pour iOS et Android
- * @param {string} type - 'message' | 'coach' | 'user' | 'private'
- */
-export const playNotificationSound = async (type = 'message') => {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) {
-      console.warn('Web Audio API not supported');
-      return;
+// === SON BASE64 "POP" DOUX ET DISCRET ===
+// Son synthetique court (150ms) type "glass chime" - pas de fichier externe
+const SOFT_POP_SOUND = 'data:audio/wav;base64,UklGRl4FAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YToFAAAAAAD//wEAAQD+/wIA/f8DAP3/AgD+/wIA/f8CAP7/AQD//wAA//8BAP//AQD//wEA//8BAP//AAAAAAAAAAAA//8BAP//AQD//wEA//8AAAAAAAAAAAAAAAAAAP//AQD//wEA//8BAAAAAAAAAAAAAAD//wEAAAABAAAAAwACAAQAAwAGAAUACQAJAA0ADQASABMAGQAbACEAJAAqAC4ANgA7AEQASgBVAFwAaABwAH4AhwCWAKAAsAC7AM0A2ADsAPgADQEZAS8BOwFSAV4BdgGCAZoBpgG/AcsB4wHvAQcCEwIqAjYCTQJYAm4CeQKOApgCrAK1AsoCzwLhAucC9gL5AgYDCQMUAxcDIQMjAywDLgM1AzYDOwM9Az8DPQM/Az0DPgM8AzwDOgM5AzcDNQM0AzIDLwMtAysDKAMlAyMDHwMcAxkDFgMSAw8DCwMIAwQDAQP9AvkC9gLyAu4C6gLmAuEC3QLYAtMCzwLKAsUCwAK7ArYCsQKsAqcCoQKcApYCkAKLAoUCfwJ5AnMCbQJnAmECWwJVAk8CSQJDAL0AtwCxAKsApQCfAJkAkwCNAIcAgQB7AHUAbwBpAGMAXQBXAFEASwBFAD8AOQA0AC4AKAAjAB0AGAASAAwABwACAP3/+P/z/+7/6f/k/+D/2//W/9L/zv/J/8X/wf+9/7n/tf+y/67/q/+o/6T/of+e/5v/mP+W/5P/kf+O/4z/iv+I/4b/hP+D/4H/gP9//37/ff98/3v/ev96/3n/ef95/3n/ef95/3n/ev96/3v/fP99/37/gP+B/4P/hf+H/4r/jP+P/5L/lf+Y/5z/n/+j/6f/q/+v/7P/t/+8/8D/xf/K/8//1P/Z/97/4//p/+7/9P/5////BAEKARABFgEcASIBKAEuATQBOgFAAUYBSwFRAVcBXAFiAWcBbAFxAXYBewGAAYQBiAGMAZABlAGYAZsBngGhAaQBpgGoAaoBqwGsAa0BrgGuAa4BrgGuAa0BrAGrAakBpwGlAaMBoAGdAZoBmAGUAZEBjQGJAYUBgAF8AXcBcgFtAWgBYwFdAVgBUgFMAUYBQAE6ATQBLgEnASEBGgETAQ0BBgEAAfoA8wDsAOYA3wDYANEAywDEAL0AtgCwAKkAogCcAJUAjgCIAIEAfAB1AG8AaQBjAF0AVwBRAEsARgBAADoANQAwACoAJQAfABoAFQAQAAsABgACAP3/+f/0//D/6//n/+P/3v/b/9f/0v/P/8v/yP/E/8H/vv+7/7j/tv+z/7D/rv+s/6n/p/+m/6T/ov+g/5//nf+c/5v/mv+Z/5j/l/+X/5b/lv+W/5X/lf+V/5X/lf+W/5b/l/+X/5j/mf+a/5v/nP+d/5//oP+i/6T/pv+o/6r/rf+v/7L/tf+4/7v/vv/C/8X/yf/N/9D/1P/Y/9z/4P/k/+n/7f/x//X/+v/+/wIABwAMABAAFQAaAB8AJAAoAC0AMgA3ADwAQQBFAEoATwBTAFgAXQBhAGYAagBuAHIAdgB6AH4AggCFAIkAjACPAJIAlQCYAJoAnQCfAKEAowClAKYAqACpAKoAqwCsAKwArACsAKwArAGsAKsAqwCqAKkAqACmAKUAowCiAKAAngCbAJkAlgCUAJEAjgCLAIgAhQCCAH8AfAB4AHUAcQBuAGoAZgBjAF8AWwBXAFMATwBLAEcAQwA/ADsANgAyAC4AKgAmACEAHQAZABUAEAAMAAgABAAAAAEA
     }
     
     // Résumer le contexte audio si suspendu (politique navigateur iOS/Chrome)
