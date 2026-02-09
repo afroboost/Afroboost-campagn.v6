@@ -137,11 +137,14 @@ export const playSoftPopSound = async () => {
  * @param {string} type - 'message' | 'coach' | 'user' | 'private'
  */
 export const playNotificationSound = async (type = 'message') => {
-  // Si l'app est en arriere-plan, utiliser le son Base64 de qualite
+  // Si l'app est en arriere-plan, utiliser le son Base64 de qualite + vibration
   if (document.visibilityState === 'hidden') {
     const played = await playSoftPopSound();
     if (played) return;
   }
+  
+  // Vibration meme si son synthetique (mode silencieux)
+  triggerVibration();
   
   // Fallback: son synthetique via Web Audio API (pour app au premier plan)
   try {
