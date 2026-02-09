@@ -18,7 +18,8 @@ import {
   isPushSupported, 
   promptForNotifications, 
   registerServiceWorker,
-  isSubscribed 
+  isSubscribed,
+  subscribeToPush
 } from '../services/pushNotificationService';
 import { 
   isInSilenceHours, 
