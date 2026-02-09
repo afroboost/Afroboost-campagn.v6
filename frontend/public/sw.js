@@ -22,8 +22,8 @@ self.addEventListener('push', (event) => {
   let data = {
     title: 'Afroboost',
     body: 'Nouveau message de votre coach',
-    icon: '/logo.png',
-    badge: '/logo.png',
+    icon: '/logo192.png',
+    badge: '/logo192.png',
     data: { url: '/' }
   };
   
