@@ -1503,52 +1503,6 @@ export const ChatWidget = () => {
     }
   }, []);
 
-  // === DEMANDE AUTORISATION NOTIFICATIONS AU PREMIER CHARGEMENT POST-LOGIN ===
-  // Design minimaliste - demande non intrusive apres connexion
-  useEffect(() => {
-    const askNotificationPermission = async () => {
-      // Verifier si l'utilisateur est connecte (profil ou session)
-      const storedProfile = getStoredProfile();
-      const hasSession = sessionData?.id || storedProfile?.code;
-      
-      if (!hasSession) {
-        return; // Pas connecte, ne pas demander
-      }
-      
-      // Verifier si la permission n'a pas deja ete accordee ou refusee
-      const currentPermission = getNotificationPermissionStatus();
-      if (currentPermission === 'granted' || currentPermission === 'denied') {
-        console.log('[NOTIFICATIONS] Permission deja traitee:', currentPermission);
-        return;
-      }
-      
-      // Verifier si on n'a pas deja demande recemment (eviter spam)
-      const lastAsked = localStorage.getItem('af_notif_asked_at');
-      if (lastAsked) {
-        const daysSinceAsked = (Date.now() - parseInt(lastAsked)) / (1000 * 60 * 60 * 24);
-        if (daysSinceAsked < 7) {
-          console.log('[NOTIFICATIONS] Demande ignoree (moins de 7 jours)');
-          return;
-        }
-      }
-      
-      // Attendre 3 secondes apres le chargement (non intrusif)
-      setTimeout(async () => {
-        console.log('[NOTIFICATIONS] Demande autorisation notifications...');
-        localStorage.setItem('af_notif_asked_at', Date.now().toString());
-        
-        const permission = await requestNotificationPermission();
-        console.log('[NOTIFICATIONS] Resultat:', permission);
-        
-        if (permission === 'granted') {
-          setPushEnabled(true);
-        }
-      }, 3000);
-    };
-    
-    askNotificationPermission();
-  }, [sessionData?.id]); // Se declenche quand une session est etablie
-
   // === ADHESION AUTOMATIQUE VIA LIEN ?group=ID (ZERO-FLASH) ===
   // Utilise pendingGroupJoin détecté AVANT le premier render
   // L'adhésion se fait silencieusement, le formulaire n'est JAMAIS affiché
