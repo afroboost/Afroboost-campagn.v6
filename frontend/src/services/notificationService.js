@@ -487,6 +487,7 @@ export default {
   unlockAudio,
   requestNotificationPermission,
   showBrowserNotification,
+  showNewMessageNotification,
   linkifyText,
   parseEmojis,
   parseMessageContent,
