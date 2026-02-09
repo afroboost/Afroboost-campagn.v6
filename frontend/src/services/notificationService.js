@@ -89,7 +89,21 @@ export const unlockAudio = () => {
 };
 
 /**
- * Joue le son "soft pop" Base64 (son doux de qualite)
+ * Declenche une vibration sur mobile (si supporte)
+ * Pattern: court-pause-court pour notification discrete
+ */
+export const triggerVibration = () => {
+  if (navigator.vibrate) {
+    navigator.vibrate([200, 100, 200]);
+    console.log('[VIBRATION] Vibration declenchee');
+    return true;
+  }
+  console.log('[VIBRATION] API non supportee');
+  return false;
+};
+
+/**
+ * Joue le son "soft pop" Base64 (son doux de qualite) + VIBRATION
  * Se declenche UNIQUEMENT si document.visibilityState === 'hidden'
  */
 export const playSoftPopSound = async () => {
@@ -98,6 +112,9 @@ export const playSoftPopSound = async () => {
     console.log('[SOUND] App visible - son ignore');
     return false;
   }
+  
+  // VIBRATION: Meme si le telephone est en silencieux
+  triggerVibration();
   
   try {
     const audio = initSoftPopAudio();
