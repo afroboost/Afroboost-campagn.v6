@@ -6138,7 +6138,7 @@ async def send_push_notification(participant_id: str, title: str, body: str, dat
         return False
     
     subscription_info = sub["subscription"]
-    payload = json.dumps({"title": title, "body": body, "icon": "/logo.png", "badge": "/logo.png", "data": data or {}, "timestamp": datetime.now(timezone.utc).isoformat()})
+    payload = json.dumps({"title": title, "body": body, "icon": "/logo192.png", "badge": "/logo192.png", "data": data or {}, "timestamp": datetime.now(timezone.utc).isoformat()})
     try:
         webpush(
             subscription_info=subscription_info,
