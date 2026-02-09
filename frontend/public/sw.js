@@ -33,8 +33,8 @@ self.addEventListener('push', (event) => {
       data = {
         title: payload.title || 'Afroboost',
         body: payload.body || payload.message || 'Nouveau message de votre coach',
-        icon: payload.icon || '/logo.png',
-        badge: payload.badge || '/logo.png',
+        icon: payload.icon || '/logo192.png',
+        badge: payload.badge || '/logo192.png',
         data: payload.data || { url: '/' }
       };
     } catch (e) {
