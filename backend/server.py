@@ -7384,3 +7384,4 @@ async def shutdown_db_client():
     logger.info("[SYSTEM] Arrete")
 
 # END
+
