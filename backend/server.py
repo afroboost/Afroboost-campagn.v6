@@ -6123,25 +6123,15 @@ async def send_push_notification(participant_id: str, title: str, body: str, dat
         return False
 
 async def send_backup_email(participant_id: str, message_preview: str):
-    """
-    Envoie un email de backup si la notification push échoue.
-    """
-    # Récupérer les infos du participant d'abord pour la simulation
+    """Envoie un email de backup si la notification push echoue."""
     participant = await db.chat_participants.find_one({"id": participant_id}, {"_id": 0})
     if not participant or not participant.get("email"):
-        logger.info(f"No email for participant {participant_id}")
         return False
-    
     email = participant["email"]
     name = participant.get("name", "")
-    
-    # Mode simulation si Resend non configuré
     if not RESEND_AVAILABLE or not RESEND_API_KEY:
-        logger.info(f"[SIMULATION EMAIL] To: {email}, Name: {name}")
-        logger.info(f"[SIMULATION EMAIL] Subject: 💬 Nouvelle réponse sur Afroboost")
-        logger.info(f"[SIMULATION EMAIL] Body preview: {message_preview[:100]}...")
-        logger.info(f"[SIMULATION EMAIL] Email would be sent successfully (Resend not configured)")
-        return True  # Retourne True pour la simulation
+        logger.debug(f"[EMAIL] Simulation -> {email}")
+        return True
     
     html_content = f"""
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
