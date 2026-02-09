@@ -212,28 +212,24 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: |
-      Implementation V6 - Finalisation Production et Etancheite:
+      Implementation V7 - Regroupement Notifications et Stabilite MongoDB:
       
-      1. SECURISATION ENDPOINT-USER
-         - Si endpoint existe pour AUTRE user -> reassigne au nouveau
-         - Evite qu'un ancien user recoive les messages du nouveau
-         - Cle: update_one({"subscription.endpoint": endpoint}, {...})
+      1. TAG FIXE POUR REGROUPEMENT (sw.js)
+         - Avant: tag: 'afroboost-chat-' + Date.now() (unique)
+         - Apres: tag: 'afroboost-chat-sync' (fixe)
+         - 3 messages -> 1 seule notification affichee (la plus recente)
+         - renotify: true conserve -> vibration a chaque message
       
-      2. PRIORITE ET CANAUX (sw.js)
-         - tag unique: 'afroboost-chat-' + Date.now()
-         - silent: false pour forcer le son
-         - renotify: true pour chaque message
-      
-      3. NETTOYAGE DES LOGS
-         - Succes push -> logger.debug (invisible en prod)
-         - Seules les ERREURS critiques -> logger.error
-         - Logs de simulation email -> logger.debug
+      2. SECURISATION MONGODB (upsert=True)
+         - update_one(..., upsert=True) deja present
+         - Requetes simultanees gerees sans erreur
+         - Si existe -> update, sinon -> create
       
       CONTRAINTES RESPECTEES:
       - server.py = 7387 lignes exactement
-      - Aucune modification login/reservation/medias
-      - Design minimaliste (pas d'emojis)
-      - window.location.replace('/') inchange
+      - Login PROMO20SECRET inchange
+      - 4 dates de reservation intactes
+      - Design SVG minimaliste (pas d'emojis)
   
   - agent: "testing"
     message: |
