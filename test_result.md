@@ -101,3 +101,83 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: |
+  Implementation des notifications sonores et alertes visuelles (P0):
+  1. Alerte sonore - Son de notification a chaque message Socket.IO recu (sauf si utilisateur regarde la conversation)
+  2. Notifications navigateur (Web Push) - Demander autorisation au premier chargement post-login
+  3. Afficher notification systeme avec le texte du message Afroboost meme si onglet en arriere-plan
+
+frontend:
+  - task: "Son de notification via Web Audio API"
+    implemented: true
+    working: true
+    file: "frontend/src/services/notificationService.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Son genere via Web Audio API (oscillator) - pas de fichier externe, pas de 404"
+
+  - task: "Notification navigateur si onglet en arriere-plan"
+    implemented: true
+    working: true
+    file: "frontend/src/services/notificationService.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Fonction showNewMessageNotification ajoutee - affiche notification systeme avec texte message"
+
+  - task: "Demande autorisation notifications au login"
+    implemented: true
+    working: true
+    file: "frontend/src/components/ChatWidget.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "useEffect ajoute pour demander permission 3s apres connexion (non intrusif, design minimaliste)"
+
+  - task: "Verification utilisateur actif avant notification"
+    implemented: true
+    working: true
+    file: "frontend/src/components/ChatWidget.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Handler message_received modifie - verifie isOpen && document.hasFocus() avant notification"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Notification navigateur si onglet en arriere-plan"
+    - "Demande autorisation notifications au login"
+    - "Verification utilisateur actif avant notification"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: |
+      Implementation terminee des notifications sonores et visuelles:
+      1. Son via Web Audio API (inline, pas de fichier externe)
+      2. Notification navigateur quand onglet en arriere-plan (showNewMessageNotification)
+      3. Demande permission au premier chargement post-login (3s delay)
+      4. Verification isOpen && document.hasFocus() avant notification
+      server.py inchange (7387 lignes comme requis)
