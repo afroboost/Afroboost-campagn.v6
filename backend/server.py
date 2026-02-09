@@ -6122,20 +6122,21 @@ async def unsubscribe_push(participant_id: str):
     )
     return {"success": True, "message": "Souscription désactivée"}
 
-async def send_push_notification(participant_id: str, title: str, body: str, data: dict = None):
-    """
-    Envoie une notification push à un participant.
-    Retourne True si envoyé avec succès, False sinon.
-    """
+async def send_push_notification(participant_id: str, title: str, body: str, data: dict = None, session_id: str = None):
+    """Envoie une notification push a un participant (sauf si socket actif)."""
     if not WEBPUSH_AVAILABLE or not VAPID_PRIVATE_KEY:
-        logger.warning("Web Push not configured")
         return False
-    
+    # Verifier si socket actif (chat ouvert) - evite vibration inutile
+    if session_id:
+        try:
+            room_sids = list(sio.manager.rooms.get('/', {}).get(session_id, set()))
+            if room_sids:
+                logger.info(f"[PUSH] Skip - {len(room_sids)} client(s) actif(s)")
+                return False
+        except Exception:
+            pass
     # Récupérer la souscription
-    sub = await db.push_subscriptions.find_one(
-        {"participant_id": participant_id, "active": True},
-        {"_id": 0}
-    )
+    sub = await db.push_subscriptions.find_one({"participant_id": participant_id, "active": True}, {"_id": 0})
     
     if not sub or not sub.get("subscription"):
         logger.info(f"No push subscription for participant {participant_id}")
