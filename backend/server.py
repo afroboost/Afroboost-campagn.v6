@@ -6067,55 +6067,26 @@ async def get_vapid_public_key():
 
 @api_router.post("/push/subscribe")
 async def subscribe_push(request: Request):
-    """
-    Enregistre une souscription push pour un participant.
-    
-    Body attendu:
-    {
-        "participant_id": "xxx",
-        "subscription": {
-            "endpoint": "https://...",
-            "keys": {
-                "p256dh": "...",
-                "auth": "..."
-            }
-        }
-    }
-    """
+    """Enregistre une souscription push. Si endpoint existe deja pour autre user, le reassigner."""
     body = await request.json()
     participant_id = body.get("participant_id")
     subscription = body.get("subscription")
-    
     if not participant_id or not subscription:
-        raise HTTPException(status_code=400, detail="participant_id et subscription sont requis")
-    
-    # Sauvegarder la souscription
-    sub_obj = {
-        "id": str(uuid.uuid4()),
-        "participant_id": participant_id,
-        "subscription": subscription,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "active": True
-    }
-    
-    # Mettre à jour ou créer
-    await db.push_subscriptions.update_one(
-        {"participant_id": participant_id},
-        {"$set": sub_obj},
-        upsert=True
-    )
-    
-    logger.info(f"Push subscription registered for participant {participant_id}")
-    return {"success": True, "message": "Souscription enregistrée"}
+        raise HTTPException(status_code=400, detail="participant_id et subscription requis")
+    endpoint = subscription.get("endpoint", "")
+    # Securite: si endpoint existe pour AUTRE user, le reassigner au nouveau
+    if endpoint:
+        await db.push_subscriptions.update_one({"subscription.endpoint": endpoint}, {"$set": {"participant_id": participant_id, "subscription": subscription, "active": True, "updated_at": datetime.now(timezone.utc).isoformat()}}, upsert=True)
+    else:
+        await db.push_subscriptions.update_one({"participant_id": participant_id}, {"$set": {"subscription": subscription, "active": True}}, upsert=True)
+    logger.debug(f"[PUSH] Subscribe OK: {participant_id[:8]}...")
+    return {"success": True}
 
 @api_router.delete("/push/subscribe/{participant_id}")
 async def unsubscribe_push(participant_id: str):
-    """Désactive la souscription push d'un participant"""
-    await db.push_subscriptions.update_one(
-        {"participant_id": participant_id},
-        {"$set": {"active": False}}
-    )
-    return {"success": True, "message": "Souscription désactivée"}
+    """Desactive la souscription push d'un participant"""
+    await db.push_subscriptions.update_one({"participant_id": participant_id}, {"$set": {"active": False}})
+    return {"success": True}
 
 async def send_push_notification(participant_id: str, title: str, body: str, data: dict = None, session_id: str = None):
     """Envoie une notification push a un participant (sauf si socket actif)."""
