@@ -50,12 +50,18 @@ self.addEventListener('push', (event) => {
     body: data.body,
     icon: data.icon,
     badge: data.badge,
-    vibrate: [200, 100, 200], // Vibration pattern pour mobile
-    tag: 'afroboost-notification',
+    vibrate: [200, 100, 200],
+    tag: 'afroboost-chat-' + Date.now(),
     renotify: true,
     requireInteraction: false,
+    silent: false,
     data: data.data
   };
+  
+  // Android: priority high pour reveiller l'ecran
+  if ('actions' in Notification.prototype) {
+    options.actions = [];
+  }
   
   event.waitUntil(
     self.registration.showNotification(data.title, options)
